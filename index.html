@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Absen Archipelago</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { box-sizing: border-box; }
+    * { font-family: 'Poppins', sans-serif; }
+    
+    :root {
+      --bg-primary: #0a1628;
+      --bg-header: #1a2d4a;
+      --pink-bold: #ff1493;
+      --orange: #ff8c00;
+    }
+    
+    .bg-primary { background-color: var(--bg-primary); }
+    .bg-header { background-color: var(--bg-header); }
+    .text-orange { color: var(--orange); }
+    .bg-pink-bold { background-color: var(--pink-bold); }
+    
+    .status-selected {
+      background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%) !important;
+      border: 2px solid #fff !important;
+      box-shadow: 0 0 12px rgba(255, 20, 147, 0.5) !important;
+      transform: scale(1.02);
+    }
+    
+    .card-worker {
+      transition: all 0.3s ease;
+    }
+    
+    .card-worker:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    
+    .btn-status {
+      transition: all 0.2s ease;
+    }
+    
+    .btn-status:hover {
+      transform: scale(1.05);
+    }
+    
+    .btn-status:active {
+      transform: scale(0.95);
+    }
+    
+    .page { display: none; }
+    .page.active { display: flex; }
+    #page-login.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #page-attendance.active,
+    #page-recap.active,
+    #page-calendar.active,
+    #page-recap-detail.active,
+    #page-photo-gallery.active,
+    #page-photo-detail.active,
+    #page-apps-script.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0.7); }
+      50% { box-shadow: 0 0 0 8px rgba(255, 20, 147, 0); }
+    }
+    
+    .pulse-pink {
+      animation: pulse 2s infinite;
+    }
+    
+    .calendar-day {
+      transition: all 0.2s ease;
+    }
+    
+    .calendar-day:hover {
+      background-color: rgba(255, 140, 0, 0.3);
+      transform: scale(1.1);
+    }
+    
+    .calendar-day.has-data {
+      background-color: rgba(34, 197, 94, 0.3);
+    }
+    
+    .gallery-folder {
+      transition: all 0.3s ease;
+    }
+    
+    .gallery-folder:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    
+    .notification {
+      animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .code-block {
+      background: #1e1e1e;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    
+    .code-block pre {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #d4d4d4;
+    }
+    
+    .copy-btn {
+      transition: all 0.2s ease;
+    }
+    
+    .copy-btn:hover {
+      background-color: #ff8c00;
+    }
+    
+    .worker-photo {
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .photo-thumbnail {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    
+    .photo-thumbnail:hover {
+      transform: scale(1.05);
+    }
+    
+    .photo-thumbnail .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      background: #ef4444;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    
+    .photo-thumbnail:hover .delete-btn {
+      opacity: 1;
+    }
+    
+    .fullscreen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .fullscreen-overlay img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+    
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 50px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .nav-arrow:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    
+    .nav-arrow.left { left: 20px; }
+    .nav-arrow.right { right: 20px; }
+  </style>
+</head>
+<body class="h-full m-0 p-0 overflow-hidden bg-primary">
+  <div id="app" class="h-full w-full overflow-auto">
+    
+    <!-- NOTIFICATION -->
+    <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
+      <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span id="notification-text">Berhasil!</span>
+      </div>
+    </div>
+
+    <!-- FULLSCREEN PHOTO VIEWER -->
+    <div id="fullscreen-viewer" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
+      <div class="nav-arrow left" onclick="navigatePhoto(-1, event)">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </div>
+      <img id="fullscreen-image" src="" alt="Preview">
+      <div class="nav-arrow right" onclick="navigatePhoto(1, event)">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>
+      <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm">
+        <span id="photo-counter">1 / 1</span>
+      </div>
+    </div>
+
+    <!-- PAGE 1: LOGIN -->
+    <div id="page-login" class="page active h-full w-full" style="display: flex; align-items: center; justify-content: center; min-height: 100%;">
+      <div class="bg-white rounded-3xl shadow-2xl overflow-hidden fade-in" style="width: 100%; max-width: 360px; aspect-ratio: 9/12;">
+        <div class="h-full flex flex-col items-center justify-center p-8 md:p-10 text-center">
+          <div class="mb-5">
+            <img 
+              id="login-logo"
+              src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" 
+              alt="Logo Archipelago"
+              class="w-32 h-32 md:w-40 md:h-40 mx-auto object-contain"
+              onerror="this.style.display='none'; document.getElementById('login-logo-fallback').style.display='flex';"
+            >
+            <div id="login-logo-fallback" class="hidden w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full bg-gradient-to-br from-orange-400 to-pink-500 items-center justify-center">
+              <span class="text-white text-4xl font-bold">A</span>
+            </div>
+          </div>
+          
+          <h1 class="text-xl md:text-2xl font-bold text-slate-800 mb-5 text-center">ABSEN ARCHIPELAGO</h1>
+          
+          <form id="login-form" class="w-full space-y-3">
+            <div>
+              <label for="username" class="block text-left text-slate-600 text-xs font-medium mb-1">Username</label>
+              <input 
+                type="text" 
+                id="username" 
+                placeholder="Masukkan username"
+                class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                required
+              >
+            </div>
+            <div>
+              <label for="password" class="block text-left text-slate-600 text-xs font-medium mb-1">Password</label>
+              <input 
+                type="password" 
+                id="password" 
+                placeholder="Masukkan password"
+                class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                required
+              >
+            </div>
+            <p id="login-error" class="hidden text-red-500 text-xs"></p>
+            <button 
+              type="submit"
+              class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-500/30 text-sm"
+            >
+              Login
+            </button>
+          </form>
+          
+          <button 
+            onclick="showPage('page-apps-script')"
+            class="mt-3 text-slate-400 hover:text-green-500 text-xs underline transition-colors"
+          >
+            ⚙️ Setup Apps Script
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: MAIN ATTENDANCE -->
+    <div id="page-attendance" class="page min-h-full">
+      <header class="bg-header p-3 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img 
+              src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" 
+              alt="Logo"
+              class="w-8 h-8 md:w-10 md:h-10 object-contain rounded-lg"
+              style="filter: brightness(0) invert(1);"
+              onerror="this.outerHTML='<div class=\'w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white flex items-center justify-center\'><span class=\'text-slate-800 text-lg font-bold\'>A</span></div>'"
+            >
+            <div>
+              <h1 id="header-title" class="text-sm md:text-base font-bold text-white">ABSEN ONLINE DAILY WORKER I.B.L</h1>
+            </div>
+          </div>
+          <div class="text-right">
+            <p id="header-date" class="text-white text-xs md:text-sm font-medium"></p>
+            <div class="flex items-center justify-end gap-1">
+              <p id="header-time" class="text-yellow-400 text-sm md:text-lg font-bold"></p>
+              <span id="timezone-badge" class="text-yellow-400 text-sm md:text-lg font-bold"></span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="p-3 max-w-7xl mx-auto">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <button 
+            onclick="setAllPresent()"
+            class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all flex items-center gap-1 font-medium text-xs"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Hadir Semua
+          </button>
+          <button 
+            onclick="resetAllStatus()"
+            class="px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all flex items-center gap-1 font-medium text-xs"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Reset
+          </button>
+          <div class="flex-1"></div>
+          <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Recap
+          </button>
+          <button onclick="showPage('page-apps-script')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+            Script
+          </button>
+        </div>
+
+        <div id="search-container" class="hidden mb-3">
+          <div class="flex gap-2 items-stretch">
+            <div class="relative flex-1">
+              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <input 
+                type="text" 
+                id="search-input"
+                placeholder="Cari nama..."
+                class="w-full h-full pl-9 pr-8 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+              >
+              <button 
+                id="clear-search"
+                onclick="clearSearch()"
+                class="hidden absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs">
+              <div class="flex items-center gap-1">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span id="counter-selected" class="text-green-600 font-semibold">0</span>
+              </div>
+              <div class="w-px h-4 bg-slate-300"></div>
+              <div class="flex items-center gap-1">
+                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                <span id="counter-unselected" class="text-red-500 font-semibold">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="loading-workers" class="text-center py-12">
+          <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-slate-400 mt-4 text-sm">Memuat data pekerja...</p>
+        </div>
+
+        <div id="workers-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4">
+        </div>
+
+        <div id="search-results" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4">
+        </div>
+
+        <div id="photo-section" class="hidden mb-4">
+          <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-3 shadow-lg">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-slate-300 text-sm font-semibold">Upload foto absen</p>
+              <span id="photo-count-badge" class="hidden px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">0 foto</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex-1 cursor-pointer">
+                <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoUpload(event)">
+                <div class="py-2 bg-slate-700/70 hover:bg-slate-600 border border-slate-600 text-white rounded-lg transition-all flex items-center justify-center gap-2 font-medium text-sm">
+                  <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <span>Ambil Foto</span>
+                </div>
+              </label>
+            </div>
+            
+            <!-- Photo thumbnails grid -->
+            <div id="photo-thumbnails" class="hidden mt-3 grid grid-cols-4 gap-2">
+            </div>
+            
+            <!-- Location status -->
+            <div id="location-status" class="mt-2 text-xs text-slate-400 flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span id="location-text">Mengambil lokasi...</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="submit-section" class="hidden">
+          <button 
+            id="submit-btn"
+            onclick="submitAttendance()"
+            class="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold text-sm rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md shadow-green-500/30 border border-green-400/30"
+          >
+            <span class="inline-flex items-center gap-2">
+              <svg class="w-4 h-4 transform rotate-[-35deg]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+              Kirim Absensi
+            </span>
+          </button>
+        </div>
+
+        <div id="no-script-warning" class="hidden bg-amber-500/20 border border-amber-500/50 rounded-xl p-3 text-center">
+          <p class="text-amber-400 text-sm">Apps Script URL belum diatur.</p>
+          <button onclick="showPage('page-apps-script')" class="mt-2 text-orange-400 hover:text-orange-300 underline text-sm">Setup Apps Script</button>
+        </div>
+      </main>
+    </div>
+
+    <!-- PAGE 3: RECAP MENU -->
+    <div id="page-recap" class="page min-h-full bg-primary">
+      <header class="bg-header p-3 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button onclick="showPage('page-attendance')" class="text-white hover:text-orange-400 transition-colors mr-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+            </button>
+            <img 
+              src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" 
+              alt="Logo"
+              class="w-8 h-8 md:w-10 md:h-10 object-contain rounded-lg"
+              style="filter: brightness(0) invert(1);"
+              onerror="this.outerHTML='<div class=\'w-8 h-8 md:w-10 md:h-10 rounded-lg bg-white flex items-center justify-center\'><span class=\'text-slate-800 text-lg font-bold\'>A</span></div>'"
+            >
+            <div>
+              <h1 id="header-title-recap" class="text-sm md:text-base font-bold text-white">ABSEN ONLINE DAILY WORKER I.B.L</h1>
+            </div>
+          </div>
+          <div class="text-right">
+            <p id="header-date-recap" class="text-white text-xs md:text-sm font-medium"></p>
+            <div class="flex items-center justify-end gap-1">
+              <p id="header-time-recap" class="text-yellow-400 text-sm md:text-lg font-bold"></p>
+              <span id="timezone-badge-recap" class="text-yellow-400 text-sm md:text-lg font-bold"></span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <main class="p-3 max-w-7xl mx-auto">
+        <div class="flex flex-row gap-3 overflow-x-auto pb-2">
+          <button 
+            onclick="showRecapToday()"
+            class="flex-1 min-w-[120px] bg-white p-3 rounded-xl text-center hover:shadow-xl transition-all shadow-lg border border-slate-200"
+          >
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-blue-900/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-xs md:text-sm font-bold text-blue-900">Hari Ini</h2>
+              </div>
+            </div>
+          </button>
+
+          <button 
+            onclick="showPage('page-calendar')"
+            class="flex-1 min-w-[120px] bg-white p-3 rounded-xl text-center hover:shadow-xl transition-all shadow-lg border border-slate-200"
+          >
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-blue-900/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-xs md:text-sm font-bold text-blue-900">Kalender</h2>
+              </div>
+            </div>
+          </button>
+
+          <button 
+            onclick="showPage('page-photo-gallery')"
+            class="flex-1 min-w-[120px] bg-white p-3 rounded-xl text-center hover:shadow-xl transition-all shadow-lg border border-slate-200"
+          >
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-blue-900/10 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-xs md:text-sm font-bold text-blue-900">Foto</h2>
+              </div>
+            </div>
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <!-- PAGE 4: CALENDAR -->
+    <div id="page-calendar" class="page min-h-full bg-primary">
+      <header class="bg-header p-3 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button onclick="showPage('page-recap')" class="text-white hover:text-orange-400 transition-colors mr-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+            </button>
+            <div>
+              <h1 id="header-title-calendar" class="text-sm md:text-base font-bold text-white">Pilih Tanggal</h1>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <main class="p-3 max-w-4xl mx-auto">
+        <div class="bg-slate-800/50 rounded-xl p-3 md:p-4">
+          <div class="flex items-center justify-between mb-3">
+            <button onclick="prevMonth()" class="p-2 hover:bg-slate-700 rounded-lg transition-colors text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <h2 id="calendar-month" class="text-sm md:text-base font-bold text-white"></h2>
+            <button onclick="nextMonth()" class="p-2 hover:bg-slate-700 rounded-lg transition-colors text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1 mb-2">
+            <div class="text-center text-slate-400 text-xs font-medium py-1">Min</div>
+            <div class="text-center text-slate-400 text-xs font-medium py-1">Sen</div>
+            <div class="text-center text-slate-400 text-xs font-medium py-1">Sel</div>
+            <div class="text-center text-slate-400 text-xs font-medium py-1">Rab</div>
+            <div class="text-center text-slate-400 text-xs font-medium py-1">Kam</div>
+            <div class="text-center text-slate-400 text-xs font-medium py-1">Jum</div>
+            <div class="text-center text-slate-400 text-xs font-medium py-1">Sab</div>
+          </div>
+          <div id="calendar-days" class="grid grid-cols-7 gap-1">
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- PAGE 5: RECAP DETAIL -->
+    <div id="page-recap-detail" class="page min-h-full bg-primary">
+      <header class="bg-header p-3 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button onclick="showPage('page-recap')" class="text-white hover:text-orange-400 transition-colors mr-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+            </button>
+            <div>
+              <h1 id="header-title-detail" class="text-sm md:text-base font-bold text-white">Recap Absen</h1>
+              <p id="recap-date-label" class="text-yellow-400 text-xs font-medium"></p>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <main class="p-3 max-w-4xl mx-auto">
+        <div id="recap-loading" class="text-center py-12">
+          <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-slate-400 mt-4 text-sm">Memuat data...</p>
+        </div>
+
+        <div id="recap-content" class="hidden space-y-2">
+        </div>
+
+        <div id="recap-empty" class="hidden text-center py-12">
+          <div class="text-5xl mb-3">📭</div>
+          <p class="text-slate-400 text-sm">Tidak ada data absensi</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- PAGE 6: PHOTO GALLERY -->
+    <div id="page-photo-gallery" class="page min-h-full bg-primary">
+      <header class="bg-header p-3 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button onclick="showPage('page-recap')" class="text-white hover:text-orange-400 transition-colors mr-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+            </button>
+            <div>
+              <h1 id="header-title-gallery" class="text-sm md:text-base font-bold text-white">Galeri Foto</h1>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <main class="p-3 max-w-4xl mx-auto">
+        <div id="gallery-loading" class="text-center py-12">
+          <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-slate-400 mt-4 text-sm">Memuat galeri...</p>
+        </div>
+
+        <div id="gallery-folders" class="hidden grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+        </div>
+
+        <div id="gallery-empty" class="hidden text-center py-12">
+          <div class="text-5xl mb-3">📷</div>
+          <p class="text-slate-400 text-sm">Belum ada foto absen</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- PAGE 7: PHOTO DETAIL -->
+    <div id="page-photo-detail" class="page min-h-full bg-primary">
+      <header class="bg-header p-3 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button onclick="showPage('page-photo-gallery')" class="text-white hover:text-orange-400 transition-colors mr-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+            </button>
+            <div>
+              <h1 id="header-title-photo" class="text-sm md:text-base font-bold text-white">Foto Absen</h1>
+              <p id="photo-folder-date" class="text-yellow-400 text-xs font-medium"></p>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <main class="p-3 max-w-4xl mx-auto">
+        <div id="photo-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+        </div>
+
+        <div id="photos-empty" class="hidden text-center py-12">
+          <div class="text-5xl mb-3">📷</div>
+          <p class="text-slate-400 text-sm">Tidak ada foto</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- PAGE 8: APPS SCRIPT SETUP -->
+    <div id="page-apps-script" class="page min-h-full bg-primary">
+      <header class="bg-header p-3 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button onclick="goBackFromAppsScript()" class="text-white hover:text-orange-400 transition-colors mr-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+            </button>
+            <div>
+              <h1 id="header-title-script" class="text-sm md:text-base font-bold text-white">Setup Apps Script</h1>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <main class="p-3 max-w-4xl mx-auto space-y-4">
+        <div class="bg-slate-800/50 rounded-xl p-3 md:p-4 border border-slate-700">
+          <h2 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-xs">1</span>
+            Paste URL Apps Script
+          </h2>
+          <div class="flex gap-2">
+            <input 
+              type="url" 
+              id="script-url-input"
+              placeholder="https://script.google.com/macros/s/..."
+              class="flex-1 px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+            >
+            <button 
+              onclick="saveScriptUrl()"
+              class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-all text-sm"
+            >
+              Simpan
+            </button>
+          </div>
+          <p id="script-url-status" class="mt-2 text-xs"></p>
+        </div>
+
+        <div class="bg-slate-800/50 rounded-xl p-3 md:p-4 border border-slate-700">
+          <h2 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-xs">2</span>
+            Copy Kode Apps Script
+          </h2>
+          
+          <div class="relative">
+            <button 
+              onclick="copyScript()"
+              class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-600 hover:bg-orange-500 text-white text-xs rounded transition-all z-10"
+            >
+              Copy
+            </button>
+            <div class="code-block max-h-64 overflow-y-auto">
+              <pre id="apps-script-code">// ABSEN ARCHIPELAGO - Google Apps Script
+const SPREADSHEET_ID = '1FllBcwBjTr_jfPylhyWwHt6ZE16j6fJpSa0C9hYEw44';
+const SHEET_WORKERS = 'Form responses 1';
+const SHEET_ABSEN = 'Absen recap';
+const FOLDER_PHOTOS = '1CJ46h8M89mzc3XKEg-4hJPV-2voMN3OD';
+
+const COLORS = {
+  'Start Work': '#22c55e',
+  'Finish Work': '#3b82f6',
+  'Sakit': '#f97316',
+  'Standby': '#a855f7'
+};
+
+function doGet(e) {
+  const action = e.parameter.action;
+  try {
+    if (action === 'getWorkers') return jsonResponse(getWorkers());
+    if (action === 'getAttendance') return jsonResponse(getAttendance(e.parameter.date));
+    if (action === 'getPhotos') return jsonResponse(getPhotos(e.parameter.date));
+    if (action === 'getPhotoFolders') return jsonResponse(getPhotoFolders());
+    return jsonResponse({ error: 'Invalid action' });
+  } catch (error) { return jsonResponse({ error: error.message }); }
+}
+
+function doPost(e) {
+  try {
+    let data;
+    if (e.parameter && e.parameter.data) {
+      data = JSON.parse(e.parameter.data);
+    } else if (e.postData && e.postData.contents) {
+      data = JSON.parse(e.postData.contents);
+    } else {
+      return jsonResponse({ error: 'No data received' });
+    }
+    if (data.action === 'submitAttendance') return jsonResponse(submitAttendance(data));
+    if (data.action === 'uploadPhoto') return jsonResponse(uploadPhoto(data));
+    return jsonResponse({ error: 'Invalid action' });
+  } catch (error) { return jsonResponse({ error: error.message }); }
+}
+
+function jsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getWorkers() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_WORKERS);
+  if (!sheet) return { success: false, error: 'Sheet tidak ditemukan!', workers: [] };
+  const data = sheet.getDataRange().getValues();
+  const workers = [];
+  for (let i = 1; i < data.length; i++) {
+    const nama = data[i][1], foto = data[i][2];
+    if (nama && nama.toString().trim() !== '') {
+      workers.push({ id: i, name: nama.toString().trim(), photo: foto ? foto.toString().trim() : '' });
+    }
+  }
+  return { success: true, workers: workers };
+}
+
+function syncWorkersToAbsenSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const workersSheet = ss.getSheetByName(SHEET_WORKERS);
+  let absenSheet = ss.getSheetByName(SHEET_ABSEN);
+  
+  if (!absenSheet) {
+    absenSheet = ss.insertSheet(SHEET_ABSEN);
+    absenSheet.getRange('A1').setValue('Tanggal').setBackground('#1a2d4a').setFontColor('#ffffff').setFontWeight('bold');
+    absenSheet.getRange('A2').setValue('Jam').setBackground('#1a2d4a').setFontColor('#ffffff').setFontWeight('bold');
+  }
+  
+  const workersData = workersSheet.getDataRange().getValues();
+  const currentWorkers = [];
+  for (let i = 1; i < workersData.length; i++) {
+    const nama = workersData[i][1];
+    if (nama && nama.toString().trim() !== '') {
+      currentWorkers.push(nama.toString().trim());
+    }
+  }
+  
+  const lastRow = absenSheet.getLastRow();
+  const existingWorkers = [];
+  if (lastRow >= 3) {
+    const existingData = absenSheet.getRange(3, 1, lastRow - 2, 1).getValues();
+    for (let i = 0; i < existingData.length; i++) {
+      if (existingData[i][0]) existingWorkers.push(existingData[i][0].toString().trim());
+    }
+  }
+  
+  let nextRow = lastRow >= 3 ? lastRow + 1 : 3;
+  currentWorkers.forEach(worker => {
+    if (!existingWorkers.includes(worker)) {
+      absenSheet.getRange(nextRow, 1).setValue(worker).setBackground('#1a2d4a').setFontColor('#ffffff').setFontWeight('bold');
+      nextRow++;
+    }
+  });
+  
+  return currentWorkers;
+}
+
+function submitAttendance(data) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(SHEET_ABSEN);
+  
+  syncWorkersToAbsenSheet();
+  sheet = ss.getSheetByName(SHEET_ABSEN);
+  
+  const lastCol = sheet.getLastColumn();
+  const newCol = lastCol + 1;
+  
+  sheet.getRange(1, newCol).setValue(data.tanggal);
+  sheet.getRange(2, newCol).setValue(data.jam);
+  
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 3) {
+    const workerNames = sheet.getRange(3, 1, lastRow - 2, 1).getValues();
+    
+    const statusMap = {};
+    data.attendance.forEach(item => {
+      statusMap[item.name.trim()] = item.status;
+    });
+    
+    for (let i = 0; i < workerNames.length; i++) {
+      const workerName = workerNames[i][0].toString().trim();
+      const status = statusMap[workerName] || '-';
+      const cell = sheet.getRange(3 + i, newCol);
+      cell.setValue(status);
+      if (COLORS[status]) {
+        cell.setBackground(COLORS[status]).setFontColor('#ffffff');
+      }
+    }
+  }
+  
+  return { success: true, message: 'Absensi berhasil disimpan!' };
+}
+
+function getAttendance(date) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_ABSEN);
+  if (!sheet) return { success: true, data: [] };
+  
+  const allData = sheet.getDataRange().getValues();
+  if (allData.length < 3) return { success: true, data: [] };
+  
+  const results = [];
+  
+  for (let col = 1; col < allData[0].length; col++) {
+    const tanggal = allData[0][col];
+    if (tanggal === date) {
+      const jam = allData[1][col];
+      const workers = [];
+      
+      for (let row = 2; row < allData.length; row++) {
+        const workerName = allData[row][0];
+        if (workerName) {
+          workers.push({
+            name: workerName.toString().trim(),
+            status: allData[row][col] || '-'
+          });
+        }
+      }
+      
+      results.push({ tanggal: tanggal, jam: jam, workers: workers });
+    }
+  }
+  
+  return { success: true, data: results };
+}
+
+function uploadPhoto(data) {
+  const parentFolder = DriveApp.getFolderById(FOLDER_PHOTOS);
+  const folderName = data.tanggal.replace(/\//g, '-');
+  
+  let dateFolder;
+  const folders = parentFolder.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    dateFolder = folders.next();
+  } else {
+    dateFolder = parentFolder.createFolder(folderName);
+  }
+  
+  const base64Data = data.photo.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+  const blob = Utilities.newBlob(Utilities.base64Decode(base64Data), 'image/jpeg', 'foto_' + data.jam.replace(/:/g, '-') + '_' + data.index + '.jpg');
+  dateFolder.createFile(blob);
+  
+  return { success: true };
+}
+
+function getPhotoFolders() {
+  try {
+    const parentFolder = DriveApp.getFolderById(FOLDER_PHOTOS);
+    const folders = parentFolder.getFolders();
+    const folderList = [];
+    
+    while (folders.hasNext()) {
+      const folder = folders.next();
+      folderList.push(folder.getName());
+    }
+    
+    folderList.sort((a, b) => {
+      const dateA = a.split('-').reverse().join('-');
+      const dateB = b.split('-').reverse().join('-');
+      return dateB.localeCompare(dateA);
+    });
+    
+    return { success: true, folders: folderList };
+  } catch (error) {
+    return { success: false, error: error.message, folders: [] };
+  }
+}
+
+function getPhotos(date) {
+  try {
+    const parentFolder = DriveApp.getFolderById(FOLDER_PHOTOS);
+    const folderName = date.replace(/\//g, '-');
+    const folders = parentFolder.getFoldersByName(folderName);
+    
+    if (!folders.hasNext()) {
+      return { success: true, photos: [] };
+    }
+    
+    const dateFolder = folders.next();
+    const files = dateFolder.getFiles();
+    const photos = [];
+    
+    while (files.hasNext()) {
+      const file = files.next();
+      if (file.getMimeType().startsWith('image/')) {
+        photos.push({
+          name: file.getName(),
+          url: 'https://lh3.googleusercontent.com/d/' + file.getId(),
+          id: file.getId()
+        });
+      }
+    }
+    
+    return { success: true, photos: photos };
+  } catch (error) {
+    return { success: false, error: error.message, photos: [] };
+  }
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <button 
+          onclick="goBackFromAppsScript()"
+          class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all text-sm"
+        >
+          Kembali
+        </button>
+      </main>
+    </div>
+
+  </div>
+
+  <script>
+    const defaultConfig = {
+      app_title: 'ABSEN ONLINE DAILY WORKER I.B.L',
+      company_name: 'ABSEN ARCHIPELAGO'
+    };
+
+    let config = { ...defaultConfig };
+    let workers = [];
+    let attendanceStatus = {};
+    let uploadedPhotos = []; // Array untuk multiple photos
+    let currentPhotoIndex = 0; // Index untuk fullscreen viewer
+    let currentCalendarDate = new Date();
+    let isLoggedIn = false;
+    let scriptUrl = localStorage.getItem('appsScriptUrl') || 'https://script.google.com/macros/s/AKfycbydsNAiAuO9sM6wi63B8hxSkX93gg2EjrxHnP8nsnRiIRk2i-IbunhTgp8Is2ApwXFVHw/exec';
+    
+    // Location cache
+    let cachedLocation = null;
+    let cachedAddress = null;
+    let locationWatchId = null;
+
+    // Request location permission on page load
+    function requestLocationPermission() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            cachedLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            fetchAddress(cachedLocation.lat, cachedLocation.lng);
+            updateLocationStatus('success');
+          },
+          (error) => {
+            updateLocationStatus('error', error.message);
+            // Keep trying
+            setTimeout(requestLocationPermission, 3000);
+          },
+          { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+        );
+        
+        // Watch position for updates
+        locationWatchId = navigator.geolocation.watchPosition(
+          (position) => {
+            cachedLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            if (!cachedAddress) {
+              fetchAddress(cachedLocation.lat, cachedLocation.lng);
+            }
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        );
+      }
+    }
+
+    async function fetchAddress(lat, lng) {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+        const data = await response.json();
+        if (data && data.display_name) {
+          cachedAddress = data.display_name;
+          updateLocationStatus('success');
+        }
+      } catch (error) {
+        console.error('Failed to fetch address:', error);
+      }
+    }
+
+    function updateLocationStatus(status, message = '') {
+      const locationText = document.getElementById('location-text');
+      if (locationText) {
+        if (status === 'success' && cachedAddress) {
+          const shortAddress = cachedAddress.length > 50 ? cachedAddress.substring(0, 50) + '...' : cachedAddress;
+          locationText.textContent = shortAddress;
+          locationText.classList.remove('text-red-400');
+          locationText.classList.add('text-green-400');
+        } else if (status === 'error') {
+          locationText.textContent = 'Mengambil lokasi...';
+          locationText.classList.remove('text-green-400');
+          locationText.classList.add('text-slate-400');
+        } else {
+          locationText.textContent = 'Mengambil lokasi...';
+        }
+      }
+    }
+
+    function convertDriveLink(url) {
+      if (!url) return '';
+      if (url.includes('lh3.googleusercontent.com')) return url;
+      let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (match) return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (match) return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      return url;
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      
+      if (pageId === 'page-attendance') {
+        if (workers.length > 0) {
+          renderWorkers(workers);
+          updateCounter();
+          document.getElementById('loading-workers').classList.add('hidden');
+          document.getElementById('workers-grid').classList.remove('hidden');
+          document.getElementById('search-container').classList.remove('hidden');
+          document.getElementById('photo-section').classList.remove('hidden');
+          document.getElementById('submit-section').classList.remove('hidden');
+        } else {
+          loadWorkers();
+        }
+        updateDateTime();
+      } else if (pageId === 'page-calendar') {
+        renderCalendar();
+      } else if (pageId === 'page-photo-gallery') {
+        loadPhotoFolders();
+      } else if (pageId === 'page-apps-script') {
+        document.getElementById('script-url-input').value = scriptUrl;
+        updateScriptUrlStatus();
+      }
+    }
+
+    function goBackFromAppsScript() {
+      if (isLoggedIn) showPage('page-attendance');
+      else showPage('page-login');
+    }
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      if (username === 'archipelago' && password === 'balivibes') {
+        isLoggedIn = true;
+        document.getElementById('page-login').style.display = 'none';
+        showPage('page-attendance');
+      } else {
+        const errorEl = document.getElementById('login-error');
+        errorEl.textContent = 'Username atau password salah!';
+        errorEl.classList.remove('hidden');
+      }
+    });
+
+    function getTimezone() {
+      const offset = new Date().getTimezoneOffset();
+      if (offset === -420) return 'WIB';
+      if (offset === -480) return 'WITA';
+      if (offset === -540) return 'WIT';
+      return 'WIB';
+    }
+
+    function updateDateTime() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const tz = getTimezone();
+      
+      const pages = ['', '-recap', '-calendar', '-detail', '-gallery', '-photo', '-script'];
+      pages.forEach(suffix => {
+        const dateEl = document.getElementById('header-date' + suffix);
+        const timeEl = document.getElementById('header-time' + suffix);
+        const tzEl = document.getElementById('timezone-badge' + suffix);
+        if (dateEl) dateEl.textContent = dateStr;
+        if (timeEl) timeEl.textContent = timeStr;
+        if (tzEl) tzEl.textContent = tz;
+      });
+    }
+    
+    setInterval(updateDateTime, 1000);
+
+    async function loadWorkers() {
+      const loadingEl = document.getElementById('loading-workers');
+      const gridEl = document.getElementById('workers-grid');
+      const searchContainer = document.getElementById('search-container');
+      const photoSection = document.getElementById('photo-section');
+      const submitSection = document.getElementById('submit-section');
+      const noScriptWarning = document.getElementById('no-script-warning');
+
+      if (!scriptUrl) {
+        loadingEl.classList.add('hidden');
+        noScriptWarning.classList.remove('hidden');
+        return;
+      }
+
+      noScriptWarning.classList.add('hidden');
+      loadingEl.classList.remove('hidden');
+      gridEl.classList.add('hidden');
+
+      try {
+        const data = await fetchWithCallback(`${scriptUrl}?action=getWorkers`);
+        
+        if (data.success && data.workers) {
+          workers = data.workers;
+          renderWorkers(workers);
+          updateCounter();
+          
+          loadingEl.classList.add('hidden');
+          gridEl.classList.remove('hidden');
+          searchContainer.classList.remove('hidden');
+          photoSection.classList.remove('hidden');
+          submitSection.classList.remove('hidden');
+        } else {
+          throw new Error(data.error || 'Failed to load workers');
+        }
+      } catch (error) {
+        loadingEl.innerHTML = `
+          <div class="text-red-400 text-center">
+            <p class="text-base mb-2">Gagal memuat data</p>
+            <p class="text-xs mb-3 text-slate-400">${error.message}</p>
+            <button onclick="loadWorkers()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm">Coba Lagi</button>
+          </div>
+        `;
+      }
+    }
+
+    async function fetchWithCallback(url) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      try {
+        const response = await fetch(url, { method: 'GET', redirect: 'follow', signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        return JSON.parse(text);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') throw new Error('Koneksi timeout.');
+        throw error;
+      }
+    }
+
+    function renderWorkers(workerList, container = 'workers-grid') {
+      const grid = document.getElementById(container);
+      grid.innerHTML = '';
+
+      workerList.forEach(worker => {
+        const status = attendanceStatus[worker.id] || '';
+        const isSelected = status !== '';
+        
+        const card = document.createElement('div');
+        card.className = `card-worker bg-white rounded-xl p-3 border-2 ${isSelected ? 'status-selected' : 'border-slate-200'}`;
+        card.dataset.workerId = worker.id;
+        
+        const photoUrl = convertDriveLink(worker.photo);
+        
+        let photoHtml = '';
+        if (photoUrl && photoUrl.startsWith('http')) {
+          photoHtml = `<img src="${photoUrl}" alt="${worker.name}" class="w-20 h-20 rounded-full worker-photo mx-auto" onerror="this.outerHTML='<div class=\\'w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold mx-auto\\'>${worker.name.charAt(0).toUpperCase()}</div>'">`;
+        } else {
+          photoHtml = `<div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold mx-auto">${worker.name.charAt(0).toUpperCase()}</div>`;
+        }
+        
+        card.innerHTML = `
+          <div class="flex gap-3">
+            <div class="w-1/2 flex flex-col items-center justify-center gap-2">
+              ${photoHtml}
+              <p class="text-slate-800 font-semibold text-xs text-center leading-tight line-clamp-2">${worker.name}</p>
+            </div>
+            <div class="w-1/2 flex flex-col gap-1.5">
+              <div class="text-center py-1 rounded-lg ${status ? 'bg-pink-100' : 'bg-slate-100'}">
+                <p class="text-[10px] ${status ? 'text-pink-500 font-semibold' : 'text-slate-500'}">${status || 'Belum dipilih'}</p>
+              </div>
+              <div class="grid grid-cols-2 gap-1 flex-1">
+                <button onclick="setStatus(${worker.id}, 'Start Work', '${container}')" class="btn-status py-2 ${status === 'Start Work' ? 'bg-green-600 ring-2 ring-green-400' : 'bg-green-500 hover:bg-green-600'} text-white rounded-lg text-[10px] font-semibold transition-all">
+                  Start
+                </button>
+                <button onclick="setStatus(${worker.id}, 'Finish Work', '${container}')" class="btn-status py-2 ${status === 'Finish Work' ? 'bg-blue-600 ring-2 ring-blue-400' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg text-[10px] font-semibold transition-all">
+                  Finish
+                </button>
+                <button onclick="setStatus(${worker.id}, 'Sakit', '${container}')" class="btn-status py-2 ${status === 'Sakit' ? 'bg-orange-600 ring-2 ring-orange-400' : 'bg-orange-500 hover:bg-orange-600'} text-white rounded-lg text-[10px] font-semibold transition-all">
+                  Sakit
+                </button>
+                <button onclick="setStatus(${worker.id}, 'Standby', '${container}')" class="btn-status py-2 ${status === 'Standby' ? 'bg-purple-600 ring-2 ring-purple-400' : 'bg-purple-500 hover:bg-purple-600'} text-white rounded-lg text-[10px] font-semibold transition-all">
+                  Standby
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        grid.appendChild(card);
+      });
+    }
+
+    function setStatus(workerId, status, fromContainer) {
+      if (attendanceStatus[workerId] === status) {
+        delete attendanceStatus[workerId];
+      } else {
+        attendanceStatus[workerId] = status;
+      }
+      
+      renderWorkers(workers);
+      updateCounter();
+      
+      const searchInput = document.getElementById('search-input');
+      if (searchInput.value.trim() !== '') {
+        const query = searchInput.value.toLowerCase().trim();
+        const filtered = workers.filter(w => w.name.toLowerCase().includes(query));
+        renderWorkers(filtered, 'search-results');
+        
+        if (attendanceStatus[workerId]) {
+          setTimeout(() => clearSearch(), 1000);
+        }
+      }
+    }
+    
+    function updateCounter() {
+      const selectedCount = Object.keys(attendanceStatus).length;
+      const unselectedCount = workers.length - selectedCount;
+      document.getElementById('counter-selected').textContent = selectedCount;
+      document.getElementById('counter-unselected').textContent = unselectedCount;
+    }
+
+    function setAllPresent() {
+      workers.forEach(worker => { attendanceStatus[worker.id] = 'Start Work'; });
+      renderWorkers(workers);
+      updateCounter();
+      showNotification('Semua pekerja diset Start Work!');
+    }
+
+    function resetAllStatus() {
+      attendanceStatus = {};
+      renderWorkers(workers);
+      updateCounter();
+      showNotification('Status absensi direset!');
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const clearBtn = document.getElementById('clear-search');
+      const gridEl = document.getElementById('workers-grid');
+      const searchResults = document.getElementById('search-results');
+
+      if (query === '') {
+        clearBtn.classList.add('hidden');
+        gridEl.classList.remove('hidden');
+        searchResults.classList.add('hidden');
+        return;
+      }
+
+      clearBtn.classList.remove('hidden');
+      gridEl.classList.add('hidden');
+      searchResults.classList.remove('hidden');
+
+      const filtered = workers.filter(w => w.name.toLowerCase().includes(query));
+      
+      if (filtered.length > 0) {
+        renderWorkers(filtered, 'search-results');
+      } else {
+        searchResults.innerHTML = `<div class="col-span-full text-center py-6"><p class="text-slate-400 text-sm">Tidak ditemukan</p></div>`;
+      }
+    });
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('clear-search').classList.add('hidden');
+      document.getElementById('workers-grid').classList.remove('hidden');
+      document.getElementById('search-results').classList.add('hidden');
+      renderWorkers(workers);
+    }
+
+    // Photo handling with timemark
+    async function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Wait for location if not available
+      if (!cachedLocation || !cachedAddress) {
+        showNotification('Menunggu lokasi...', false);
+        await waitForLocation();
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const originalImage = e.target.result;
+        const timestampedImage = await addTimemark(originalImage);
+        uploadedPhotos.push(timestampedImage);
+        renderPhotoThumbnails();
+        event.target.value = ''; // Reset input for next photo
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function waitForLocation() {
+      return new Promise((resolve) => {
+        const checkLocation = setInterval(() => {
+          if (cachedLocation && cachedAddress) {
+            clearInterval(checkLocation);
+            resolve();
+          }
+        }, 500);
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkLocation);
+          resolve();
+        }, 10000);
+      });
+    }
+
+    async function addTimemark(imageDataUrl) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          canvas.width = img.width;
+          canvas.height = img.height;
+          
+          // Draw original image
+          ctx.drawImage(img, 0, 0);
+          
+          const now = new Date();
+          const padding = Math.min(canvas.width, canvas.height) * 0.03;
+          const fontSize = Math.min(canvas.width, canvas.height) * 0.035;
+          const smallFontSize = fontSize * 0.7;
+          
+          ctx.textBaseline = 'top';
+          
+          // === TOP RIGHT: TimeMark ===
+          ctx.font = `bold ${fontSize}px Poppins, sans-serif`;
+          const timeText = 'Time';
+          const markText = 'Mark';
+          const timeWidth = ctx.measureText(timeText).width;
+          const markWidth = ctx.measureText(markText).width;
+          
+          // TimeMark background
+          const topRightX = canvas.width - padding - timeWidth - markWidth - 10;
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+          ctx.beginPath();
+          ctx.roundRect(topRightX - 10, padding, timeWidth + markWidth + 30, fontSize * 2.5, 8);
+          ctx.fill();
+          
+          // Time (orange)
+          ctx.fillStyle = '#ff8c00';
+          ctx.fillText(timeText, topRightX, padding + 5);
+          
+          // Mark (white)
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(markText, topRightX + timeWidth, padding + 5);
+          
+          // 100% photo verified
+          ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText('100% photo verified', topRightX, padding + fontSize + 10);
+          
+          // === BOTTOM LEFT: Logo + Time + Date + Location ===
+          const bottomY = canvas.height - padding;
+          const leftX = padding;
+          
+          // Calculate total height needed
+          const lineHeight = fontSize * 1.3;
+          const addressLines = wrapText(ctx, cachedAddress || 'Location unavailable', canvas.width * 0.6, smallFontSize);
+          const totalHeight = 60 + lineHeight * 2 + (addressLines.length * smallFontSize * 1.2) + 20;
+          
+          // Background for bottom left
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+          ctx.beginPath();
+          ctx.roundRect(leftX - 5, bottomY - totalHeight, canvas.width * 0.7, totalHeight + 5, 8);
+          ctx.fill();
+          
+          // Logo card (white rounded rectangle with black logo)
+          const logoSize = 50;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.roundRect(leftX, bottomY - totalHeight + 5, logoSize, logoSize, 8);
+          ctx.fill();
+          
+          // Draw "A" as logo placeholder
+          ctx.fillStyle = '#000000';
+          ctx.font = `bold ${logoSize * 0.6}px Poppins, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText('A', leftX + logoSize/2, bottomY - totalHeight + 15);
+          ctx.textAlign = 'left';
+          
+          // Time display
+          const timeDisplay = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+          ctx.font = `bold ${fontSize * 1.2}px Poppins, sans-serif`;
+          ctx.fillStyle = '#ffffff';
+          const timeX = leftX + logoSize + 15;
+          let currentY = bottomY - totalHeight + 20;
+          ctx.fillText(timeDisplay, timeX, currentY);
+          
+          // Orange vertical line
+          const lineX = timeX + ctx.measureText(timeDisplay).width + 15;
+          ctx.strokeStyle = '#ff8c00';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(lineX, currentY - 5);
+          ctx.lineTo(lineX, currentY + fontSize * 2);
+          ctx.stroke();
+          
+          // Day and Date
+          const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+          const dateStr = now.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+          
+          ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(dayName, lineX + 15, currentY);
+          ctx.fillText(dateStr, lineX + 15, currentY + smallFontSize + 5);
+          
+          // Location with emoji
+          currentY = bottomY - totalHeight + logoSize + 20;
+          ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+          ctx.fillText('📍', leftX, currentY);
+          
+          // Address (wrapped)
+          let addressY = currentY;
+          addressLines.forEach((line, index) => {
+            ctx.fillText(line, leftX + smallFontSize + 5, addressY + (index * smallFontSize * 1.2));
+          });
+          
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        };
+        img.src = imageDataUrl;
+      });
+    }
+
+    function wrapText(ctx, text, maxWidth, fontSize) {
+      if (!text) return ['Location unavailable'];
+      ctx.font = `${fontSize}px Poppins, sans-serif`;
+      const words = text.split(/[,\s]+/);
+      const lines = [];
+      let currentLine = '';
+      
+      words.forEach(word => {
+        const testLine = currentLine ? currentLine + ' ' + word : word;
+        if (ctx.measureText(testLine).width > maxWidth) {
+          if (currentLine) lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      });
+      if (currentLine) lines.push(currentLine);
+      
+      return lines.slice(0, 3); // Max 3 lines
+    }
+
+    function renderPhotoThumbnails() {
+      const container = document.getElementById('photo-thumbnails');
+      const badge = document.getElementById('photo-count-badge');
+      
+      if (uploadedPhotos.length === 0) {
+        container.classList.add('hidden');
+        badge.classList.add('hidden');
+        return;
+      }
+      
+      container.classList.remove('hidden');
+      badge.classList.remove('hidden');
+      badge.textContent = `${uploadedPhotos.length} foto`;
+      
+      container.innerHTML = uploadedPhotos.map((photo, index) => `
+        <div class="photo-thumbnail relative aspect-square rounded-lg overflow-hidden bg-slate-700" onclick="openFullscreen(${index})">
+          <img src="${photo}" alt="Foto ${index + 1}" class="w-full h-full object-cover">
+          <button class="delete-btn" onclick="deletePhoto(${index}, event)">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function deletePhoto(index, event) {
+      event.stopPropagation();
+      uploadedPhotos.splice(index, 1);
+      renderPhotoThumbnails();
+    }
+
+    function openFullscreen(index) {
+      currentPhotoIndex = index;
+      const viewer = document.getElementById('fullscreen-viewer');
+      const image = document.getElementById('fullscreen-image');
+      const counter = document.getElementById('photo-counter');
+      
+      image.src = uploadedPhotos[index];
+      counter.textContent = `${index + 1} / ${uploadedPhotos.length}`;
+      viewer.classList.remove('hidden');
+    }
+
+    function closeFullscreen(event) {
+      if (event.target === document.getElementById('fullscreen-viewer') || 
+          event.target === document.getElementById('fullscreen-image')) {
+        document.getElementById('fullscreen-viewer').classList.add('hidden');
+      }
+    }
+
+    function navigatePhoto(direction, event) {
+      event.stopPropagation();
+      currentPhotoIndex += direction;
+      
+      if (currentPhotoIndex < 0) currentPhotoIndex = uploadedPhotos.length - 1;
+      if (currentPhotoIndex >= uploadedPhotos.length) currentPhotoIndex = 0;
+      
+      document.getElementById('fullscreen-image').src = uploadedPhotos[currentPhotoIndex];
+      document.getElementById('photo-counter').textContent = `${currentPhotoIndex + 1} / ${uploadedPhotos.length}`;
+    }
+
+    async function submitAttendance() {
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Mengirim...';
+
+      const now = new Date();
+      const tanggal = now.toLocaleDateString('id-ID');
+      const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+      const attendance = workers.map(w => ({
+        name: w.name,
+        status: attendanceStatus[w.id] || '-'
+      }));
+
+      try {
+        const formData = new FormData();
+        formData.append('data', JSON.stringify({ action: 'submitAttendance', tanggal, jam, attendance }));
+
+        const response = await fetch(scriptUrl, {
+          method: 'POST',
+          body: formData,
+          redirect: 'follow'
+        });
+
+        let result = { success: true };
+        try {
+          const text = await response.text();
+          if (text) result = JSON.parse(text);
+        } catch (e) {
+        }
+
+        // Upload all photos
+        for (let i = 0; i < uploadedPhotos.length; i++) {
+          const photoFormData = new FormData();
+          photoFormData.append('data', JSON.stringify({ 
+            action: 'uploadPhoto', 
+            tanggal, 
+            jam, 
+            photo: uploadedPhotos[i],
+            index: i + 1
+          }));
+          
+          await fetch(scriptUrl, {
+            method: 'POST',
+            body: photoFormData,
+            redirect: 'follow'
+          });
+        }
+
+        showNotification('Absen berhasil dikirim!');
+        attendanceStatus = {};
+        uploadedPhotos = [];
+        renderPhotoThumbnails();
+        renderWorkers(workers);
+        updateCounter();
+        
+      } catch (error) {
+        console.error('Submit error:', error);
+        showNotification('Gagal mengirim. Cek koneksi atau URL Script.', true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="w-4 h-4 transform rotate-[-35deg]" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>Kirim Absensi</span>';
+      }
+    }
+
+    async function showRecapToday() {
+      const today = new Date().toLocaleDateString('id-ID');
+      await showRecapForDate(today);
+    }
+
+    async function showRecapForDate(date) {
+      showPage('page-recap-detail');
+      document.getElementById('recap-date-label').textContent = date;
+      document.getElementById('recap-loading').classList.remove('hidden');
+      document.getElementById('recap-content').classList.add('hidden');
+      document.getElementById('recap-empty').classList.add('hidden');
+
+      try {
+        const response = await fetch(`${scriptUrl}?action=getAttendance&date=${encodeURIComponent(date)}`);
+        const result = await response.json();
+        document.getElementById('recap-loading').classList.add('hidden');
+
+        if (result.success && result.data.length > 0) {
+          renderRecapContent(result.data);
+          document.getElementById('recap-content').classList.remove('hidden');
+        } else {
+          document.getElementById('recap-empty').classList.remove('hidden');
+        }
+      } catch (error) {
+        document.getElementById('recap-loading').innerHTML = `<p class="text-red-400 text-sm">Error: ${error.message}</p>`;
+      }
+    }
+
+    function renderRecapContent(data) {
+      const container = document.getElementById('recap-content');
+      container.innerHTML = '';
+
+      data.forEach(record => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800/70 rounded-lg p-3 border border-slate-700';
+        
+        let workersHtml = record.workers.map(w => {
+          const statusColors = { 'Start Work': 'bg-green-500', 'Finish Work': 'bg-blue-500', 'Sakit': 'bg-orange-500', 'Standby': 'bg-purple-500', '-': 'bg-slate-600' };
+          return `<div class="flex items-center justify-between py-1.5 border-b border-slate-700 last:border-0">
+            <span class="text-white text-sm">${w.name}</span>
+            <span class="px-2 py-0.5 ${statusColors[w.status] || 'bg-slate-600'} text-white text-[10px] rounded-full">${w.status}</span>
+          </div>`;
+        }).join('');
+
+        card.innerHTML = `<div class="flex items-center gap-2 mb-2 text-orange-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="font-semibold text-sm">${record.jam}</span></div>${workersHtml}`;
+        container.appendChild(card);
+      });
+    }
+
+    function renderCalendar() {
+      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+      
+      document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
+      
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const container = document.getElementById('calendar-days');
+      container.innerHTML = '';
+      
+      for (let i = 0; i < firstDay; i++) {
+        container.appendChild(document.createElement('div'));
+      }
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateStr = date.toLocaleDateString('id-ID');
+        const isToday = new Date().toDateString() === date.toDateString();
+        
+        const dayCell = document.createElement('button');
+        dayCell.className = `calendar-day aspect-square rounded flex items-center justify-center text-white text-sm font-medium ${isToday ? 'bg-orange-500' : 'bg-slate-700/50 hover:bg-slate-600'}`;
+        dayCell.textContent = day;
+        dayCell.onclick = () => showRecapForDate(dateStr);
+        container.appendChild(dayCell);
+      }
+    }
+
+    function prevMonth() { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(); }
+    function nextMonth() { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(); }
+
+    async function loadPhotoFolders() {
+      const loading = document.getElementById('gallery-loading');
+      const folders = document.getElementById('gallery-folders');
+      const empty = document.getElementById('gallery-empty');
+
+      loading.classList.remove('hidden');
+      folders.classList.add('hidden');
+      empty.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${scriptUrl}?action=getPhotoFolders`);
+        const result = await response.json();
+        loading.classList.add('hidden');
+
+        if (result.success && result.folders.length > 0) {
+          renderPhotoFolders(result.folders);
+          folders.classList.remove('hidden');
+        } else {
+          empty.classList.remove('hidden');
+        }
+      } catch (error) {
+        loading.innerHTML = `<p class="text-red-400 text-sm">Error: ${error.message}</p>`;
+      }
+    }
+
+    function renderPhotoFolders(folderDates) {
+      const container = document.getElementById('gallery-folders');
+      container.innerHTML = '';
+
+      folderDates.forEach(date => {
+        const folder = document.createElement('button');
+        folder.className = 'gallery-folder bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-3 text-center';
+        folder.onclick = () => loadPhotosForDate(date);
+        folder.innerHTML = `<div class="text-2xl mb-1">📁</div><p class="text-white font-semibold text-xs">${date}</p>`;
+        container.appendChild(folder);
+      });
+    }
+
+    async function loadPhotosForDate(date) {
+      showPage('page-photo-detail');
+      document.getElementById('photo-folder-date').textContent = date;
+      
+      const grid = document.getElementById('photo-grid');
+      const empty = document.getElementById('photos-empty');
+      
+      grid.innerHTML = '<div class="col-span-full text-center py-8"><div class="inline-block w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>';
+      empty.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${scriptUrl}?action=getPhotos&date=${encodeURIComponent(date)}`);
+        const result = await response.json();
+
+        if (result.success && result.photos.length > 0) {
+          grid.innerHTML = '';
+          result.photos.forEach(photo => {
+            const photoEl = document.createElement('div');
+            photoEl.className = 'relative rounded-lg overflow-hidden bg-slate-800';
+            photoEl.innerHTML = `<img src="${photo.url}" alt="${photo.name}" class="w-full aspect-square object-cover" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23334155%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2212%22>No Image</text></svg>'"><div class="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-center"><span class="text-white text-xs">${photo.name}</span></div>`;
+            grid.appendChild(photoEl);
+          });
+        } else {
+          grid.innerHTML = '';
+          empty.classList.remove('hidden');
+        }
+      } catch (error) {
+        grid.innerHTML = `<p class="col-span-full text-center text-red-400 text-sm">Error: ${error.message}</p>`;
+      }
+    }
+
+    function saveScriptUrl() {
+      const input = document.getElementById('script-url-input');
+      const url = input.value.trim();
+      
+      if (url && url.startsWith('https://script.google.com/')) {
+        scriptUrl = url;
+        localStorage.setItem('appsScriptUrl', url);
+        updateScriptUrlStatus();
+        showNotification('URL tersimpan!');
+      } else {
+        showNotification('URL tidak valid!', true);
+      }
+    }
+
+    function updateScriptUrlStatus() {
+      const status = document.getElementById('script-url-status');
+      status.innerHTML = scriptUrl ? '<span class="text-green-400">✓ URL tersimpan</span>' : '<span class="text-slate-400">Belum ada URL</span>';
+    }
+
+    function copyScript() {
+      navigator.clipboard.writeText(document.getElementById('apps-script-code').textContent).then(() => showNotification('Kode di-copy!'));
+    }
+
+    function showNotification(message, isError = false) {
+      const notif = document.getElementById('notification');
+      const text = document.getElementById('notification-text');
+      text.textContent = message;
+      notif.querySelector('div').className = `${isError ? 'bg-red-500' : 'bg-green-500'} text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm`;
+      notif.classList.remove('hidden');
+      setTimeout(() => notif.classList.add('hidden'), 3000);
+    }
+
+    async function onConfigChange(newConfig) {
+      config = { ...config, ...newConfig };
+      document.getElementById('header-title').textContent = config.app_title || defaultConfig.app_title;
+    }
+
+    function mapToCapabilities(config) {
+      return { recolorables: [], borderables: [], fontEditable: undefined, fontSizeable: undefined };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['app_title', config.app_title || defaultConfig.app_title],
+        ['company_name', config.company_name || defaultConfig.company_name]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({ defaultConfig, onConfigChange, mapToCapabilities, mapToEditPanelValues });
+    }
+
+    // Initialize
+    updateDateTime();
+    requestLocationPermission(); // Request location on page load
+  </script>
+</body>
+</html>
