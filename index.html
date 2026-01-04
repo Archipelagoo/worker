@@ -833,19 +833,37 @@ function getPhotos(date) {
     let isLoggedIn = false;
     let currentRecapDate = '';
     let currentRecapData = [];
-    let recapSource = 'today'; // 'today' or 'calendar'
+    let recapSource = 'today';
     let calendarDataCache = {};
     const SAVED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydsNAiAuO9sM6wi63B8hxSkX93gg2EjrxHnP8nsnRiIRk2i-IbunhTgp8Is2ApwXFVHw/exec';
     let scriptUrl = localStorage.getItem('appsScriptUrl') || SAVED_SCRIPT_URL;
     let cachedLocation = null;
     let cachedAddress = null;
+    let cachedLogoBase64 = null;
 
-    // Store status workers for modal (unique per person)
     window.currentStatusWorkers = { 'Start Work': [], 'Finish Work': [], 'Sakit': [], 'Standby': [], 'Belum Absen': [] };
     
-    // Gallery photo viewer
     let galleryPhotos = [];
     let currentGalleryIndex = 0;
+
+    // Pre-load logo as base64 for PDF
+    function preloadLogoForPDF() {
+      const logoUrl = config.logo_url || LOGO_URL;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        cachedLogoBase64 = canvas.toDataURL('image/png');
+      };
+      img.onerror = function() {
+        cachedLogoBase64 = null;
+      };
+      img.src = logoUrl;
+    }
 
     function requestLocationPermission() {
       if ('geolocation' in navigator) {
@@ -911,6 +929,8 @@ function getPhotos(date) {
           if (fallback) fallback.classList.add('hidden');
         }
       });
+      
+      preloadLogoForPDF();
     }
 
     function showPage(pageId) {
@@ -1420,7 +1440,6 @@ function getPhotos(date) {
       const timeColumns = [];
       const workersMap = new Map();
       
-      // Get all workers from the master list
       const allWorkerNames = workers.map(w => w.name);
       
       data.forEach(record => {
@@ -1435,8 +1454,7 @@ function getPhotos(date) {
         });
       });
 
-      // Calculate unique status per person (1 person = 1 count max per status)
-      const workerStatusSets = new Map(); // Map<workerName, Set<status>>
+      const workerStatusSets = new Map();
       
       workersMap.forEach((statuses, workerName) => {
         const statusSet = new Set();
@@ -1448,15 +1466,12 @@ function getPhotos(date) {
         workerStatusSets.set(workerName, statusSet);
       });
 
-      // Count unique workers per status
       const counts = { 'Start Work': 0, 'Finish Work': 0, 'Sakit': 0, 'Standby': 0, 'Belum Absen': 0 };
       const statusWorkers = { 'Start Work': [], 'Finish Work': [], 'Sakit': [], 'Standby': [], 'Belum Absen': [] };
       
-      // Get all workers who appear in today's data
       const workersInData = new Set(workersMap.keys());
       
       workerStatusSets.forEach((statusSet, workerName) => {
-        // Count each status only once per person
         ['Start Work', 'Finish Work', 'Sakit', 'Standby'].forEach(status => {
           if (statusSet.has(status)) {
             counts[status]++;
@@ -1464,14 +1479,12 @@ function getPhotos(date) {
           }
         });
         
-        // If worker has NO valid status at all (only "-" or empty), count as Belum Absen
         if (statusSet.size === 0) {
           counts['Belum Absen']++;
           statusWorkers['Belum Absen'].push(workerName);
         }
       });
       
-      // Also count workers who are not in today's data at all as "Belum Absen"
       allWorkerNames.forEach(name => {
         if (!workersInData.has(name)) {
           counts['Belum Absen']++;
@@ -1479,7 +1492,6 @@ function getPhotos(date) {
         }
       });
 
-      // Store for modal
       window.currentStatusWorkers = statusWorkers;
 
       const displayTanggal = data[0]?.tanggal || currentRecapDate;
@@ -1601,7 +1613,6 @@ function getPhotos(date) {
       showPage('page-recap-jam');
     }
 
-    // Recap Jam Search
     document.getElementById('jam-search-input').addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
       const resultsContainer = document.getElementById('jam-search-results');
@@ -1904,7 +1915,6 @@ function getPhotos(date) {
       setTimeout(() => notif.classList.add('hidden'), 3000);
     }
 
-    // Gallery Fullscreen Functions
     function openGalleryFullscreen(index) {
       currentGalleryIndex = index;
       const viewer = document.getElementById('fullscreen-viewer');
@@ -1928,7 +1938,7 @@ function getPhotos(date) {
       document.getElementById('photo-counter').textContent = `${currentGalleryIndex + 1} / ${galleryPhotos.length}`;
     }
 
-    // PDF Download Function
+    // PDF Download Function - Rotated Table with Logo
     async function downloadRecapPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -1937,38 +1947,44 @@ function getPhotos(date) {
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // Header - Logo and Company Name
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      
-      // Logo placeholder (black circle with A)
-      doc.setFillColor(0, 0, 0);
-      doc.circle(margin + 8, 15, 8, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
-      doc.text('A', margin + 5.5, 18);
-      
-      // Company name next to logo
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Archipelago Film Service', margin + 20, 17);
-      
-      // Title - Recap Absensi Daily Worker (centered)
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Recap Absensi Daily Worker', pageWidth / 2, 32, { align: 'center' });
-      
-      // Date (centered) - format to Indonesian
+      // Format date to Indonesian
       const dateParts = currentRecapDate.split('/');
       const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
       const formattedDate = `${dateParts[0]} ${monthNames[parseInt(dateParts[1]) - 1]} ${dateParts[2]}`;
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.text(formattedDate, pageWidth / 2, 40, { align: 'center' });
       
-      // Prepare table data
+      // Header - Logo and Company Name
+      let logoWidth = 15;
+      let logoHeight = 15;
+      let headerStartX = margin;
+      
+      // Try to add logo
+      if (cachedLogoBase64) {
+        try {
+          doc.addImage(cachedLogoBase64, 'PNG', headerStartX, 10, logoWidth, logoHeight);
+          headerStartX = margin + logoWidth + 5;
+        } catch (e) {
+          // Logo failed, use text fallback
+          headerStartX = margin;
+        }
+      }
+      
+      // Company name next to logo
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('Archipelago Film Service', headerStartX, 18);
+      
+      // Title - Recap Absensi Daily Worker (centered)
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Recap Absensi Daily Worker', pageWidth / 2, 35, { align: 'center' });
+      
+      // Date (centered)
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(formattedDate, pageWidth / 2, 42, { align: 'center' });
+      
+      // Prepare data - ROTATED (transposed)
       const timeColumns = [];
       const workersMap = new Map();
       
@@ -1984,27 +2000,28 @@ function getPhotos(date) {
         });
       });
       
+      // Sort times
+      timeColumns.sort();
+      
+      // Get worker names
+      const workerNames = Array.from(workersMap.keys());
+      
       // Calculate work hours for each worker
       function calculateWorkerHours(statuses) {
-        const sessions = [];
         const sortedTimes = Object.keys(statuses).sort();
         let currentStart = null;
+        let totalMinutes = 0;
         
         sortedTimes.forEach(jam => {
           const status = statuses[jam];
           if (status === 'Start Work') {
             currentStart = jam;
           } else if (status === 'Finish Work' && currentStart) {
-            sessions.push({ start: currentStart, finish: jam });
+            const [sh, sm] = currentStart.split(':').map(Number);
+            const [fh, fm] = jam.split(':').map(Number);
+            totalMinutes += (fh * 60 + fm) - (sh * 60 + sm);
             currentStart = null;
           }
-        });
-        
-        let totalMinutes = 0;
-        sessions.forEach(s => {
-          const [sh, sm] = s.start.split(':').map(Number);
-          const [fh, fm] = s.finish.split(':').map(Number);
-          totalMinutes += (fh * 60 + fm) - (sh * 60 + sm);
         });
         
         const hours = Math.floor(totalMinutes / 60);
@@ -2012,79 +2029,109 @@ function getPhotos(date) {
         return `${hours} JAM ${minutes} MENIT`;
       }
       
-      // Build table headers
-      const headers = [['Nama Pekerja', ...timeColumns, 'Total Jam Kerja']];
+      // Build ROTATED table headers: Waktu | Worker1 | Worker2 | Worker3 | ...
+      const headers = [['Waktu', ...workerNames]];
       
-      // Build table body with colored text
+      // Build ROTATED table body
       const body = [];
       const cellStyles = [];
       
-      let rowIndex = 0;
-      workersMap.forEach((statuses, workerName) => {
-        const row = [workerName];
-        const rowStyles = [{ textColor: [0, 0, 0] }]; // Name is black
+      // Status color mapping
+      const statusColors = {
+        'Start Work': [34, 197, 94],
+        'Finish Work': [59, 130, 246],
+        'Sakit': [249, 115, 22],
+        'Standby': [168, 85, 247],
+        '-': [100, 116, 139]
+      };
+      
+      // Add data rows (each row = one time slot)
+      timeColumns.forEach(jam => {
+        const row = [jam];
+        const rowStyles = [{ textColor: [0, 0, 0], fontStyle: 'bold' }]; // Time column is bold black
         
-        timeColumns.forEach(jam => {
-          const status = statuses[jam] || '-';
+        workerNames.forEach(workerName => {
+          const status = workersMap.get(workerName)[jam] || '-';
           row.push(status);
-          
-          // Set text color based on status
-          let textColor = [0, 0, 0]; // default black
-          if (status === 'Start Work') textColor = [34, 197, 94]; // green
-          else if (status === 'Finish Work') textColor = [59, 130, 246]; // blue
-          else if (status === 'Sakit') textColor = [249, 115, 22]; // orange
-          else if (status === 'Standby') textColor = [168, 85, 247]; // purple
-          else if (status === '-') textColor = [100, 116, 139]; // gray
-          
-          rowStyles.push({ textColor: textColor });
+          rowStyles.push({ textColor: statusColors[status] || statusColors['-'] });
         });
-        
-        // Add total hours
-        const totalHours = calculateWorkerHours(statuses);
-        row.push(totalHours);
-        rowStyles.push({ textColor: [0, 0, 0], fontStyle: 'bold' });
         
         body.push(row);
         cellStyles.push(rowStyles);
-        rowIndex++;
       });
       
-      // Generate table with autoTable
+      // Add TOTAL JAM row at bottom
+      const totalRow = ['TOTAL JAM'];
+      const totalRowStyles = [{ textColor: [0, 0, 0], fontStyle: 'bold' }];
+      
+      workerNames.forEach(workerName => {
+        const hours = calculateWorkerHours(workersMap.get(workerName));
+        totalRow.push(hours);
+        totalRowStyles.push({ textColor: [0, 128, 128], fontStyle: 'bold' }); // Teal color for totals
+      });
+      
+      body.push(totalRow);
+      cellStyles.push(totalRowStyles);
+      
+      // Calculate font size based on number of workers
+      let fontSize = 8;
+      if (workerNames.length > 20) fontSize = 6;
+      if (workerNames.length > 30) fontSize = 5;
+      if (workerNames.length > 40) fontSize = 4;
+      
+      // Generate table
       doc.autoTable({
         head: headers,
         body: body,
         startY: 48,
         margin: { left: margin, right: margin },
         styles: {
-          fontSize: 8,
-          cellPadding: 2,
+          fontSize: fontSize,
+          cellPadding: 1.5,
           halign: 'center',
           valign: 'middle',
           lineColor: [100, 116, 139],
-          lineWidth: 0.1
+          lineWidth: 0.1,
+          overflow: 'linebreak'
         },
         headStyles: {
           fillColor: [30, 41, 59],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          fontSize: 8
+          fontSize: fontSize,
+          cellPadding: 2
         },
         columnStyles: {
-          0: { halign: 'left', cellWidth: 40 }
+          0: { halign: 'center', cellWidth: 18, fontStyle: 'bold' }
         },
         alternateRowStyles: {
           fillColor: [241, 245, 249]
         },
         didParseCell: function(data) {
-          if (data.section === 'body' && cellStyles[data.row]) {
-            const style = cellStyles[data.row][data.column.index];
-            if (style) {
+          // Style the last row (Total Jam) differently
+          if (data.section === 'body') {
+            if (data.row.index === body.length - 1) {
+              // Total row styling
+              data.cell.styles.fillColor = [226, 232, 240];
+              data.cell.styles.fontStyle = 'bold';
+              if (data.column.index > 0) {
+                data.cell.styles.textColor = [0, 128, 128];
+              }
+            } else if (cellStyles[data.row.index] && cellStyles[data.row.index][data.column.index]) {
+              const style = cellStyles[data.row.index][data.column.index];
               data.cell.styles.textColor = style.textColor;
               if (style.fontStyle) {
                 data.cell.styles.fontStyle = style.fontStyle;
               }
             }
           }
+        },
+        didDrawPage: function(data) {
+          // Add page number footer
+          const pageNumber = doc.internal.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.setTextColor(128, 128, 128);
+          doc.text(`Halaman ${pageNumber}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
         }
       });
       
@@ -2121,5 +2168,5 @@ function getPhotos(date) {
     requestLocationPermission();
     updateAllLogos();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8ccca83749c1c8',t:'MTc2NzU1MTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8cec2764ee9cf6',t:'MTc2NzU1MjYzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
