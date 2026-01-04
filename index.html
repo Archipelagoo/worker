@@ -783,6 +783,11 @@ function getPhotos(date) {
      <div class="text-center mb-4">
       <h2 class="text-xl md:text-2xl font-bold text-white">Recap Jam Kerja Worker</h2>
       <p id="recap-jam-date" class="text-yellow-400 text-sm font-medium mt-1"></p>
+     </div><!-- TOMBOL DOWNLOAD PDF DI ATAS SEARCH BAR -->
+     <div class="flex justify-end mb-2"><button onclick="downloadRecapJamPDF()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg> Download PDF </button>
      </div>
      <div class="relative mb-4">
       <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -1963,7 +1968,6 @@ function getPhotos(date) {
           doc.addImage(cachedLogoBase64, 'PNG', headerStartX, 10, logoWidth, logoHeight);
           headerStartX = margin + logoWidth + 5;
         } catch (e) {
-          // Logo failed, use text fallback
           headerStartX = margin;
         }
       }
@@ -2048,7 +2052,7 @@ function getPhotos(date) {
       // Add data rows (each row = one time slot)
       timeColumns.forEach(jam => {
         const row = [jam];
-        const rowStyles = [{ textColor: [0, 0, 0], fontStyle: 'bold' }]; // Time column is bold black
+        const rowStyles = [{ textColor: [0, 0, 0], fontStyle: 'bold' }];
         
         workerNames.forEach(workerName => {
           const status = workersMap.get(workerName)[jam] || '-';
@@ -2067,7 +2071,7 @@ function getPhotos(date) {
       workerNames.forEach(workerName => {
         const hours = calculateWorkerHours(workersMap.get(workerName));
         totalRow.push(hours);
-        totalRowStyles.push({ textColor: [0, 128, 128], fontStyle: 'bold' }); // Teal color for totals
+        totalRowStyles.push({ textColor: [0, 128, 128], fontStyle: 'bold' });
       });
       
       body.push(totalRow);
@@ -2108,10 +2112,8 @@ function getPhotos(date) {
           fillColor: [241, 245, 249]
         },
         didParseCell: function(data) {
-          // Style the last row (Total Jam) differently
           if (data.section === 'body') {
             if (data.row.index === body.length - 1) {
-              // Total row styling
               data.cell.styles.fillColor = [226, 232, 240];
               data.cell.styles.fontStyle = 'bold';
               if (data.column.index > 0) {
@@ -2127,7 +2129,6 @@ function getPhotos(date) {
           }
         },
         didDrawPage: function(data) {
-          // Add page number footer
           const pageNumber = doc.internal.getNumberOfPages();
           doc.setFontSize(8);
           doc.setTextColor(128, 128, 128);
@@ -2139,6 +2140,143 @@ function getPhotos(date) {
       const fileName = `Recap_Absensi_${currentRecapDate.replace(/\//g, '-')}.pdf`;
       doc.save(fileName);
       showNotification('PDF berhasil didownload!');
+    }
+
+    // PDF Download Function - Recap Jam Kerja
+    async function downloadRecapJamPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      
+      // Format date to Indonesian
+      const dateParts = currentRecapDate.split('/');
+      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const formattedDate = `${dateParts[0]} ${monthNames[parseInt(dateParts[1]) - 1]} ${dateParts[2]}`;
+      
+      // Header - Logo (black) and Company Name
+      let logoWidth = 15;
+      let logoHeight = 15;
+      let headerStartX = margin;
+      
+      // Try to add logo
+      if (cachedLogoBase64) {
+        try {
+          doc.addImage(cachedLogoBase64, 'PNG', headerStartX, 10, logoWidth, logoHeight);
+          headerStartX = margin + logoWidth + 5;
+        } catch (e) {
+          headerStartX = margin;
+        }
+      }
+      
+      // Company name next to logo
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('Archipelago Film Service', headerStartX, 18);
+      
+      // Title - RECAP JAM DAILY WORKER (centered)
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RECAP JAM DAILY WORKER', pageWidth / 2, 38, { align: 'center' });
+      
+      // Date (centered below title)
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(formattedDate, pageWidth / 2, 46, { align: 'center' });
+      
+      // Prepare data - Get all workers and calculate hours
+      const workersMap = new Map();
+      
+      currentRecapData.forEach(record => {
+        record.workers.forEach(w => {
+          if (!workersMap.has(w.name)) {
+            workersMap.set(w.name, {});
+          }
+          workersMap.get(w.name)[record.jam] = w.status;
+        });
+      });
+      
+      // Calculate work hours for each worker
+      function calculateWorkerHoursText(statuses) {
+        const sortedTimes = Object.keys(statuses).sort();
+        let currentStart = null;
+        let totalMinutes = 0;
+        
+        sortedTimes.forEach(jam => {
+          const status = statuses[jam];
+          if (status === 'Start Work') {
+            currentStart = jam;
+          } else if (status === 'Finish Work' && currentStart) {
+            const [sh, sm] = currentStart.split(':').map(Number);
+            const [fh, fm] = jam.split(':').map(Number);
+            totalMinutes += (fh * 60 + fm) - (sh * 60 + sm);
+            currentStart = null;
+          }
+        });
+        
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return `${hours} JAM ${minutes} MENIT`;
+      }
+      
+      // Build data array with names sorted alphabetically
+      const workerData = [];
+      workersMap.forEach((statuses, name) => {
+        workerData.push({
+          name: name,
+          totalJam: calculateWorkerHoursText(statuses)
+        });
+      });
+      
+      // Sort by name alphabetically (A-Z)
+      workerData.sort((a, b) => a.name.localeCompare(b.name, 'id'));
+      
+      // Build table
+      const headers = [['Nama', 'Total Jam Kerja']];
+      const body = workerData.map(w => [w.name, w.totalJam]);
+      
+      // Generate table
+      doc.autoTable({
+        head: headers,
+        body: body,
+        startY: 55,
+        margin: { left: margin, right: margin },
+        styles: {
+          fontSize: 10,
+          cellPadding: 4,
+          valign: 'middle',
+          lineColor: [100, 116, 139],
+          lineWidth: 0.1
+        },
+        headStyles: {
+          fillColor: [30, 41, 59],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 11,
+          halign: 'center'
+        },
+        columnStyles: {
+          0: { halign: 'left', cellWidth: 100 },
+          1: { halign: 'center', cellWidth: 65 }
+        },
+        alternateRowStyles: {
+          fillColor: [241, 245, 249]
+        },
+        didDrawPage: function(data) {
+          const pageNumber = doc.internal.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.setTextColor(128, 128, 128);
+          doc.text(`Halaman ${pageNumber}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+        }
+      });
+      
+      // Save PDF
+      const fileName = `Recap_Jam_Kerja_${currentRecapDate.replace(/\//g, '-')}.pdf`;
+      doc.save(fileName);
+      showNotification('PDF Recap Jam berhasil didownload!');
     }
 
     async function onConfigChange(newConfig) {
@@ -2168,5 +2306,5 @@ function getPhotos(date) {
     requestLocationPermission();
     updateAllLogos();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8cec2764ee9cf6',t:'MTc2NzU1MjYzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8d2378613f55de',t:'MTc2NzU1NDkwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
