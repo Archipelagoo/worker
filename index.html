@@ -631,6 +631,74 @@
       } catch (error) {}
     }
 
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    async function downloadPhotosToDevice(photos, tanggal, jam) {
+      const isIOSDevice = isIOS();
+      const formattedDate = tanggal.replace(/\//g, '-');
+      const formattedTime = jam.replace(/:/g, '-');
+      
+      if (isIOSDevice) {
+        // iPhone: Use Web Share API for each photo
+        showNotification('Menyiapkan foto untuk disimpan...');
+        
+        for (let i = 0; i < photos.length; i++) {
+          const photo = photos[i];
+          const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+          
+          try {
+            // Convert base64 to blob
+            const response = await fetch(photo);
+            const blob = await response.blob();
+            const file = new File([blob], fileName, { type: 'image/jpeg' });
+            
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: 'Foto Absensi',
+                text: `Foto Absen ${tanggal} ${jam}`
+              });
+            } else {
+              // Fallback: direct download
+              downloadPhotoFallback(photo, fileName);
+            }
+          } catch (error) {
+            if (error.name !== 'AbortError') {
+              // User cancelled share, try fallback
+              downloadPhotoFallback(photo, fileName);
+            }
+          }
+        }
+      } else {
+        // Android & Desktop: Direct download
+        showNotification('Mengunduh foto ke perangkat...');
+        
+        for (let i = 0; i < photos.length; i++) {
+          const photo = photos[i];
+          const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+          
+          // Small delay between downloads to prevent browser blocking
+          await new Promise(resolve => setTimeout(resolve, 300 * i));
+          downloadPhotoFallback(photo, fileName);
+        }
+        
+        showNotification(`${photos.length} foto berhasil diunduh!`);
+      }
+    }
+
+    function downloadPhotoFallback(dataUrl, fileName) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = fileName;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     function updateLocationStatus(status) {
       const locationText = document.getElementById('location-text');
       if (locationText) {
@@ -1117,7 +1185,7 @@
             
             const lineX = leftX + timeTextWidth + 20;
             ctx.strokeStyle = '#ffcc00';
-            ctx.lineWidth = 5;
+            ctx.lineWidth = 8;
             ctx.beginPath();
             ctx.moveTo(lineX, infoStartY);
             ctx.lineTo(lineX, infoStartY + lineHeight);
@@ -1276,6 +1344,12 @@
         }
 
         showNotification('Absen berhasil dikirim!');
+        
+        // Download photos to device after successful upload
+        if (uploadedPhotos.length > 0) {
+          await downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
+        }
+        
         attendanceStatus = {};
         uploadedPhotos = [];
         renderPhotoThumbnails();
@@ -1878,5 +1952,5 @@
     updateAllLogos();
     preloadTimemarkLogo();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8fbbf085a4807d',t:'MTc2NzU4MjExOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8fcabd361a4ad9',t:'MTc2NzU4MjcyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
