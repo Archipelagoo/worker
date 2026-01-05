@@ -115,6 +115,10 @@
     
     .mini-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .upload-progress { background: rgba(0,0,0,0.8); border-radius: 12px; padding: 20px; }
+    .progress-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); transition: width 0.3s ease; }
   </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -125,6 +129,19 @@
     <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
      </svg><span id="notification-text">Berhasil!</span>
+    </div>
+   </div><!-- UPLOAD PROGRESS MODAL -->
+   <div id="upload-progress-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+    <div class="upload-progress w-full max-w-sm text-center">
+     <div class="mb-4">
+      <div class="inline-block w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+     </div>
+     <p id="upload-status" class="text-white font-semibold mb-2">Mengirim absensi...</p>
+     <p id="upload-detail" class="text-slate-400 text-sm mb-4">Mengkompresi foto...</p>
+     <div class="progress-bar">
+      <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+     </div>
+     <p id="progress-text" class="text-slate-400 text-xs mt-2">0%</p>
     </div>
    </div><!-- FULLSCREEN PHOTO VIEWER -->
    <div id="fullscreen-viewer" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
@@ -509,7 +526,7 @@
      </div>
      <div id="jam-no-result" class="hidden text-center py-8">
       <div class="text-4xl mb-2">
-       �����
+       🔍
       </div>
       <p class="text-slate-400 text-sm">Ketik nama untuk mencari data jam kerja</p>
      </div>
@@ -530,7 +547,8 @@
     let config = { ...defaultConfig };
     let workers = [];
     let attendanceStatus = {};
-    let uploadedPhotos = [];
+    let uploadedPhotos = []; // Foto dengan timemark 100% quality untuk download
+    let uploadedPhotosCompressed = []; // Foto compressed 80% untuk upload
     let currentPhotoIndex = 0;
     let currentCalendarDate = new Date();
     let isLoggedIn = false;
@@ -548,6 +566,114 @@
     
     let galleryPhotos = [];
     let currentGalleryIndex = 0;
+
+    // ========== OPTIMASI: Compress foto untuk upload (80% quality) ==========
+    async function compressImageForUpload(dataUrl, quality = 0.8) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
+      });
+    }
+
+    // ========== OPTIMASI: Deteksi device ==========
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isAndroid() {
+      return /Android/i.test(navigator.userAgent);
+    }
+
+    // ========== OPTIMASI: Download foto ke device ==========
+    async function downloadPhotosToDevice(photos, tanggal, jam) {
+      const formattedDate = tanggal.replace(/\//g, '-');
+      const formattedTime = jam.replace(/:/g, '-');
+      
+      if (isIOS()) {
+        // iPhone: Use Web Share API untuk Share Sheet
+        for (let i = 0; i < photos.length; i++) {
+          const photo = photos[i];
+          const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+          
+          try {
+            const response = await fetch(photo);
+            const blob = await response.blob();
+            const file = new File([blob], fileName, { type: 'image/jpeg' });
+            
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: 'Foto Absensi',
+                text: `Foto Absen ${tanggal} ${jam}`
+              });
+            } else {
+              directDownload(photo, fileName);
+            }
+          } catch (error) {
+            if (error.name !== 'AbortError') {
+              directDownload(photo, fileName);
+            }
+          }
+        }
+      } else {
+        // Android & Laptop: Direct download tanpa popup
+        for (let i = 0; i < photos.length; i++) {
+          const photo = photos[i];
+          const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+          
+          // Delay antar download untuk mencegah browser blocking
+          if (i > 0) await new Promise(r => setTimeout(r, 200));
+          directDownload(photo, fileName);
+        }
+        
+        showNotification(`${photos.length} foto berhasil diunduh!`);
+      }
+    }
+
+    // Direct download tanpa popup (untuk Android & Laptop)
+    function directDownload(dataUrl, fileName) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = fileName;
+      link.style.display = 'none';
+      
+      // Tambahkan attribute untuk bypass popup
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup dengan delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
+    }
+
+    // ========== UPLOAD PROGRESS UI ==========
+    function showUploadProgress() {
+      document.getElementById('upload-progress-modal').classList.remove('hidden');
+    }
+
+    function hideUploadProgress() {
+      document.getElementById('upload-progress-modal').classList.add('hidden');
+    }
+
+    function updateUploadProgress(status, detail, percent) {
+      document.getElementById('upload-status').textContent = status;
+      document.getElementById('upload-detail').textContent = detail;
+      document.getElementById('progress-fill').style.width = percent + '%';
+      document.getElementById('progress-text').textContent = percent + '%';
+    }
 
     function preloadLogoForPDF() {
       const logoUrl = config.logo_url || APP_LOGO_URL;
@@ -629,74 +755,6 @@
           updateLocationStatus('success');
         }
       } catch (error) {}
-    }
-
-    function isIOS() {
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    }
-
-    async function downloadPhotosToDevice(photos, tanggal, jam) {
-      const isIOSDevice = isIOS();
-      const formattedDate = tanggal.replace(/\//g, '-');
-      const formattedTime = jam.replace(/:/g, '-');
-      
-      if (isIOSDevice) {
-        // iPhone: Use Web Share API for each photo
-        showNotification('Menyiapkan foto untuk disimpan...');
-        
-        for (let i = 0; i < photos.length; i++) {
-          const photo = photos[i];
-          const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-          
-          try {
-            // Convert base64 to blob
-            const response = await fetch(photo);
-            const blob = await response.blob();
-            const file = new File([blob], fileName, { type: 'image/jpeg' });
-            
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                files: [file],
-                title: 'Foto Absensi',
-                text: `Foto Absen ${tanggal} ${jam}`
-              });
-            } else {
-              // Fallback: direct download
-              downloadPhotoFallback(photo, fileName);
-            }
-          } catch (error) {
-            if (error.name !== 'AbortError') {
-              // User cancelled share, try fallback
-              downloadPhotoFallback(photo, fileName);
-            }
-          }
-        }
-      } else {
-        // Android & Desktop: Direct download
-        showNotification('Mengunduh foto ke perangkat...');
-        
-        for (let i = 0; i < photos.length; i++) {
-          const photo = photos[i];
-          const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-          
-          // Small delay between downloads to prevent browser blocking
-          await new Promise(resolve => setTimeout(resolve, 300 * i));
-          downloadPhotoFallback(photo, fileName);
-        }
-        
-        showNotification(`${photos.length} foto berhasil diunduh!`);
-      }
-    }
-
-    function downloadPhotoFallback(dataUrl, fileName) {
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = fileName;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
 
     function updateLocationStatus(status) {
@@ -1016,8 +1074,15 @@
       const reader = new FileReader();
       reader.onload = async (e) => {
         const originalImage = e.target.result;
+        
+        // Generate foto dengan timemark (100% quality untuk download)
         const timestampedImage = await addTimemark(originalImage);
         uploadedPhotos.push(timestampedImage);
+        
+        // Generate compressed version (80% quality untuk upload)
+        const compressedImage = await compressImageForUpload(timestampedImage, 0.8);
+        uploadedPhotosCompressed.push(compressedImage);
+        
         renderPhotoThumbnails();
         event.target.value = '';
       };
@@ -1117,11 +1182,9 @@
           const timeDisplay = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
           const timeFontSize = lineHeight;
           
-          // Ukuran card logo fixed (tidak mengikuti lebar jam)
-          const cardW = timeFontSize * 2.5; // Ukuran tetap
-          const cardH = cardW; // Kotak persegi
+          const cardW = timeFontSize * 2.5;
+          const cardH = cardW;
           
-          // Hitung lebar teks jam untuk positioning
           ctx.font = `bold ${timeFontSize}px 'Bebas Neue', Arial, sans-serif`;
           const timeTextWidth = ctx.measureText(timeDisplay).width;
           
@@ -1183,6 +1246,7 @@
             ctx.textAlign = 'left';
             ctx.fillText(timeDisplay, leftX, infoStartY);
             
+            // Garis kuning lebih tebal (8px)
             const lineX = leftX + timeTextWidth + 20;
             ctx.strokeStyle = '#ffcc00';
             ctx.lineWidth = 8;
@@ -1222,7 +1286,8 @@
               ctx.fillText('📍 Mengambil lokasi...', leftX, addressY);
             }
             
-            resolve(canvas.toDataURL('image/jpeg', 0.95));
+            // Save dengan 100% quality untuk download
+            resolve(canvas.toDataURL('image/jpeg', 1.0));
           };
           
           if (cachedTimemarkLogoBase64 && cachedTimemarkLogoBase64.length > 100) {
@@ -1265,6 +1330,7 @@
     function deletePhoto(index, event) {
       event.stopPropagation();
       uploadedPhotos.splice(index, 1);
+      uploadedPhotosCompressed.splice(index, 1);
       renderPhotoThumbnails();
     }
 
@@ -1317,10 +1383,10 @@
       return `${d}/${m}/${y}`;
     }
 
+    // ========== OPTIMASI: Submit Attendance dengan parallel upload ==========
     async function submitAttendance() {
       const btn = document.getElementById('submit-btn');
       btn.disabled = true;
-      btn.textContent = 'Mengirim...';
 
       const now = new Date();
       const tanggal = formatDateForSearch(now);
@@ -1331,36 +1397,76 @@
         status: attendanceStatus[w.id] || '-'
       }));
 
+      showUploadProgress();
+      
       try {
+        // Step 1: Kirim data absensi dulu
+        updateUploadProgress('Mengirim data absensi...', 'Menyimpan ke Google Sheets', 10);
+        
         const formData = new FormData();
         formData.append('data', JSON.stringify({ action: 'submitAttendance', tanggal, jam, attendance }));
-
-        await fetch(scriptUrl, { method: 'POST', body: formData, redirect: 'follow' });
-
-        for (let i = 0; i < uploadedPhotos.length; i++) {
-          const photoFormData = new FormData();
-          photoFormData.append('data', JSON.stringify({ action: 'uploadPhoto', tanggal, jam, photo: uploadedPhotos[i], index: i + 1 }));
-          await fetch(scriptUrl, { method: 'POST', body: photoFormData, redirect: 'follow' });
-        }
-
-        showNotification('Absen berhasil dikirim!');
         
-        // Download photos to device after successful upload
+        await fetch(scriptUrl, { method: 'POST', body: formData, redirect: 'follow' });
+        
+        // Step 2: Upload foto secara paralel (jika ada)
+        if (uploadedPhotosCompressed.length > 0) {
+          updateUploadProgress('Mengupload foto...', `0/${uploadedPhotosCompressed.length} foto`, 30);
+          
+          // Upload semua foto secara paralel
+          const uploadPromises = uploadedPhotosCompressed.map((photo, i) => {
+            return new Promise(async (resolve) => {
+              const photoFormData = new FormData();
+              photoFormData.append('data', JSON.stringify({ 
+                action: 'uploadPhoto', 
+                tanggal, 
+                jam, 
+                photo: photo, // Foto compressed 80%
+                index: i + 1 
+              }));
+              
+              try {
+                await fetch(scriptUrl, { method: 'POST', body: photoFormData, redirect: 'follow' });
+              } catch (e) {
+                console.error('Photo upload error:', e);
+              }
+              
+              // Update progress
+              const completed = i + 1;
+              const percent = 30 + Math.round((completed / uploadedPhotosCompressed.length) * 50);
+              updateUploadProgress('Mengupload foto...', `${completed}/${uploadedPhotosCompressed.length} foto`, percent);
+              resolve();
+            });
+          });
+          
+          await Promise.all(uploadPromises);
+        }
+        
+        // Step 3: Download foto ke device (100% quality)
         if (uploadedPhotos.length > 0) {
+          updateUploadProgress('Menyimpan foto ke device...', 'Mohon tunggu...', 90);
           await downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
         }
         
+        updateUploadProgress('Selesai!', 'Absensi berhasil dikirim', 100);
+        
+        // Reset state
         attendanceStatus = {};
         uploadedPhotos = [];
+        uploadedPhotosCompressed = [];
         renderPhotoThumbnails();
         renderWorkers(workers);
         updateCounter();
         
+        setTimeout(() => {
+          hideUploadProgress();
+          showNotification('Absen berhasil dikirim!');
+        }, 500);
+        
       } catch (error) {
+        hideUploadProgress();
         showNotification('Gagal mengirim. Cek koneksi atau URL Script.', true);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="w-4 h-4 transform rotate-[-35deg]" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>Kirim Absensi</span>';
       }
     }
 
@@ -1486,7 +1592,7 @@
           </div>
           <div class="status-card clickable rounded-lg p-3 text-center" style="background-color: #f97316;" onclick="showStatusModal('Sakit')">
             <p class="text-2xl font-bold text-white">${counts['Sakit']}</p>
-            <p class="text-xs font-medium text-white">Sakit ����</p>
+            <p class="text-xs font-medium text-white">Sakit 👆</p>
           </div>
           <div class="status-card clickable rounded-lg p-3 text-center" style="background-color: #a855f7;" onclick="showStatusModal('Standby')">
             <p class="text-2xl font-bold text-white">${counts['Standby']}</p>
@@ -1822,7 +1928,7 @@
         const folder = document.createElement('button');
         folder.className = 'gallery-folder bg-white rounded-xl p-3 text-center border border-slate-200 shadow-md';
         folder.onclick = () => loadPhotosForDate(date);
-        folder.innerHTML = `<div class="text-2xl mb-1">����</div><p class="text-slate-800 font-semibold text-xs">${date}</p>`;
+        folder.innerHTML = `<div class="text-2xl mb-1">📁</div><p class="text-slate-800 font-semibold text-xs">${date}</p>`;
         container.appendChild(folder);
       });
     }
@@ -1952,5 +2058,5 @@
     updateAllLogos();
     preloadTimemarkLogo();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8fcabd361a4ad9',t:'MTc2NzU4MjcyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8fe80f92241333',t:'MTc2NzU4MzkyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
