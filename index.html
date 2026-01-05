@@ -783,7 +783,7 @@ function getPhotos(date) {
      <div class="text-center mb-4">
       <h2 class="text-xl md:text-2xl font-bold text-white">Recap Jam Kerja Worker</h2>
       <p id="recap-jam-date" class="text-yellow-400 text-sm font-medium mt-1"></p>
-     </div><!-- TOMBOL DOWNLOAD PDF DI ATAS SEARCH BAR -->
+     </div>
      <div class="flex justify-end mb-2"><button onclick="downloadRecapJamPDF()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -851,7 +851,6 @@ function getPhotos(date) {
     let galleryPhotos = [];
     let currentGalleryIndex = 0;
 
-    // Pre-load logo as base64 for PDF
     function preloadLogoForPDF() {
       const logoUrl = config.logo_url || LOGO_URL;
       const img = new Image();
@@ -1229,6 +1228,7 @@ function getPhotos(date) {
       reader.readAsDataURL(file);
     }
 
+    // FUNGSI TIMEMARK BARU SESUAI FORMAT YANG DIMINTA
     async function addTimemark(imageDataUrl) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -1242,30 +1242,172 @@ function getPhotos(date) {
           
           const now = new Date();
           const padding = Math.min(canvas.width, canvas.height) * 0.03;
-          const fontSize = Math.min(canvas.width, canvas.height) * 0.04;
+          const fontSize = Math.min(canvas.width, canvas.height) * 0.05;
+          const smallFontSize = fontSize * 0.45;
           
+          // === KANAN ATAS: TimeMark ===
           ctx.textBaseline = 'top';
+          ctx.textAlign = 'right';
+          const rightX = canvas.width - padding;
+          
+          // Baris 1: Time[orange] Mark[putih]
           ctx.font = `bold ${fontSize}px Poppins, sans-serif`;
+          const markText = 'Mark';
+          const timeText = 'Time';
+          const markWidth = ctx.measureText(markText).width;
           
-          const timeDisplay = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-          const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-          
-          const bottomY = canvas.height - padding - fontSize * 3;
-          
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-          ctx.fillRect(padding - 5, bottomY - 5, canvas.width * 0.5, fontSize * 3 + 10);
-          
+          // Draw "Mark" putih
           ctx.fillStyle = '#ffffff';
-          ctx.fillText(timeDisplay, padding, bottomY);
-          ctx.font = `${fontSize * 0.7}px Poppins, sans-serif`;
-          ctx.fillText(dateStr, padding, bottomY + fontSize + 5);
+          ctx.fillText(markText, rightX, padding);
           
+          // Draw "Time" orange
+          ctx.fillStyle = '#ff8c00';
+          ctx.fillText(timeText, rightX - markWidth, padding);
+          
+          // Baris 2: 100% photo verified (putih)
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `bold ${smallFontSize}px Poppins, sans-serif`;
+          ctx.fillText('100% photo verified', rightX, padding + fontSize + 5);
+          
+          // === KIRI BAWAH ===
+          ctx.textAlign = 'left';
+          const leftX = padding;
+          const logoSize = fontSize * 1.5;
+          
+          // Hitung alamat multi-baris
+          let addressLines = [];
           if (cachedAddress) {
-            const shortAddr = cachedAddress.length > 40 ? cachedAddress.substring(0, 40) + '...' : cachedAddress;
-            ctx.fillText('📍 ' + shortAddr, padding, bottomY + fontSize * 2);
+            const maxCharsPerLine = 40;
+            let remaining = cachedAddress;
+            while (remaining.length > 0) {
+              if (remaining.length <= maxCharsPerLine) {
+                addressLines.push(remaining);
+                break;
+              } else {
+                let cutIndex = remaining.lastIndexOf(' ', maxCharsPerLine);
+                if (cutIndex === -1) cutIndex = maxCharsPerLine;
+                addressLines.push(remaining.substring(0, cutIndex));
+                remaining = remaining.substring(cutIndex).trim();
+              }
+            }
           }
           
-          resolve(canvas.toDataURL('image/jpeg', 0.9));
+          const addressHeight = addressLines.length * smallFontSize * 1.3;
+          const totalHeight = logoSize + 15 + addressHeight;
+          const bottomStartY = canvas.height - padding - totalHeight;
+          
+          // Baris 1: Logo dengan card rounded putih
+          const logoCardPadding = 8;
+          const logoCardSize = logoSize + logoCardPadding * 2;
+          
+          // Draw rounded card putih untuk logo
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          const cardRadius = 10;
+          const cardX = leftX;
+          const cardY = bottomStartY;
+          ctx.moveTo(cardX + cardRadius, cardY);
+          ctx.lineTo(cardX + logoCardSize - cardRadius, cardY);
+          ctx.quadraticCurveTo(cardX + logoCardSize, cardY, cardX + logoCardSize, cardY + cardRadius);
+          ctx.lineTo(cardX + logoCardSize, cardY + logoCardSize - cardRadius);
+          ctx.quadraticCurveTo(cardX + logoCardSize, cardY + logoCardSize, cardX + logoCardSize - cardRadius, cardY + logoCardSize);
+          ctx.lineTo(cardX + cardRadius, cardY + logoCardSize);
+          ctx.quadraticCurveTo(cardX, cardY + logoCardSize, cardX, cardY + logoCardSize - cardRadius);
+          ctx.lineTo(cardX, cardY + cardRadius);
+          ctx.quadraticCurveTo(cardX, cardY, cardX + cardRadius, cardY);
+          ctx.closePath();
+          ctx.fill();
+          
+          // Draw logo hitam atau fallback "A"
+          const drawLogoAndFinish = () => {
+            const infoStartX = leftX + logoCardSize + 15;
+            const infoStartY = bottomStartY;
+            
+            // Baris 2: Jam putih | garis orange | hari & tanggal
+            const timeDisplay = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+            const day = now.getDate();
+            const month = now.toLocaleDateString('en-US', { month: 'long' });
+            const year = now.getFullYear();
+            const dateDisplay = `${day} ${month} ${year}`;
+            
+            // Jam besar putih
+            ctx.font = `bold ${fontSize * 1.2}px Poppins, sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(timeDisplay, infoStartX, infoStartY + logoCardSize * 0.4);
+            
+            const timeTextWidth = ctx.measureText(timeDisplay).width;
+            
+            // Garis tegak orange
+            const lineX = infoStartX + timeTextWidth + 15;
+            ctx.strokeStyle = '#ff8c00';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(lineX, infoStartY + 8);
+            ctx.lineTo(lineX, infoStartY + logoCardSize - 8);
+            ctx.stroke();
+            
+            // Hari dan tanggal (2 baris)
+            const dateInfoX = lineX + 15;
+            ctx.font = `bold ${smallFontSize * 1.1}px Poppins, sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'top';
+            ctx.fillText(dayName, dateInfoX, infoStartY + 10);
+            ctx.fillText(dateDisplay, dateInfoX, infoStartY + 10 + smallFontSize * 1.4);
+            
+            // Baris 3: Emoji location + alamat lengkap
+            const addressY = bottomStartY + logoCardSize + 12;
+            ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'top';
+            
+            if (addressLines.length > 0) {
+              addressLines.forEach((line, index) => {
+                const prefix = index === 0 ? '📍 ' : '     ';
+                ctx.fillText(prefix + line, leftX, addressY + (index * smallFontSize * 1.3));
+              });
+            } else {
+              ctx.fillText('📍 Mengambil lokasi...', leftX, addressY);
+            }
+            
+            resolve(canvas.toDataURL('image/jpeg', 0.9));
+          };
+          
+          // Coba gambar logo
+          if (cachedLogoBase64) {
+            const logoImg = new Image();
+            logoImg.onload = () => {
+              // Gambar logo dengan filter hitam
+              ctx.save();
+              ctx.filter = 'grayscale(100%) brightness(0)';
+              ctx.drawImage(logoImg, leftX + logoCardPadding, bottomStartY + logoCardPadding, logoSize, logoSize);
+              ctx.restore();
+              drawLogoAndFinish();
+            };
+            logoImg.onerror = () => {
+              // Fallback: gambar "A" hitam
+              ctx.fillStyle = '#000000';
+              ctx.font = `bold ${logoSize * 0.6}px Poppins, sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText('A', leftX + logoCardSize / 2, bottomStartY + logoCardSize / 2);
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'top';
+              drawLogoAndFinish();
+            };
+            logoImg.src = cachedLogoBase64;
+          } else {
+            // Fallback: gambar "A" hitam
+            ctx.fillStyle = '#000000';
+            ctx.font = `bold ${logoSize * 0.6}px Poppins, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('A', leftX + logoCardSize / 2, bottomStartY + logoCardSize / 2);
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            drawLogoAndFinish();
+          }
         };
         img.src = imageDataUrl;
       });
@@ -1943,7 +2085,6 @@ function getPhotos(date) {
       document.getElementById('photo-counter').textContent = `${currentGalleryIndex + 1} / ${galleryPhotos.length}`;
     }
 
-    // PDF Download Function - Rotated Table with Logo
     async function downloadRecapPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -1952,17 +2093,14 @@ function getPhotos(date) {
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // Format date to Indonesian
       const dateParts = currentRecapDate.split('/');
       const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
       const formattedDate = `${dateParts[0]} ${monthNames[parseInt(dateParts[1]) - 1]} ${dateParts[2]}`;
       
-      // Header - Logo and Company Name
       let logoWidth = 15;
       let logoHeight = 15;
       let headerStartX = margin;
       
-      // Try to add logo
       if (cachedLogoBase64) {
         try {
           doc.addImage(cachedLogoBase64, 'PNG', headerStartX, 10, logoWidth, logoHeight);
@@ -1972,23 +2110,19 @@ function getPhotos(date) {
         }
       }
       
-      // Company name next to logo
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text('Archipelago Film Service', headerStartX, 18);
       
-      // Title - Recap Absensi Daily Worker (centered)
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text('Recap Absensi Daily Worker', pageWidth / 2, 35, { align: 'center' });
       
-      // Date (centered)
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.text(formattedDate, pageWidth / 2, 42, { align: 'center' });
       
-      // Prepare data - ROTATED (transposed)
       const timeColumns = [];
       const workersMap = new Map();
       
@@ -2004,13 +2138,10 @@ function getPhotos(date) {
         });
       });
       
-      // Sort times
       timeColumns.sort();
       
-      // Get worker names
       const workerNames = Array.from(workersMap.keys());
       
-      // Calculate work hours for each worker
       function calculateWorkerHours(statuses) {
         const sortedTimes = Object.keys(statuses).sort();
         let currentStart = null;
@@ -2033,14 +2164,11 @@ function getPhotos(date) {
         return `${hours} JAM ${minutes} MENIT`;
       }
       
-      // Build ROTATED table headers: Waktu | Worker1 | Worker2 | Worker3 | ...
       const headers = [['Waktu', ...workerNames]];
       
-      // Build ROTATED table body
       const body = [];
       const cellStyles = [];
       
-      // Status color mapping
       const statusColors = {
         'Start Work': [34, 197, 94],
         'Finish Work': [59, 130, 246],
@@ -2049,7 +2177,6 @@ function getPhotos(date) {
         '-': [100, 116, 139]
       };
       
-      // Add data rows (each row = one time slot)
       timeColumns.forEach(jam => {
         const row = [jam];
         const rowStyles = [{ textColor: [0, 0, 0], fontStyle: 'bold' }];
@@ -2064,7 +2191,6 @@ function getPhotos(date) {
         cellStyles.push(rowStyles);
       });
       
-      // Add TOTAL JAM row at bottom
       const totalRow = ['TOTAL JAM'];
       const totalRowStyles = [{ textColor: [0, 0, 0], fontStyle: 'bold' }];
       
@@ -2077,13 +2203,11 @@ function getPhotos(date) {
       body.push(totalRow);
       cellStyles.push(totalRowStyles);
       
-      // Calculate font size based on number of workers
       let fontSize = 8;
       if (workerNames.length > 20) fontSize = 6;
       if (workerNames.length > 30) fontSize = 5;
       if (workerNames.length > 40) fontSize = 4;
       
-      // Generate table
       doc.autoTable({
         head: headers,
         body: body,
@@ -2136,13 +2260,11 @@ function getPhotos(date) {
         }
       });
       
-      // Save PDF
       const fileName = `Recap_Absensi_${currentRecapDate.replace(/\//g, '-')}.pdf`;
       doc.save(fileName);
       showNotification('PDF berhasil didownload!');
     }
 
-    // PDF Download Function - Recap Jam Kerja
     async function downloadRecapJamPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -2151,17 +2273,14 @@ function getPhotos(date) {
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // Format date to Indonesian
       const dateParts = currentRecapDate.split('/');
       const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
       const formattedDate = `${dateParts[0]} ${monthNames[parseInt(dateParts[1]) - 1]} ${dateParts[2]}`;
       
-      // Header - Logo (black) and Company Name
       let logoWidth = 15;
       let logoHeight = 15;
       let headerStartX = margin;
       
-      // Try to add logo
       if (cachedLogoBase64) {
         try {
           doc.addImage(cachedLogoBase64, 'PNG', headerStartX, 10, logoWidth, logoHeight);
@@ -2171,23 +2290,19 @@ function getPhotos(date) {
         }
       }
       
-      // Company name next to logo
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text('Archipelago Film Service', headerStartX, 18);
       
-      // Title - RECAP JAM DAILY WORKER (centered)
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text('RECAP JAM DAILY WORKER', pageWidth / 2, 38, { align: 'center' });
       
-      // Date (centered below title)
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.text(formattedDate, pageWidth / 2, 46, { align: 'center' });
       
-      // Prepare data - Get all workers and calculate hours
       const workersMap = new Map();
       
       currentRecapData.forEach(record => {
@@ -2199,7 +2314,6 @@ function getPhotos(date) {
         });
       });
       
-      // Calculate work hours for each worker
       function calculateWorkerHoursText(statuses) {
         const sortedTimes = Object.keys(statuses).sort();
         let currentStart = null;
@@ -2222,7 +2336,6 @@ function getPhotos(date) {
         return `${hours} JAM ${minutes} MENIT`;
       }
       
-      // Build data array with names sorted alphabetically
       const workerData = [];
       workersMap.forEach((statuses, name) => {
         workerData.push({
@@ -2231,14 +2344,11 @@ function getPhotos(date) {
         });
       });
       
-      // Sort by name alphabetically (A-Z)
       workerData.sort((a, b) => a.name.localeCompare(b.name, 'id'));
       
-      // Build table
       const headers = [['Nama', 'Total Jam Kerja']];
       const body = workerData.map(w => [w.name, w.totalJam]);
       
-      // Generate table
       doc.autoTable({
         head: headers,
         body: body,
@@ -2273,7 +2383,6 @@ function getPhotos(date) {
         }
       });
       
-      // Save PDF
       const fileName = `Recap_Jam_Kerja_${currentRecapDate.replace(/\//g, '-')}.pdf`;
       doc.save(fileName);
       showNotification('PDF Recap Jam berhasil didownload!');
@@ -2306,5 +2415,5 @@ function getPhotos(date) {
     requestLocationPermission();
     updateAllLogos();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8d2378613f55de',t:'MTc2NzU1NDkwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8f3134f4f4b5ae',t:'MTc2NzU3NjQzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
