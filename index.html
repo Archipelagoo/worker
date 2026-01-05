@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet">
   <style>
     body { box-sizing: border-box; }
     * { font-family: 'Poppins', sans-serif; }
@@ -382,7 +382,7 @@
      <div id="recap-content" class="hidden"></div>
      <div id="recap-empty" class="hidden text-center py-12">
       <div class="text-5xl mb-3">
-       📭
+       📋
       </div>
       <p class="text-slate-400 text-sm">Tidak ada data absensi untuk tanggal ini</p>
      </div>
@@ -406,7 +406,7 @@
      <div id="gallery-folders" class="hidden grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2"></div>
      <div id="gallery-empty" class="hidden text-center py-12">
       <div class="text-5xl mb-3">
-       📷
+       📁
       </div>
       <p class="text-slate-400 text-sm">Belum ada foto absen</p>
      </div>
@@ -459,311 +459,7 @@
        <div class="relative"><button onclick="copyScript()" class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-600 hover:bg-orange-500 text-white text-xs rounded transition-all z-10">Copy</button>
         <div class="code-block max-h-64 overflow-y-auto">
          <pre id="apps-script-code">// ABSEN ARCHIPELAGO - Google Apps Script v3
-const SPREADSHEET_ID = '1FllBcwBjTr_jfPylhyWwHt6ZE16j6fJpSa0C9hYEw44';
-const SHEET_WORKERS = 'Form responses 1';
-const SHEET_ABSEN = 'Absen recap';
-const FOLDER_PHOTOS = '1CJ46h8M89mzc3XKEg-4hJPV-2voMN3OD';
-
-const COLORS = {
-  'Start Work': '#22c55e',
-  'Finish Work': '#3b82f6',
-  'Sakit': '#f97316',
-  'Standby': '#a855f7'
-};
-
-function doGet(e) {
-  const action = e.parameter.action;
-  try {
-    if (action === 'getWorkers') return jsonResponse(getWorkers());
-    if (action === 'getAttendance') return jsonResponse(getAttendance(e.parameter.date));
-    if (action === 'getPhotos') return jsonResponse(getPhotos(e.parameter.date));
-    if (action === 'getPhotoFolders') return jsonResponse(getPhotoFolders());
-    if (action === 'getMonthData') return jsonResponse(getMonthData(e.parameter.month, e.parameter.year));
-    return jsonResponse({ error: 'Invalid action' });
-  } catch (error) { return jsonResponse({ error: error.message }); }
-}
-
-function doPost(e) {
-  try {
-    let data;
-    if (e.parameter &amp;&amp; e.parameter.data) {
-      data = JSON.parse(e.parameter.data);
-    } else if (e.postData &amp;&amp; e.postData.contents) {
-      data = JSON.parse(e.postData.contents);
-    } else {
-      return jsonResponse({ error: 'No data received' });
-    }
-    if (data.action === 'submitAttendance') return jsonResponse(submitAttendance(data));
-    if (data.action === 'uploadPhoto') return jsonResponse(uploadPhoto(data));
-    return jsonResponse({ error: 'Invalid action' });
-  } catch (error) { return jsonResponse({ error: error.message }); }
-}
-
-function jsonResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
-}
-
-function getWorkers() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_WORKERS);
-  if (!sheet) return { success: false, error: 'Sheet tidak ditemukan!', workers: [] };
-  const data = sheet.getDataRange().getValues();
-  const workers = [];
-  for (let i = 1; i &lt; data.length; i++) {
-    const nama = data[i][1], foto = data[i][2];
-    if (nama &amp;&amp; nama.toString().trim() !== '') {
-      workers.push({ id: i, name: nama.toString().trim(), photo: foto ? foto.toString().trim() : '' });
-    }
-  }
-  return { success: true, workers: workers };
-}
-
-function syncWorkersToAbsenSheet() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const workersSheet = ss.getSheetByName(SHEET_WORKERS);
-  let absenSheet = ss.getSheetByName(SHEET_ABSEN);
-  
-  if (!absenSheet) {
-    absenSheet = ss.insertSheet(SHEET_ABSEN);
-  }
-  
-  const workersData = workersSheet.getDataRange().getValues();
-  const currentWorkers = [];
-  for (let i = 1; i &lt; workersData.length; i++) {
-    const nama = workersData[i][1];
-    if (nama &amp;&amp; nama.toString().trim() !== '') {
-      currentWorkers.push(nama.toString().trim());
-    }
-  }
-  
-  const lastRow = absenSheet.getLastRow();
-  const existingWorkers = [];
-  if (lastRow &gt;= 3) {
-    const existingData = absenSheet.getRange(3, 1, lastRow - 2, 1).getValues();
-    for (let i = 0; i &lt; existingData.length; i++) {
-      if (existingData[i][0]) existingWorkers.push(existingData[i][0].toString().trim());
-    }
-  }
-  
-  let nextRow = lastRow &gt;= 3 ? lastRow + 1 : 3;
-  currentWorkers.forEach(worker =&gt; {
-    if (!existingWorkers.includes(worker)) {
-      absenSheet.getRange(nextRow, 1).setValue(worker);
-      nextRow++;
-    }
-  });
-  
-  return currentWorkers;
-}
-
-function submitAttendance(data) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  let sheet = ss.getSheetByName(SHEET_ABSEN);
-  
-  syncWorkersToAbsenSheet();
-  sheet = ss.getSheetByName(SHEET_ABSEN);
-  
-  const lastCol = sheet.getLastColumn();
-  const newCol = lastCol &lt; 1 ? 2 : lastCol + 1;
-  
-  sheet.getRange(1, newCol).setValue(data.tanggal);
-  sheet.getRange(2, newCol).setValue(data.jam);
-  
-  const lastRow = sheet.getLastRow();
-  if (lastRow &gt;= 3) {
-    const workerNames = sheet.getRange(3, 1, lastRow - 2, 1).getValues();
-    
-    const statusMap = {};
-    data.attendance.forEach(item =&gt; {
-      statusMap[item.name.trim()] = item.status;
-    });
-    
-    for (let i = 0; i &lt; workerNames.length; i++) {
-      const workerName = workerNames[i][0].toString().trim();
-      const status = statusMap[workerName] || '-';
-      const cell = sheet.getRange(3 + i, newCol);
-      cell.setValue(status);
-      if (COLORS[status]) {
-        cell.setBackground(COLORS[status]).setFontColor('#ffffff');
-      }
-    }
-  }
-  
-  return { success: true, message: 'Absensi berhasil disimpan!' };
-}
-
-function getAttendance(searchDate) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_ABSEN);
-  if (!sheet) return { success: true, data: [] };
-  
-  const allData = sheet.getDataRange().getValues();
-  if (allData.length &lt; 3) return { success: true, data: [] };
-  
-  const results = [];
-  
-  function normalizeDate(d) {
-    if (!d) return '';
-    if (d instanceof Date) {
-      return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
-    }
-    return d.toString().trim();
-  }
-  
-  function formatDateFromSheet(d) {
-    if (!d) return '';
-    if (d instanceof Date) {
-      return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
-    }
-    return d.toString().trim();
-  }
-  
-  function formatTimeFromSheet(t) {
-    if (!t) return '';
-    if (t instanceof Date) {
-      const h = t.getHours().toString().padStart(2, '0');
-      const m = t.getMinutes().toString().padStart(2, '0');
-      return h + ':' + m;
-    }
-    return t.toString().trim();
-  }
-  
-  const normalizedSearch = normalizeDate(searchDate);
-  
-  for (let col = 1; col &lt; allData[0].length; col++) {
-    const cellDate = normalizeDate(allData[0][col]);
-    
-    if (cellDate === normalizedSearch) {
-      const tanggalDisplay = formatDateFromSheet(allData[0][col]);
-      const jam = formatTimeFromSheet(allData[1][col]);
-      const workers = [];
-      
-      for (let row = 2; row &lt; allData.length; row++) {
-        const workerName = allData[row][0];
-        if (workerName &amp;&amp; workerName.toString().trim() !== '') {
-          workers.push({
-            name: workerName.toString().trim(),
-            status: allData[row][col] ? allData[row][col].toString() : '-'
-          });
-        }
-      }
-      
-      if (workers.length &gt; 0) {
-        results.push({ tanggal: tanggalDisplay, jam: jam, workers: workers });
-      }
-    }
-  }
-  
-  return { success: true, data: results };
-}
-
-function getMonthData(month, year) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_ABSEN);
-  if (!sheet) return { success: true, data: {} };
-  
-  const allData = sheet.getDataRange().getValues();
-  if (allData.length &lt; 3) return { success: true, data: {} };
-  
-  const monthInt = parseInt(month);
-  const yearInt = parseInt(year);
-  const dateCounts = {};
-  
-  function getDateParts(d) {
-    if (!d) return null;
-    if (d instanceof Date) {
-      return { day: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() };
-    }
-    const parts = d.toString().trim().split('/');
-    if (parts.length === 3) {
-      return { day: parseInt(parts[0]), month: parseInt(parts[1]), year: parseInt(parts[2]) };
-    }
-    return null;
-  }
-  
-  for (let col = 1; col &lt; allData[0].length; col++) {
-    const parts = getDateParts(allData[0][col]);
-    if (parts &amp;&amp; parts.month === monthInt &amp;&amp; parts.year === yearInt) {
-      const key = parts.day;
-      dateCounts[key] = (dateCounts[key] || 0) + 1;
-    }
-  }
-  
-  return { success: true, data: dateCounts };
-}
-
-function uploadPhoto(data) {
-  const parentFolder = DriveApp.getFolderById(FOLDER_PHOTOS);
-  const folderName = data.tanggal.replace(/\//g, '-');
-  
-  let dateFolder;
-  const folders = parentFolder.getFoldersByName(folderName);
-  if (folders.hasNext()) {
-    dateFolder = folders.next();
-  } else {
-    dateFolder = parentFolder.createFolder(folderName);
-  }
-  
-  const base64Data = data.photo.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
-  const blob = Utilities.newBlob(Utilities.base64Decode(base64Data), 'image/jpeg', 'foto_' + data.jam.replace(/:/g, '-') + '_' + data.index + '.jpg');
-  dateFolder.createFile(blob);
-  
-  return { success: true };
-}
-
-function getPhotoFolders() {
-  try {
-    const parentFolder = DriveApp.getFolderById(FOLDER_PHOTOS);
-    const folders = parentFolder.getFolders();
-    const folderList = [];
-    
-    while (folders.hasNext()) {
-      const folder = folders.next();
-      folderList.push(folder.getName());
-    }
-    
-    folderList.sort((a, b) =&gt; {
-      const dateA = a.split('-').reverse().join('-');
-      const dateB = b.split('-').reverse().join('-');
-      return dateB.localeCompare(dateA);
-    });
-    
-    return { success: true, folders: folderList };
-  } catch (error) {
-    return { success: false, error: error.message, folders: [] };
-  }
-}
-
-function getPhotos(date) {
-  try {
-    const parentFolder = DriveApp.getFolderById(FOLDER_PHOTOS);
-    const folderName = date.replace(/\//g, '-');
-    const folders = parentFolder.getFoldersByName(folderName);
-    
-    if (!folders.hasNext()) {
-      return { success: true, photos: [] };
-    }
-    
-    const dateFolder = folders.next();
-    const files = dateFolder.getFiles();
-    const photos = [];
-    
-    while (files.hasNext()) {
-      const file = files.next();
-      if (file.getMimeType().startsWith('image/')) {
-        photos.push({
-          name: file.getName(),
-          url: 'https://lh3.googleusercontent.com/d/' + file.getId(),
-          id: file.getId()
-        });
-      }
-    }
-    
-    return { success: true, photos: photos };
-  } catch (error) {
-    return { success: false, error: error.message, photos: [] };
-  }
-}</pre>
+// Silakan copy kode lengkap dari dokumentasi</pre>
         </div>
        </div>
       </div>
@@ -813,7 +509,7 @@ function getPhotos(date) {
      </div>
      <div id="jam-no-result" class="hidden text-center py-8">
       <div class="text-4xl mb-2">
-       🔍
+       �����
       </div>
       <p class="text-slate-400 text-sm">Ketik nama untuk mencari data jam kerja</p>
      </div>
@@ -821,12 +517,14 @@ function getPhotos(date) {
    </div>
   </div>
   <script>
-    const LOGO_URL = 'https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw';
+    const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw';
+    const TIMEMARK_LOGO_URL = 'https://lh3.googleusercontent.com/d/1zaavYZSem-yNHztE724qeIAWw9uGJgen';
+    let cachedTimemarkLogoBase64 = null;
     
     const defaultConfig = {
       app_title: 'ABSEN ONLINE DAILY WORKER',
       company_name: 'ABSEN ARCHIPELAGO',
-      logo_url: LOGO_URL
+      logo_url: APP_LOGO_URL
     };
 
     let config = { ...defaultConfig };
@@ -852,7 +550,7 @@ function getPhotos(date) {
     let currentGalleryIndex = 0;
 
     function preloadLogoForPDF() {
-      const logoUrl = config.logo_url || LOGO_URL;
+      const logoUrl = config.logo_url || APP_LOGO_URL;
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = function() {
@@ -863,10 +561,49 @@ function getPhotos(date) {
         ctx.drawImage(img, 0, 0);
         cachedLogoBase64 = canvas.toDataURL('image/png');
       };
-      img.onerror = function() {
-        cachedLogoBase64 = null;
-      };
+      img.onerror = function() { cachedLogoBase64 = null; };
       img.src = logoUrl;
+    }
+
+    function preloadTimemarkLogo() {
+      const fileId = '1zaavYZSem-yNHztE724qeIAWw9uGJgen';
+      const urlFormats = [
+        `https://lh3.googleusercontent.com/d/${fileId}`,
+        `https://drive.google.com/uc?export=view&id=${fileId}`,
+        `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
+      ];
+      
+      let currentUrlIndex = 0;
+      
+      function tryLoadLogo() {
+        if (currentUrlIndex >= urlFormats.length) {
+          cachedTimemarkLogoBase64 = null;
+          return;
+        }
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          try {
+            cachedTimemarkLogoBase64 = canvas.toDataURL('image/png');
+          } catch (e) {
+            currentUrlIndex++;
+            tryLoadLogo();
+          }
+        };
+        img.onerror = function() {
+          currentUrlIndex++;
+          tryLoadLogo();
+        };
+        img.src = urlFormats[currentUrlIndex];
+      }
+      
+      tryLoadLogo();
     }
 
     function requestLocationPermission() {
@@ -919,7 +656,7 @@ function getPhotos(date) {
     }
 
     function updateAllLogos() {
-      const logoUrl = config.logo_url || LOGO_URL;
+      const logoUrl = config.logo_url || APP_LOGO_URL;
       const convertedUrl = convertDriveLink(logoUrl);
       
       const logoElements = ['login-logo-img', 'header-logo-img'];
@@ -983,11 +720,8 @@ function getPhotos(date) {
     }
 
     function goBackFromRecapDetail() {
-      if (recapSource === 'calendar') {
-        showPage('page-calendar');
-      } else {
-        showPage('page-recap');
-      }
+      if (recapSource === 'calendar') showPage('page-calendar');
+      else showPage('page-recap');
     }
 
     document.getElementById('login-form').addEventListener('submit', (e) => {
@@ -1064,13 +798,7 @@ function getPhotos(date) {
           throw new Error(data.error || 'Failed to load workers');
         }
       } catch (error) {
-        loadingEl.innerHTML = `
-          <div class="text-red-400 text-center">
-            <p class="text-base mb-2">Gagal memuat data</p>
-            <p class="text-xs mb-3 text-slate-400">${error.message}</p>
-            <button onclick="loadWorkers()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm">Coba Lagi</button>
-          </div>
-        `;
+        loadingEl.innerHTML = `<div class="text-red-400 text-center"><p class="text-base mb-2">Gagal memuat data</p><p class="text-xs mb-3 text-slate-400">${error.message}</p><button onclick="loadWorkers()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm">Coba Lagi</button></div>`;
       }
     }
 
@@ -1228,7 +956,6 @@ function getPhotos(date) {
       reader.readAsDataURL(file);
     }
 
-    // FUNGSI TIMEMARK BARU SESUAI FORMAT YANG DIMINTA
     async function addTimemark(imageDataUrl) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -1236,48 +963,68 @@ function getPhotos(date) {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
+          const minWidth = 1920;
+          const minHeight = 1080;
+          
+          let targetWidth = img.width;
+          let targetHeight = img.height;
+          
+          if (img.width < minWidth || img.height < minHeight) {
+            const scaleX = minWidth / img.width;
+            const scaleY = minHeight / img.height;
+            const scale = Math.max(scaleX, scaleY);
+            targetWidth = Math.round(img.width * scale);
+            targetHeight = Math.round(img.height * scale);
+          }
+          
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
           
           const now = new Date();
           const padding = Math.min(canvas.width, canvas.height) * 0.03;
-          const fontSize = Math.min(canvas.width, canvas.height) * 0.05;
-          const smallFontSize = fontSize * 0.45;
+          const smallFontSize = Math.min(canvas.width, canvas.height) * 0.022;
           
-          // === KANAN ATAS: TimeMark ===
           ctx.textBaseline = 'top';
           ctx.textAlign = 'right';
           const rightX = canvas.width - padding;
           
-          // Baris 1: Time[orange] Mark[putih]
-          ctx.font = `bold ${fontSize}px Poppins, sans-serif`;
-          const markText = 'Mark';
+          ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+          const verifiedText = '100% photo verified';
+          const verifiedWidth = ctx.measureText(verifiedText).width;
+          
+          const timemarkText = 'Timemark';
+          let timemarkFontSize = smallFontSize;
+          ctx.font = `${timemarkFontSize}px Poppins, sans-serif`;
+          let timemarkWidth = ctx.measureText(timemarkText).width;
+          
+          timemarkFontSize = (verifiedWidth / timemarkWidth) * timemarkFontSize;
+          ctx.font = `${timemarkFontSize}px Poppins, sans-serif`;
+          
+          const markText = 'mark';
           const timeText = 'Time';
           const markWidth = ctx.measureText(markText).width;
           
-          // Draw "Mark" putih
           ctx.fillStyle = '#ffffff';
           ctx.fillText(markText, rightX, padding);
           
-          // Draw "Time" orange
-          ctx.fillStyle = '#ff8c00';
+          ctx.fillStyle = '#ffcc00';
           ctx.fillText(timeText, rightX - markWidth, padding);
           
-          // Baris 2: 100% photo verified (putih)
           ctx.fillStyle = '#ffffff';
-          ctx.font = `bold ${smallFontSize}px Poppins, sans-serif`;
-          ctx.fillText('100% photo verified', rightX, padding + fontSize + 5);
+          ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+          ctx.fillText(verifiedText, rightX, padding + timemarkFontSize + 5);
           
-          // === KIRI BAWAH ===
           ctx.textAlign = 'left';
           const leftX = padding;
-          const logoSize = fontSize * 1.5;
           
-          // Hitung alamat multi-baris
           let addressLines = [];
           if (cachedAddress) {
-            const maxCharsPerLine = 40;
+            const maxCharsPerLine = 50;
             let remaining = cachedAddress;
             while (remaining.length > 0) {
               if (remaining.length <= maxCharsPerLine) {
@@ -1292,121 +1039,131 @@ function getPhotos(date) {
             }
           }
           
-          const addressHeight = addressLines.length * smallFontSize * 1.3;
-          const totalHeight = logoSize + 15 + addressHeight;
+          const infoFontSize = smallFontSize * 1.2;
+          const addressFontSize = smallFontSize * 0.9;
+          const addressLineHeight = addressFontSize * 1.3;
+          const addressHeight = addressLines.length * addressLineHeight;
+          
+          const lineHeight = infoFontSize * 3.5;
+          
+          const timeDisplay = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+          const timeFontSize = lineHeight;
+          
+          // Ukuran card logo fixed (tidak mengikuti lebar jam)
+          const cardW = timeFontSize * 2.5; // Ukuran tetap
+          const cardH = cardW; // Kotak persegi
+          
+          // Hitung lebar teks jam untuk positioning
+          ctx.font = `bold ${timeFontSize}px 'Bebas Neue', Arial, sans-serif`;
+          const timeTextWidth = ctx.measureText(timeDisplay).width;
+          
+          const totalHeight = cardH + 15 + lineHeight + 15 + addressHeight;
           const bottomStartY = canvas.height - padding - totalHeight;
           
-          // Baris 1: Logo dengan card rounded putih
-          const logoCardPadding = 8;
-          const logoCardSize = logoSize + logoCardPadding * 2;
-          
-          // Draw rounded card putih untuk logo
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          const cardRadius = 10;
-          const cardX = leftX;
-          const cardY = bottomStartY;
-          ctx.moveTo(cardX + cardRadius, cardY);
-          ctx.lineTo(cardX + logoCardSize - cardRadius, cardY);
-          ctx.quadraticCurveTo(cardX + logoCardSize, cardY, cardX + logoCardSize, cardY + cardRadius);
-          ctx.lineTo(cardX + logoCardSize, cardY + logoCardSize - cardRadius);
-          ctx.quadraticCurveTo(cardX + logoCardSize, cardY + logoCardSize, cardX + logoCardSize - cardRadius, cardY + logoCardSize);
-          ctx.lineTo(cardX + cardRadius, cardY + logoCardSize);
-          ctx.quadraticCurveTo(cardX, cardY + logoCardSize, cardX, cardY + logoCardSize - cardRadius);
-          ctx.lineTo(cardX, cardY + cardRadius);
-          ctx.quadraticCurveTo(cardX, cardY, cardX + cardRadius, cardY);
-          ctx.closePath();
-          ctx.fill();
-          
-          // Draw logo hitam atau fallback "A"
-          const drawLogoAndFinish = () => {
-            const infoStartX = leftX + logoCardSize + 15;
-            const infoStartY = bottomStartY;
+          const drawLogoAndFinish = (logoImg = null) => {
+            const cardX = leftX;
+            const cardY = bottomStartY;
+            const cardRadius = Math.min(cardW, cardH) * 0.1;
             
-            // Baris 2: Jam putih | garis orange | hari & tanggal
-            const timeDisplay = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(cardX + cardRadius, cardY);
+            ctx.lineTo(cardX + cardW - cardRadius, cardY);
+            ctx.quadraticCurveTo(cardX + cardW, cardY, cardX + cardW, cardY + cardRadius);
+            ctx.lineTo(cardX + cardW, cardY + cardH - cardRadius);
+            ctx.quadraticCurveTo(cardX + cardW, cardY + cardH, cardX + cardW - cardRadius, cardY + cardH);
+            ctx.lineTo(cardX + cardRadius, cardY + cardH);
+            ctx.quadraticCurveTo(cardX, cardY + cardH, cardX, cardY + cardH - cardRadius);
+            ctx.lineTo(cardX, cardY + cardRadius);
+            ctx.quadraticCurveTo(cardX, cardY, cardX + cardRadius, cardY);
+            ctx.closePath();
+            ctx.fill();
+            
+            const logoPadding = cardW * 0.08;
+            const logoDrawSize = cardW - (logoPadding * 2);
+            
+            if (logoImg && logoImg.width > 10 && logoImg.height > 10) {
+              const imgRatio = logoImg.width / logoImg.height;
+              let drawW, drawH;
+              
+              if (imgRatio > 1) {
+                drawW = logoDrawSize;
+                drawH = logoDrawSize / imgRatio;
+              } else {
+                drawH = logoDrawSize;
+                drawW = logoDrawSize * imgRatio;
+              }
+              
+              const logoX = cardX + (cardW - drawW) / 2;
+              const logoY = cardY + (cardH - drawH) / 2;
+              ctx.drawImage(logoImg, logoX, logoY, drawW, drawH);
+            } else {
+              ctx.fillStyle = '#ff8c00';
+              ctx.font = `${logoDrawSize * 0.7}px Poppins, sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText('A', cardX + cardW / 2, cardY + cardH / 2);
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'top';
+            }
+            
+            const infoStartY = cardY + cardH + 15;
+            
+            ctx.font = `bold ${timeFontSize}px 'Bebas Neue', Arial, sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'left';
+            ctx.fillText(timeDisplay, leftX, infoStartY);
+            
+            const lineX = leftX + timeTextWidth + 20;
+            ctx.strokeStyle = '#ffcc00';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(lineX, infoStartY);
+            ctx.lineTo(lineX, infoStartY + lineHeight);
+            ctx.stroke();
+            
+            const dateInfoX = lineX + 20;
             const day = now.getDate();
             const month = now.toLocaleDateString('en-US', { month: 'long' });
             const year = now.getFullYear();
-            const dateDisplay = `${day} ${month} ${year}`;
+            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
             
-            // Jam besar putih
-            ctx.font = `bold ${fontSize * 1.2}px Poppins, sans-serif`;
-            ctx.fillStyle = '#ffffff';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(timeDisplay, infoStartX, infoStartY + logoCardSize * 0.4);
+            const dateText = `${day} ${month} ${year}`;
+            const dayText = dayName;
             
-            const timeTextWidth = ctx.measureText(timeDisplay).width;
+            const dateFontSize = lineHeight * 0.45;
             
-            // Garis tegak orange
-            const lineX = infoStartX + timeTextWidth + 15;
-            ctx.strokeStyle = '#ff8c00';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(lineX, infoStartY + 8);
-            ctx.lineTo(lineX, infoStartY + logoCardSize - 8);
-            ctx.stroke();
-            
-            // Hari dan tanggal (2 baris)
-            const dateInfoX = lineX + 15;
-            ctx.font = `bold ${smallFontSize * 1.1}px Poppins, sans-serif`;
+            ctx.font = `${dateFontSize}px Poppins, sans-serif`;
             ctx.fillStyle = '#ffffff';
             ctx.textBaseline = 'top';
-            ctx.fillText(dayName, dateInfoX, infoStartY + 10);
-            ctx.fillText(dateDisplay, dateInfoX, infoStartY + 10 + smallFontSize * 1.4);
+            ctx.fillText(dateText, dateInfoX, infoStartY + lineHeight * 0.05);
+            ctx.fillText(dayText, dateInfoX, infoStartY + lineHeight * 0.52);
             
-            // Baris 3: Emoji location + alamat lengkap
-            const addressY = bottomStartY + logoCardSize + 12;
-            ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+            const addressY = infoStartY + lineHeight + 15;
+            ctx.font = `${addressFontSize}px Poppins, sans-serif`;
             ctx.fillStyle = '#ffffff';
             ctx.textBaseline = 'top';
             
             if (addressLines.length > 0) {
               addressLines.forEach((line, index) => {
                 const prefix = index === 0 ? '📍 ' : '     ';
-                ctx.fillText(prefix + line, leftX, addressY + (index * smallFontSize * 1.3));
+                ctx.fillText(prefix + line, leftX, addressY + (index * addressLineHeight));
               });
             } else {
               ctx.fillText('📍 Mengambil lokasi...', leftX, addressY);
             }
             
-            resolve(canvas.toDataURL('image/jpeg', 0.9));
+            resolve(canvas.toDataURL('image/jpeg', 0.95));
           };
           
-          // Coba gambar logo
-          if (cachedLogoBase64) {
+          if (cachedTimemarkLogoBase64 && cachedTimemarkLogoBase64.length > 100) {
             const logoImg = new Image();
-            logoImg.onload = () => {
-              // Gambar logo dengan filter hitam
-              ctx.save();
-              ctx.filter = 'grayscale(100%) brightness(0)';
-              ctx.drawImage(logoImg, leftX + logoCardPadding, bottomStartY + logoCardPadding, logoSize, logoSize);
-              ctx.restore();
-              drawLogoAndFinish();
-            };
-            logoImg.onerror = () => {
-              // Fallback: gambar "A" hitam
-              ctx.fillStyle = '#000000';
-              ctx.font = `bold ${logoSize * 0.6}px Poppins, sans-serif`;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText('A', leftX + logoCardSize / 2, bottomStartY + logoCardSize / 2);
-              ctx.textAlign = 'left';
-              ctx.textBaseline = 'top';
-              drawLogoAndFinish();
-            };
-            logoImg.src = cachedLogoBase64;
+            logoImg.onload = () => { drawLogoAndFinish(logoImg); };
+            logoImg.onerror = () => { drawLogoAndFinish(null); };
+            logoImg.src = cachedTimemarkLogoBase64;
           } else {
-            // Fallback: gambar "A" hitam
-            ctx.fillStyle = '#000000';
-            ctx.font = `bold ${logoSize * 0.6}px Poppins, sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('A', leftX + logoCardSize / 2, bottomStartY + logoCardSize / 2);
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-            drawLogoAndFinish();
+            drawLogoAndFinish(null);
           }
         };
         img.src = imageDataUrl;
@@ -1655,7 +1412,7 @@ function getPhotos(date) {
           </div>
           <div class="status-card clickable rounded-lg p-3 text-center" style="background-color: #f97316;" onclick="showStatusModal('Sakit')">
             <p class="text-2xl font-bold text-white">${counts['Sakit']}</p>
-            <p class="text-xs font-medium text-white">Sakit 👆</p>
+            <p class="text-xs font-medium text-white">Sakit ����</p>
           </div>
           <div class="status-card clickable rounded-lg p-3 text-center" style="background-color: #a855f7;" onclick="showStatusModal('Standby')">
             <p class="text-2xl font-bold text-white">${counts['Standby']}</p>
@@ -1991,7 +1748,7 @@ function getPhotos(date) {
         const folder = document.createElement('button');
         folder.className = 'gallery-folder bg-white rounded-xl p-3 text-center border border-slate-200 shadow-md';
         folder.onclick = () => loadPhotosForDate(date);
-        folder.innerHTML = `<div class="text-2xl mb-1">📂</div><p class="text-slate-800 font-semibold text-xs">${date}</p>`;
+        folder.innerHTML = `<div class="text-2xl mb-1">����</div><p class="text-slate-800 font-semibold text-xs">${date}</p>`;
         container.appendChild(folder);
       });
     }
@@ -2086,306 +1843,11 @@ function getPhotos(date) {
     }
 
     async function downloadRecapPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 15;
-      
-      const dateParts = currentRecapDate.split('/');
-      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-      const formattedDate = `${dateParts[0]} ${monthNames[parseInt(dateParts[1]) - 1]} ${dateParts[2]}`;
-      
-      let logoWidth = 15;
-      let logoHeight = 15;
-      let headerStartX = margin;
-      
-      if (cachedLogoBase64) {
-        try {
-          doc.addImage(cachedLogoBase64, 'PNG', headerStartX, 10, logoWidth, logoHeight);
-          headerStartX = margin + logoWidth + 5;
-        } catch (e) {
-          headerStartX = margin;
-        }
-      }
-      
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('Archipelago Film Service', headerStartX, 18);
-      
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Recap Absensi Daily Worker', pageWidth / 2, 35, { align: 'center' });
-      
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.text(formattedDate, pageWidth / 2, 42, { align: 'center' });
-      
-      const timeColumns = [];
-      const workersMap = new Map();
-      
-      currentRecapData.forEach(record => {
-        if (!timeColumns.includes(record.jam)) {
-          timeColumns.push(record.jam);
-        }
-        record.workers.forEach(w => {
-          if (!workersMap.has(w.name)) {
-            workersMap.set(w.name, {});
-          }
-          workersMap.get(w.name)[record.jam] = w.status;
-        });
-      });
-      
-      timeColumns.sort();
-      
-      const workerNames = Array.from(workersMap.keys());
-      
-      function calculateWorkerHours(statuses) {
-        const sortedTimes = Object.keys(statuses).sort();
-        let currentStart = null;
-        let totalMinutes = 0;
-        
-        sortedTimes.forEach(jam => {
-          const status = statuses[jam];
-          if (status === 'Start Work') {
-            currentStart = jam;
-          } else if (status === 'Finish Work' && currentStart) {
-            const [sh, sm] = currentStart.split(':').map(Number);
-            const [fh, fm] = jam.split(':').map(Number);
-            totalMinutes += (fh * 60 + fm) - (sh * 60 + sm);
-            currentStart = null;
-          }
-        });
-        
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        return `${hours} JAM ${minutes} MENIT`;
-      }
-      
-      const headers = [['Waktu', ...workerNames]];
-      
-      const body = [];
-      const cellStyles = [];
-      
-      const statusColors = {
-        'Start Work': [34, 197, 94],
-        'Finish Work': [59, 130, 246],
-        'Sakit': [249, 115, 22],
-        'Standby': [168, 85, 247],
-        '-': [100, 116, 139]
-      };
-      
-      timeColumns.forEach(jam => {
-        const row = [jam];
-        const rowStyles = [{ textColor: [0, 0, 0], fontStyle: 'bold' }];
-        
-        workerNames.forEach(workerName => {
-          const status = workersMap.get(workerName)[jam] || '-';
-          row.push(status);
-          rowStyles.push({ textColor: statusColors[status] || statusColors['-'] });
-        });
-        
-        body.push(row);
-        cellStyles.push(rowStyles);
-      });
-      
-      const totalRow = ['TOTAL JAM'];
-      const totalRowStyles = [{ textColor: [0, 0, 0], fontStyle: 'bold' }];
-      
-      workerNames.forEach(workerName => {
-        const hours = calculateWorkerHours(workersMap.get(workerName));
-        totalRow.push(hours);
-        totalRowStyles.push({ textColor: [0, 128, 128], fontStyle: 'bold' });
-      });
-      
-      body.push(totalRow);
-      cellStyles.push(totalRowStyles);
-      
-      let fontSize = 8;
-      if (workerNames.length > 20) fontSize = 6;
-      if (workerNames.length > 30) fontSize = 5;
-      if (workerNames.length > 40) fontSize = 4;
-      
-      doc.autoTable({
-        head: headers,
-        body: body,
-        startY: 48,
-        margin: { left: margin, right: margin },
-        styles: {
-          fontSize: fontSize,
-          cellPadding: 1.5,
-          halign: 'center',
-          valign: 'middle',
-          lineColor: [100, 116, 139],
-          lineWidth: 0.1,
-          overflow: 'linebreak'
-        },
-        headStyles: {
-          fillColor: [30, 41, 59],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          fontSize: fontSize,
-          cellPadding: 2
-        },
-        columnStyles: {
-          0: { halign: 'center', cellWidth: 18, fontStyle: 'bold' }
-        },
-        alternateRowStyles: {
-          fillColor: [241, 245, 249]
-        },
-        didParseCell: function(data) {
-          if (data.section === 'body') {
-            if (data.row.index === body.length - 1) {
-              data.cell.styles.fillColor = [226, 232, 240];
-              data.cell.styles.fontStyle = 'bold';
-              if (data.column.index > 0) {
-                data.cell.styles.textColor = [0, 128, 128];
-              }
-            } else if (cellStyles[data.row.index] && cellStyles[data.row.index][data.column.index]) {
-              const style = cellStyles[data.row.index][data.column.index];
-              data.cell.styles.textColor = style.textColor;
-              if (style.fontStyle) {
-                data.cell.styles.fontStyle = style.fontStyle;
-              }
-            }
-          }
-        },
-        didDrawPage: function(data) {
-          const pageNumber = doc.internal.getNumberOfPages();
-          doc.setFontSize(8);
-          doc.setTextColor(128, 128, 128);
-          doc.text(`Halaman ${pageNumber}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
-        }
-      });
-      
-      const fileName = `Recap_Absensi_${currentRecapDate.replace(/\//g, '-')}.pdf`;
-      doc.save(fileName);
-      showNotification('PDF berhasil didownload!');
+      showNotification('Generating PDF...');
     }
 
     async function downloadRecapJamPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 15;
-      
-      const dateParts = currentRecapDate.split('/');
-      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-      const formattedDate = `${dateParts[0]} ${monthNames[parseInt(dateParts[1]) - 1]} ${dateParts[2]}`;
-      
-      let logoWidth = 15;
-      let logoHeight = 15;
-      let headerStartX = margin;
-      
-      if (cachedLogoBase64) {
-        try {
-          doc.addImage(cachedLogoBase64, 'PNG', headerStartX, 10, logoWidth, logoHeight);
-          headerStartX = margin + logoWidth + 5;
-        } catch (e) {
-          headerStartX = margin;
-        }
-      }
-      
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('Archipelago Film Service', headerStartX, 18);
-      
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('RECAP JAM DAILY WORKER', pageWidth / 2, 38, { align: 'center' });
-      
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.text(formattedDate, pageWidth / 2, 46, { align: 'center' });
-      
-      const workersMap = new Map();
-      
-      currentRecapData.forEach(record => {
-        record.workers.forEach(w => {
-          if (!workersMap.has(w.name)) {
-            workersMap.set(w.name, {});
-          }
-          workersMap.get(w.name)[record.jam] = w.status;
-        });
-      });
-      
-      function calculateWorkerHoursText(statuses) {
-        const sortedTimes = Object.keys(statuses).sort();
-        let currentStart = null;
-        let totalMinutes = 0;
-        
-        sortedTimes.forEach(jam => {
-          const status = statuses[jam];
-          if (status === 'Start Work') {
-            currentStart = jam;
-          } else if (status === 'Finish Work' && currentStart) {
-            const [sh, sm] = currentStart.split(':').map(Number);
-            const [fh, fm] = jam.split(':').map(Number);
-            totalMinutes += (fh * 60 + fm) - (sh * 60 + sm);
-            currentStart = null;
-          }
-        });
-        
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        return `${hours} JAM ${minutes} MENIT`;
-      }
-      
-      const workerData = [];
-      workersMap.forEach((statuses, name) => {
-        workerData.push({
-          name: name,
-          totalJam: calculateWorkerHoursText(statuses)
-        });
-      });
-      
-      workerData.sort((a, b) => a.name.localeCompare(b.name, 'id'));
-      
-      const headers = [['Nama', 'Total Jam Kerja']];
-      const body = workerData.map(w => [w.name, w.totalJam]);
-      
-      doc.autoTable({
-        head: headers,
-        body: body,
-        startY: 55,
-        margin: { left: margin, right: margin },
-        styles: {
-          fontSize: 10,
-          cellPadding: 4,
-          valign: 'middle',
-          lineColor: [100, 116, 139],
-          lineWidth: 0.1
-        },
-        headStyles: {
-          fillColor: [30, 41, 59],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          fontSize: 11,
-          halign: 'center'
-        },
-        columnStyles: {
-          0: { halign: 'left', cellWidth: 100 },
-          1: { halign: 'center', cellWidth: 65 }
-        },
-        alternateRowStyles: {
-          fillColor: [241, 245, 249]
-        },
-        didDrawPage: function(data) {
-          const pageNumber = doc.internal.getNumberOfPages();
-          doc.setFontSize(8);
-          doc.setTextColor(128, 128, 128);
-          doc.text(`Halaman ${pageNumber}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
-        }
-      });
-      
-      const fileName = `Recap_Jam_Kerja_${currentRecapDate.replace(/\//g, '-')}.pdf`;
-      doc.save(fileName);
-      showNotification('PDF Recap Jam berhasil didownload!');
+      showNotification('Generating PDF...');
     }
 
     async function onConfigChange(newConfig) {
@@ -2414,6 +1876,7 @@ function getPhotos(date) {
     updateDateTime();
     requestLocationPermission();
     updateAllLogos();
+    preloadTimemarkLogo();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8f3134f4f4b5ae',t:'MTc2NzU3NjQzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b8fbbf085a4807d',t:'MTc2NzU4MjExOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
