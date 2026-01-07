@@ -1112,12 +1112,12 @@ function applyColorsToAllData() {
     let galleryPhotos = [];
     let currentGalleryIndex = 0;
 
-    function formatTanggalIndo(date) {
-      const d = date.getDate();
-      const m = BULAN_INDO[date.getMonth()];
-      const y = date.getFullYear();
-      return `${d} ${m} ${y}`;
-    }
+   function formatTanggalIndo(date) {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`; // Hasil: 07/01/2026
+}
 
     async function compressImageForUpload(dataUrl, quality = 0.3, maxSize = 600) {
       return new Promise((resolve) => {
@@ -1324,14 +1324,16 @@ function applyColorsToAllData() {
     }
 
     function convertDriveLink(url) {
-      if (!url) return '';
-      if (url.includes('lh3.googleusercontent.com')) return url;
-      let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-      if (match) return `https://lh3.googleusercontent.com/d/${match[1]}`;
-      match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      if (match) return `https://lh3.googleusercontent.com/d/${match[1]}`;
-      return url;
-    }
+  if (!url || url === '') return '';
+  if (url.includes('googleusercontent.com')) return url;
+  
+  // Mengambil ID file dari link Drive biasa
+  const match = url.match(/[-\w]{25,}/);
+  if (match) {
+    return `https://lh3.googleusercontent.com/d/${match[0]}`;
+  }
+  return url;
+}
 
     function updateAllLogos() {
       const logoUrl = config.logo_url || APP_LOGO_URL;
@@ -2290,10 +2292,29 @@ function applyColorsToAllData() {
     }
 
     function calculateMinutes(start, finish) {
-      const [sh, sm] = start.split(':').map(Number);
-      const [fh, fm] = finish.split(':').map(Number);
-      return (fh * 60 + fm) - (sh * 60 + sm);
-    }
+  if (!start || !finish) return 0;
+
+  const parseTime = (timeStr) => {
+    // Menghapus detik jika ada (misal 23:05:04 jadi 23:05)
+    // Dan mengubah titik (.) menjadi titik dua (:) agar seragam sebelum diproses
+    const cleanTime = timeStr.toString().replace(/\./g, ':');
+    const parts = cleanTime.split(':');
+    
+    const hours = parseInt(parts[0]) || 0;
+    const minutes = parseInt(parts[1]) || 0;
+    return (hours * 60) + minutes;
+  };
+
+  const startTotal = parseTime(start);
+  const finishTotal = parseTime(finish);
+
+  // Logika jika jam kerja melewati tengah malam (misal 22:00 - 02:00)
+  if (finishTotal < startTotal) {
+    return (1440 - startTotal) + finishTotal;
+  }
+
+  return finishTotal - startTotal;
+}
 
     async function renderCalendar() {
       const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
