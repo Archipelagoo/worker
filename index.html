@@ -7,66 +7,34 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  
-  <script src="https://archipelagoo.github.io/worker/_sdk/element_sdk.js"></script>
-<script src="https://archipelagoo.github.io/worker/_sdk/data_sdk.js"></script>
-
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
-    body { box-sizing: border-box; margin: 0; padding: 0; background-color: #0a1628; }
+    body { box-sizing: border-box; margin: 0; padding: 0; background-color: #0a1628; color: white; }
     * { font-family: 'Poppins', sans-serif; }
-    :root {
-      --bg-primary: #0a1628;
-      --bg-header: #1a2d4a;
-      --pink-bold: #ff1493;
-      --orange: #ff8c00;
-    }
-    .bg-primary { background-color: var(--bg-primary); }
-    .bg-header { background-color: var(--bg-header); }
-    .status-selected {
-      background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%) !important;
-      border: 2px solid #fff !important;
-      box-shadow: 0 0 12px rgba(255, 20, 147, 0.5) !important;
-      transform: scale(1.02);
-    }
+    .bg-header { background-color: #1a2d4a; }
     .page { display: none; min-height: 100vh; }
     .page.active { display: flex; flex-direction: column; }
     #page-login.active { align-items: center; justify-content: center; }
     #page-attendance.active { display: block; }
-    .card-worker { transition: all 0.3s ease; }
-    .card-worker:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-    .notification { animation: slideDown 0.3s ease-out; }
-    @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .worker-card { background: white; color: #1e293b; border-radius: 12px; padding: 12px; text-align: center; border: 2px solid #e2e8f0; }
   </style>
 </head>
-<body class="h-full bg-primary text-white">
+<body class="h-full">
   <div id="app" class="h-full w-full">
-    <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
-      <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-        <span id="notification-text">Berhasil!</span>
-      </div>
-    </div>
-
     <header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 flex items-center justify-center">
-            <img id="header-logo-img" class="w-full h-full object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo">
-          </div>
-          <h1 class="text-lg md:text-2xl font-bold uppercase">Absen Archipelago</h1>
-        </div>
+        <h1 class="text-lg md:text-2xl font-bold uppercase">Absen Archipelago</h1>
+        <p id="header-time" class="text-yellow-400 font-bold"></p>
       </div>
     </header>
 
     <div id="page-login" class="page active">
-      <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm fade-in text-slate-800 text-center">
-        <img class="w-32 h-32 mx-auto mb-4" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo">
+      <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm text-slate-800 text-center">
         <h1 class="text-xl font-bold mb-6">LOGIN ABSEN</h1>
         <form id="login-form" class="space-y-4">
-          <input type="text" id="username" placeholder="Username" class="w-full px-4 py-2 bg-slate-100 border rounded-xl outline-none focus:ring-2 focus:ring-green-500" required>
-          <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2 bg-slate-100 border rounded-xl outline-none focus:ring-2 focus:ring-green-500" required>
-          <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg transition-all">LOGIN</button>
+          <input type="text" id="username" placeholder="Username" class="w-full px-4 py-2 border rounded-xl" required>
+          <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2 border rounded-xl" required>
+          <button type="submit" class="w-full py-3 bg-green-500 text-white font-bold rounded-xl shadow-lg">LOGIN</button>
         </form>
         <p id="login-error" class="hidden text-red-500 text-xs mt-3">Username atau password salah!</p>
       </div>
@@ -74,20 +42,15 @@
 
     <div id="page-attendance" class="page">
       <main class="p-4 max-w-7xl mx-auto">
-        <div class="flex flex-wrap items-center gap-2 mb-6">
-          <button onclick="setAllPresent()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-all shadow-md">Hadir Semua</button>
-          <button onclick="resetAllStatus()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-all shadow-md">Reset</button>
+        <div class="flex items-center gap-2 mb-6">
+          <button class="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm">Hadir Semua</button>
           <div class="flex-1"></div>
-          
-          <button onclick="showPage('page-recap')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all shadow-md flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            Recap
-          </button>
+          <button onclick="showPage('page-recap')" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm flex items-center gap-2">Recap</button>
         </div>
 
         <div id="loading-workers" class="text-center py-20">
           <div class="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p class="mt-4 text-slate-400">Menghubungkan ke database...</p>
+          <p class="mt-4 text-slate-400 italic">Mengambil data dari Google Sheets...</p>
         </div>
 
         <div id="workers-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10"></div>
@@ -95,43 +58,63 @@
     </div>
 
     <div id="page-recap" class="page">
-        <main class="p-4 text-center">
-            <h2 class="text-2xl font-bold mb-4">Halaman Recap</h2>
+        <main class="p-10 text-center">
+            <h2 class="text-2xl font-bold mb-4 text-white">RECAP ABSEN</h2>
             <button onclick="showPage('page-attendance')" class="px-4 py-2 bg-slate-600 rounded-lg">Kembali</button>
         </main>
     </div>
   </div>
 
   <script>
-    // FIX: Mengatasi error "Unexpected token c" dengan membersihkan string callback
-    async function fetchWithCallback(url) {
-      try {
-        const response = await fetch(url, { method: 'GET', redirect: 'follow' });
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-        let text = await response.text();
-        
-        // Bersihkan pembungkus callback(...) jika ada
-        if (text.trim().startsWith('callback(')) {
-          text = text.trim().replace(/^callback\(/, '').replace(/\);?$/, '');
-        }
-        return JSON.parse(text);
-      } catch (error) {
-        console.error("Gagal dapet data:", error);
-        throw error;
-      }
-    }
+    // URL Google Apps Script lo yang ada di baris 844 kode lama lo
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykHilTCxFbqVnxOCbPxAl733dR2KHx7z0Z6TIMBGV4DbmiZru_ksbhd2kgH2pj1kKfZw/exec';
 
-    // Navigasi halaman sederhana
+    function updateDateTime() {
+        const timeEl = document.getElementById('header-time');
+        if (timeEl) timeEl.textContent = new Date().toLocaleTimeString('id-ID');
+    }
+    setInterval(updateDateTime, 1000);
+
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      const target = document.getElementById(pageId);
-      if(target) target.classList.add('active');
-      
-      const header = document.getElementById('main-header');
-      header.classList.toggle('hidden', pageId === 'page-login');
+      document.getElementById(pageId).classList.add('active');
+      document.getElementById('main-header').classList.toggle('hidden', pageId === 'page-login');
     }
 
-    // Handle Login
+    // FUNGSI PENGGANTI SDK (NARIK DATA LANGSUNG)
+    async function loadWorkersDirectly() {
+        const grid = document.getElementById('workers-grid');
+        const loader = document.getElementById('loading-workers');
+        
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=getWorkers`);
+            const data = await response.json();
+            
+            loader.classList.add('hidden');
+            grid.innerHTML = '';
+            
+            if (data.success && data.workers) {
+                data.workers.forEach(worker => {
+                    const card = document.createElement('div');
+                    card.className = 'worker-card shadow-md';
+                    card.innerHTML = `
+                        <div class="w-16 h-16 bg-slate-200 rounded-full mx-auto mb-2 flex items-center justify-center font-bold text-xl">
+                            ${worker.name.charAt(0)}
+                        </div>
+                        <p class="font-bold text-sm">${worker.name}</p>
+                        <div class="mt-2 grid grid-cols-2 gap-1 text-[10px]">
+                            <button class="bg-green-500 text-white p-1 rounded">Start</button>
+                            <button class="bg-blue-500 text-white p-1 rounded">Finish</button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        } catch (error) {
+            loader.innerHTML = `<p class="text-red-400">Gagal load data: ${error.message}</p>`;
+        }
+    }
+
     document.getElementById('login-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const user = document.getElementById('username').value;
@@ -139,15 +122,11 @@
       
       if (user === 'archipelago' && pass === 'balivibes') {
         showPage('page-attendance');
-        loadWorkers(); // <--- TAMBAHKAN BARIS INI agar data pekerja langsung dipanggil
+        loadWorkersDirectly(); // Panggil data langsung tanpa SDK
       } else {
         document.getElementById('login-error').classList.remove('hidden');
       }
     });
-
-    // Mockup fungsi lainnya biar gak error saat tombol diklik
-    function setAllPresent() { alert('Fitur Hadir Semua dipicu'); }
-    function resetAllStatus() { alert('Status direset'); }
   </script>
 </body>
 </html>
