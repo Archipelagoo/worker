@@ -2295,10 +2295,10 @@ function applyColorsToAllData() {
   if (!start || !finish) return 0;
 
   const parseTime = (timeStr) => {
-    // Menghapus detik jika ada (misal 23:05:04 jadi 23:05)
-    // Dan mengubah titik (.) menjadi titik dua (:) agar seragam sebelum diproses
-    const cleanTime = timeStr.toString().replace(/\./g, ':');
-    const parts = cleanTime.split(':');
+    // 1. Ubah ke string dan ganti semua titik (.) jadi titik dua (:)
+    // 2. Ambil hanya jam dan menit (buang detik jika ada)
+    const clean = timeStr.toString().replace(/\./g, ':').trim();
+    const parts = clean.split(':');
     
     const hours = parseInt(parts[0]) || 0;
     const minutes = parseInt(parts[1]) || 0;
@@ -2308,14 +2308,15 @@ function applyColorsToAllData() {
   const startTotal = parseTime(start);
   const finishTotal = parseTime(finish);
 
+  let diff = finishTotal - startTotal;
+
   // Logika jika jam kerja melewati tengah malam (misal 22:00 - 02:00)
-  if (finishTotal < startTotal) {
-    return (1440 - startTotal) + finishTotal;
+  if (diff < 0) {
+    diff += 1440; // Tambah 24 jam dalam menit
   }
 
-  return finishTotal - startTotal;
+  return diff;
 }
-
     async function renderCalendar() {
       const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
       const year = currentCalendarDate.getFullYear();
