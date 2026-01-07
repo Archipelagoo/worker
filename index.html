@@ -1,16 +1,15 @@
 <!doctype html>
 <html lang="id" class="h-full">
- <head>
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Absen Archipelago</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
-    body { box-sizing: border-box; }
+    body { box-sizing: border-box; background-color: #0a1628; }
     * { font-family: 'Poppins', sans-serif; }
     :root {
       --bg-primary: #0a1628;
@@ -20,8 +19,6 @@
     }
     .bg-primary { background-color: var(--bg-primary); }
     .bg-header { background-color: var(--bg-header); }
-    .text-orange { color: var(--orange); }
-    .bg-pink-bold { background-color: var(--pink-bold); }
     .status-selected {
       background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%) !important;
       border: 2px solid #fff !important;
@@ -34,147 +31,73 @@
     .btn-status:hover { transform: scale(1.05); }
     .btn-status:active { transform: scale(0.95); }
     .page { display: none; }
-    .page.active { display: flex; }
-    #page-login.active { display: flex; align-items: center; justify-content: center; }
-    #page-attendance.active, #page-recap.active, #page-calendar.active, 
-    #page-recap-detail.active, #page-photo-gallery.active, #page-photo-detail.active, 
-    #page-apps-script.active, #page-recap-jam.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .page.active { display: block; }
+    #page-login.active { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .fade-in { animation: fadeIn 0.3s ease-out; }
-    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0.7); } 50% { box-shadow: 0 0 0 8px rgba(255, 20, 147, 0); } }
-    .pulse-pink { animation: pulse 2s infinite; }
-    .calendar-day { transition: all 0.2s ease; cursor: pointer; }
-    .calendar-day:hover { background-color: rgba(255, 140, 0, 0.4); transform: scale(1.05); }
-    .calendar-day.has-data { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-    .calendar-day.today { ring: 2px; ring-color: #ff8c00; }
-    .gallery-folder { transition: all 0.3s ease; }
-    .gallery-folder:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-    .notification { animation: slideDown 0.3s ease-out; }
-    @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .code-block { background: #1e1e1e; border-radius: 8px; overflow-x: auto; }
-    .code-block pre { margin: 0; padding: 16px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; color: #d4d4d4; }
-    .copy-btn { transition: all 0.2s ease; }
-    .copy-btn:hover { background-color: #ff8c00; }
-    .worker-photo { object-fit: cover; border: 2px solid rgba(255,255,255,0.3); }
-    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .photo-thumbnail { position: relative; cursor: pointer; transition: transform 0.2s ease; }
-    .photo-thumbnail:hover { transform: scale(1.05); }
-    .photo-thumbnail .delete-btn { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
-    .photo-thumbnail:hover .delete-btn { opacity: 1; }
-    .fullscreen-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
-    .fullscreen-overlay img { max-width: 90%; max-height: 90%; object-fit: contain; }
-    .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease; }
-    .nav-arrow:hover { background: rgba(255,255,255,0.4); }
-    .nav-arrow.left { left: 20px; }
-    .nav-arrow.right { right: 20px; }
-    .recap-table { width: 100%; border-collapse: collapse; }
-    .recap-table th, .recap-table td { border: 1px solid #334155; padding: 8px 12px; text-align: center; }
-    .recap-table th { background: #1e293b; color: #fff; font-weight: 600; position: sticky; top: 0; z-index: 10; }
-    .recap-table th.sticky-col { position: sticky; left: 0; z-index: 20; background: #1e293b; }
-    .recap-table td.sticky-col { position: sticky; left: 0; background: #0f172a; z-index: 5; }
-    .recap-table tr:nth-child(even) td { background: #1e293b; }
-    .recap-table tr:nth-child(even) td.sticky-col { background: #1e293b; }
-    .recap-table tr:nth-child(odd) td { background: #0f172a; }
-    .logo-img { width: 100%; height: 100%; object-fit: cover; }
-    .nav-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
-    .status-card { cursor: pointer; transition: all 0.2s ease; }
-    .status-card:hover { transform: scale(1.03); opacity: 0.9; }
-    .status-card.clickable { cursor: pointer; }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .modal-content { background: #1e293b; border-radius: 16px; max-width: 500px; width: 100%; max-height: 80%; overflow-y: auto; }
-    .modal-header { padding: 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #1e293b; z-index: 10; }
-    .modal-body { padding: 16px; }
-    .worker-list-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #0f172a; border-radius: 12px; margin-bottom: 8px; }
-    .worker-list-item img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-    .worker-list-item .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
-    .jam-result-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-top: 16px; }
-    .mini-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .upload-progress { background: rgba(0,0,0,0.8); border-radius: 12px; padding: 20px; }
-    .progress-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); transition: width 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
- </head>
- <body class="h-full m-0 p-0 overflow-hidden bg-primary text-white">
+</head>
+<body class="h-full m-0 p-0 overflow-hidden bg-primary text-white">
   <div id="app" class="h-full w-full overflow-auto">
-   <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
-    <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm">
-     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-     <span id="notification-text">Berhasil!</span>
+    <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+      <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+        <span id="notification-text">Berhasil!</span>
+      </div>
     </div>
-   </div>
 
-   <div id="upload-progress-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-    <div class="upload-progress w-full max-w-sm text-center">
-     <div class="mb-4"><div class="inline-block w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>
-     <p id="upload-status" class="text-white font-semibold mb-2 text-sm">Mengirim absensi...</p>
-     <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: 0%"></div></div>
-    </div>
-   </div>
-
-   <div id="fullscreen-viewer" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
-    <div class="nav-arrow left" onclick="handleNavClick(-1, event)"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></div>
-    <img id="fullscreen-image" src="" alt="Preview" onclick="event.stopPropagation()">
-    <div class="nav-arrow right" onclick="handleNavClick(1, event)"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></div>
-    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm"><span id="photo-counter">1 / 1</span></div>
-   </div>
-
-   <header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-     <div class="flex items-center gap-3">
-      <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-800 font-bold text-xl">A</div>
-      <h1 class="text-lg md:text-2xl font-bold">ABSEN ONLINE DAILY WORKER</h1>
-     </div>
-     <div class="text-right">
-      <p id="header-date" class="text-white text-xs"></p>
-      <p id="header-time" class="text-yellow-400 text-base font-bold"></p>
-     </div>
-    </div>
-   </header>
-
-   <div id="page-login" class="page active h-full w-full">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm text-center m-auto text-slate-800">
-     <h1 class="text-xl font-bold mb-4">ABSEN ARCHIPELAGO</h1>
-     <form id="login-form" class="space-y-3">
-      <input type="text" id="username" placeholder="Username" class="w-full px-4 py-2 bg-slate-100 border rounded-xl" required>
-      <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2 bg-slate-100 border rounded-xl" required>
-      <button type="submit" class="w-full py-3 bg-green-500 text-white font-bold rounded-xl shadow-lg">Login</button>
-     </form>
-     <p id="login-error" class="hidden text-red-500 text-xs mt-2">Login Gagal!</p>
-    </div>
-   </div>
-
-   <div id="page-attendance" class="page min-h-full">
-    <main class="p-3 max-w-7xl mx-auto">
-     <div class="flex flex-wrap items-center gap-2 mb-3">
-      <button onclick="setAllPresent()" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs">Hadir Semua</button>
-      <button onclick="resetAllStatus()" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs">Reset</button>
-      <div class="flex-1"></div>
-      
-      <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs flex items-center gap-1">
-       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Recap
-      </button>
-     </div>
-
-     <div id="loading-workers" class="text-center py-12">
-      <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-slate-400 mt-4 text-sm">Memuat data pekerja...</p>
-     </div>
-     <div id="workers-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
-    </main>
-   </div>
-
-   <div id="page-recap" class="page min-h-full">
-      <main class="p-3 max-w-7xl mx-auto text-center">
-        <h2 class="text-xl font-bold mb-6 mt-10">MENU RECAP</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-           <button onclick="showRecapToday()" class="bg-white p-6 rounded-2xl text-blue-900 font-bold shadow-lg">Recap Hari Ini</button>
-           <button onclick="showPage('page-calendar')" class="bg-white p-6 rounded-2xl text-blue-900 font-bold shadow-lg">Berdasarkan Tanggal</button>
-           <button onclick="showPage('page-photo-gallery')" class="bg-white p-6 rounded-2xl text-blue-900 font-bold shadow-lg">Galeri Foto</button>
+    <header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center font-bold text-slate-800 text-2xl">A</div>
+          <h1 id="header-title" class="text-lg md:text-2xl font-bold">ABSEN ONLINE DAILY WORKER</h1>
         </div>
-        <button onclick="showPage('page-attendance')" class="mt-10 px-6 py-2 bg-slate-700 rounded-lg">Kembali</button>
+        <div class="text-right">
+          <p id="header-date" class="text-white text-xs"></p>
+          <p id="header-time" class="text-yellow-400 text-xl font-bold"></p>
+        </div>
+      </div>
+    </header>
+
+    <div id="page-login" class="page active h-full w-full">
+      <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm text-center m-auto text-slate-800">
+        <h1 class="text-xl font-bold mb-4">ABSEN ARCHIPELAGO</h1>
+        <form id="login-form" class="space-y-3">
+          <input type="text" id="username" placeholder="Username" class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-xl" required>
+          <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-xl" required>
+          <button type="submit" class="w-full py-3 bg-green-500 text-white font-bold rounded-xl shadow-lg">Login</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="page-attendance" class="page min-h-full">
+      <main class="p-3 max-w-7xl mx-auto">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <button onclick="setAllPresent()" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium">Hadir Semua</button>
+          <button onclick="resetAllStatus()" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium">Reset</button>
+          <div class="flex-1"></div>
+          <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs flex items-center gap-1 font-bold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Recap
+          </button>
+        </div>
+        <div id="loading-workers" class="text-center py-12">
+          <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-slate-400 mt-4 text-sm">Memuat data pekerja...</p>
+        </div>
+        <div id="workers-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
       </main>
-   </div>
+    </div>
+
+    <div id="page-recap" class="page min-h-full bg-primary">
+       <main class="p-3 max-w-7xl mx-auto text-center">
+         <h2 class="text-xl font-bold mb-6 mt-10">MENU RECAP</h2>
+         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button onclick="alert('Recap Hari Ini')" class="bg-white p-6 rounded-2xl text-blue-900 font-bold shadow-lg">Recap Hari Ini</button>
+            <button onclick="alert('Kalender')" class="bg-white p-6 rounded-2xl text-blue-900 font-bold shadow-lg">Berdasarkan Tanggal</button>
+            <button onclick="alert('Galeri')" class="bg-white p-6 rounded-2xl text-blue-900 font-bold shadow-lg">Galeri Foto</button>
+         </div>
+         <button onclick="showPage('page-attendance')" class="mt-10 px-6 py-2 bg-slate-700 rounded-lg">Kembali</button>
+       </main>
+    </div>
   </div>
 
   <script>
@@ -182,12 +105,11 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykHilTCxFbqVnxOCbPxAl733dR2KHx7z0Z6TIMBGV4DbmiZru_ksbhd2kgH2pj1kKfZw/exec';
     let workers = [];
     let attendanceStatus = {};
-    let uploadedPhotos = [];
 
-    // Fungsi pembersihan format data dari Google Script
     async function fetchSafe(url) {
       const resp = await fetch(url, { method: 'GET', redirect: 'follow' });
       let text = await resp.text();
+      // Menangani format JSONP callback agar tidak error "token c"
       if (text.trim().startsWith('callback(')) {
         text = text.trim().replace(/^callback\(/, '').replace(/\);?$/, '');
       }
@@ -226,21 +148,30 @@
       const grid = document.getElementById('workers-grid');
       grid.innerHTML = '';
       list.forEach(w => {
+        const status = attendanceStatus[w.id] || '';
+        const isSelected = status !== '';
         const card = document.createElement('div');
-        card.className = 'card-worker bg-white rounded-xl p-3 border-2 border-slate-200 text-slate-800 flex flex-col items-center';
+        card.className = `card-worker bg-white rounded-xl p-3 border-2 ${isSelected ? 'status-selected' : 'border-slate-200'} text-slate-800 flex flex-col items-center shadow-md`;
         card.innerHTML = `
           <div class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold mb-2 shadow-md">
-            ${w.name.charAt(0)}
+            ${w.name.charAt(0).toUpperCase()}
           </div>
-          <p class="font-bold text-[11px] text-center mb-2">${w.name}</p>
+          <p class="font-bold text-[11px] text-center mb-2 h-8 flex items-center">${w.name}</p>
           <div class="grid grid-cols-2 gap-1 w-full">
-            <button class="py-1 bg-green-500 text-white rounded text-[9px] font-bold">Start</button>
-            <button class="py-1 bg-blue-500 text-white rounded text-[9px] font-bold">Finish</button>
+            <button onclick="setStatus(${w.id}, 'Start Work', event)" class="py-1 bg-green-500 text-white rounded text-[9px] font-bold">Start</button>
+            <button onclick="setStatus(${w.id}, 'Finish Work', event)" class="py-1 bg-blue-500 text-white rounded text-[9px] font-bold">Finish</button>
+            <button onclick="setStatus(${w.id}, 'Sakit', event)" class="py-1 bg-orange-500 text-white rounded text-[9px] font-bold">Sakit</button>
+            <button onclick="setStatus(${w.id}, 'Standby', event)" class="py-1 bg-purple-500 text-white rounded text-[9px] font-bold">Standby</button>
           </div>
         `;
-        card.onclick = () => card.classList.toggle('status-selected');
         grid.appendChild(card);
       });
+    }
+
+    function setStatus(workerId, status, event) {
+        event.stopPropagation();
+        attendanceStatus[workerId] = status;
+        renderWorkers(workers);
     }
 
     document.getElementById('login-form').addEventListener('submit', (e) => {
@@ -250,20 +181,17 @@
         showPage('page-attendance');
         loadWorkers();
         updateDateTime();
-      } else {
-        document.getElementById('login-error').classList.remove('hidden');
       }
     });
 
-    // Mock functions (fitur asli lo butuh ini biar gak error)
-    function setAllPresent() { showNotification("Semua pekerja diset Start Work!"); }
-    function resetAllStatus() { renderWorkers(workers); showNotification("Status direset!"); }
-    function showNotification(msg) {
-      const el = document.getElementById('notification');
-      document.getElementById('notification-text').textContent = msg;
-      el.classList.remove('hidden');
-      setTimeout(() => el.classList.add('hidden'), 3000);
+    function setAllPresent() {
+        workers.forEach(w => attendanceStatus[w.id] = 'Start Work');
+        renderWorkers(workers);
+    }
+    function resetAllStatus() {
+        attendanceStatus = {};
+        renderWorkers(workers);
     }
   </script>
- </body>
+</body>
 </html>
