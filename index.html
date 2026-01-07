@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="id" class="h-full">
- <head>
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Absen Archipelago</title>
@@ -8,11 +8,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   
-  <script src="_sdk/element_sdk.js"></script>
-  
+  <script src="./_sdk/element_sdk.js"></script>
+  <script src="./_sdk/data_sdk.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
-    body { box-sizing: border-box; }
+    body { box-sizing: border-box; margin: 0; padding: 0; background-color: #0a1628; }
     * { font-family: 'Poppins', sans-serif; }
     :root {
       --bg-primary: #0a1628;
@@ -22,152 +23,131 @@
     }
     .bg-primary { background-color: var(--bg-primary); }
     .bg-header { background-color: var(--bg-header); }
-    .text-orange { color: var(--orange); }
-    .bg-pink-bold { background-color: var(--pink-bold); }
     .status-selected {
       background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%) !important;
       border: 2px solid #fff !important;
       box-shadow: 0 0 12px rgba(255, 20, 147, 0.5) !important;
       transform: scale(1.02);
     }
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: flex; flex-direction: column; }
+    #page-login.active { align-items: center; justify-content: center; }
+    #page-attendance.active { display: block; }
     .card-worker { transition: all 0.3s ease; }
     .card-worker:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-    .btn-status { transition: all 0.2s ease; }
-    .btn-status:hover { transform: scale(1.05); }
-    .btn-status:active { transform: scale(0.95); }
-    .page { display: none; }
-    .page.active { display: flex; }
-    #page-login.active { display: flex; align-items: center; justify-content: center; }
-    #page-attendance.active, #page-recap.active, #page-calendar.active, 
-    #page-recap-detail.active, #page-photo-gallery.active, #page-photo-detail.active, 
-    #page-apps-script.active, #page-recap-jam.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.3s ease-out; }
-    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0.7); } 50% { box-shadow: 0 0 0 8px rgba(255, 20, 147, 0); } }
-    .pulse-pink { animation: pulse 2s infinite; }
-    .calendar-day { transition: all 0.2s ease; cursor: pointer; }
-    .calendar-day:hover { background-color: rgba(255, 140, 0, 0.4); transform: scale(1.05); }
-    .calendar-day.has-data { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-    .calendar-day.today { ring: 2px; ring-color: #ff8c00; }
-    .gallery-folder { transition: all 0.3s ease; }
-    .gallery-folder:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
     .notification { animation: slideDown 0.3s ease-out; }
     @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .code-block { background: #1e1e1e; border-radius: 8px; overflow-x: auto; }
-    .code-block pre { margin: 0; padding: 16px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; color: #d4d4d4; }
-    .copy-btn { transition: all 0.2s ease; }
-    .copy-btn:hover { background-color: #ff8c00; }
-    .worker-photo { object-fit: cover; border: 2px solid rgba(255,255,255,0.3); }
-    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .photo-thumbnail { position: relative; cursor: pointer; transition: transform 0.2s ease; }
-    .photo-thumbnail:hover { transform: scale(1.05); }
-    .photo-thumbnail .delete-btn { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
-    .photo-thumbnail:hover .delete-btn { opacity: 1; }
-    .fullscreen-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
-    .fullscreen-overlay img { max-width: 90%; max-height: 90%; object-fit: contain; }
-    .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease; }
-    .nav-arrow:hover { background: rgba(255,255,255,0.4); }
-    .nav-arrow.left { left: 20px; }
-    .nav-arrow.right { right: 20px; }
-    .recap-table { width: 100%; border-collapse: collapse; }
-    .recap-table th, .recap-table td { border: 1px solid #334155; padding: 8px 12px; text-align: center; }
-    .recap-table th { background: #1e293b; color: #fff; font-weight: 600; position: sticky; top: 0; z-index: 10; }
-    .recap-table th.sticky-col { position: sticky; left: 0; z-index: 20; background: #1e293b; }
-    .recap-table td.sticky-col { position: sticky; left: 0; background: #0f172a; z-index: 5; }
-    .recap-table tr:nth-child(even) td { background: #1e293b; }
-    .recap-table tr:nth-child(even) td.sticky-col { background: #1e293b; }
-    .recap-table tr:nth-child(odd) td { background: #0f172a; }
-    .logo-img { width: 100%; height: 100%; object-fit: cover; }
-    .nav-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
-    .status-card { cursor: pointer; transition: all 0.2s ease; }
-    .status-card:hover { transform: scale(1.03); opacity: 0.9; }
-    .status-card.clickable { cursor: pointer; }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .modal-content { background: #1e293b; border-radius: 16px; max-width: 500px; width: 100%; max-height: 80%; overflow-y: auto; }
-    .modal-header { padding: 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #1e293b; z-index: 10; }
-    .modal-body { padding: 16px; }
-    .worker-list-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #0f172a; border-radius: 12px; margin-bottom: 8px; }
-    .worker-list-item img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-    .worker-list-item .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
-    .jam-result-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-top: 16px; }
-    .mini-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .upload-progress { background: rgba(0,0,0,0.8); border-radius: 12px; padding: 20px; }
-    .progress-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); transition: width 0.3s ease; }
   </style>
-  <style>@view-transition { navigation: auto; }</style>
-  
-  <script src="_sdk/data_sdk.js" type="text/javascript"></script>
- </head>
- <body class="h-full m-0 p-0 overflow-hidden bg-primary">
-  <div id="app" class="h-full w-full overflow-auto">
-   <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
-    <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
-     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-     <span id="notification-text">Berhasil!</span>
-    </div>
-   </div>
-   
-   <header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-     <div class="flex items-center gap-3">
-      <div id="header-logo" class="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
-        <img id="header-logo-img" class="w-full h-full object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo">
+</head>
+<body class="h-full bg-primary text-white">
+  <div id="app" class="h-full w-full">
+    <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
+      <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+        <span id="notification-text">Berhasil!</span>
       </div>
-      <h1 id="header-title" class="text-lg md:text-2xl font-bold text-white uppercase">Absen Online Daily Worker</h1>
-     </div>
-     <div class="text-right">
-      <p id="header-date" class="text-white text-xs md:text-sm font-medium"></p>
-      <p id="header-time" class="text-yellow-400 text-base md:text-xl font-bold"></p>
-     </div>
     </div>
-   </header>
 
-   <div id="page-attendance" class="page min-h-full">
-    <main class="p-3 max-w-7xl mx-auto">
-     <div class="flex flex-wrap items-center gap-2 mb-3">
-       <button onclick="setAllPresent()" class="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-medium">Hadir Semua</button> 
-       <button onclick="resetAllStatus()" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium">Reset</button>
-       <div class="flex-1"></div>
-       
-       <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-        Recap
-       </button>
-     </div>
-     
-     <div id="loading-workers" class="text-center py-12">
-      <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-slate-400 mt-4 text-sm">Memuat data pekerja...</p>
-     </div>
-     <div id="workers-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
-    </main>
-   </div>
+    <header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 flex items-center justify-center">
+            <img id="header-logo-img" class="w-full h-full object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo">
+          </div>
+          <h1 class="text-lg md:text-2xl font-bold uppercase">Absen Archipelago</h1>
+        </div>
+      </div>
+    </header>
+
+    <div id="page-login" class="page active">
+      <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm fade-in text-slate-800 text-center">
+        <img class="w-32 h-32 mx-auto mb-4" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo">
+        <h1 class="text-xl font-bold mb-6">LOGIN ABSEN</h1>
+        <form id="login-form" class="space-y-4">
+          <input type="text" id="username" placeholder="Username" class="w-full px-4 py-2 bg-slate-100 border rounded-xl outline-none focus:ring-2 focus:ring-green-500" required>
+          <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2 bg-slate-100 border rounded-xl outline-none focus:ring-2 focus:ring-green-500" required>
+          <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg transition-all">LOGIN</button>
+        </form>
+        <p id="login-error" class="hidden text-red-500 text-xs mt-3">Username atau password salah!</p>
+      </div>
+    </div>
+
+    <div id="page-attendance" class="page">
+      <main class="p-4 max-w-7xl mx-auto">
+        <div class="flex flex-wrap items-center gap-2 mb-6">
+          <button onclick="setAllPresent()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-all shadow-md">Hadir Semua</button>
+          <button onclick="resetAllStatus()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-all shadow-md">Reset</button>
+          <div class="flex-1"></div>
+          
+          <button onclick="showPage('page-recap')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all shadow-md flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            Recap
+          </button>
+        </div>
+
+        <div id="loading-workers" class="text-center py-20">
+          <div class="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p class="mt-4 text-slate-400">Menghubungkan ke database...</p>
+        </div>
+
+        <div id="workers-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10"></div>
+      </main>
+    </div>
+
+    <div id="page-recap" class="page">
+        <main class="p-4 text-center">
+            <h2 class="text-2xl font-bold mb-4">Halaman Recap</h2>
+            <button onclick="showPage('page-attendance')" class="px-4 py-2 bg-slate-600 rounded-lg">Kembali</button>
+        </main>
+    </div>
   </div>
 
   <script>
-    // FIX: Fungsi fetch ini sekarang bisa membersihkan tulisan "callback(" sehingga tidak error JSON lagi
+    // FIX: Mengatasi error "Unexpected token c" dengan membersihkan string callback
     async function fetchWithCallback(url) {
       try {
         const response = await fetch(url, { method: 'GET', redirect: 'follow' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
         let text = await response.text();
         
-        // Membersihkan format callback dari Google Apps Script
+        // Bersihkan pembungkus callback(...) jika ada
         if (text.trim().startsWith('callback(')) {
           text = text.trim().replace(/^callback\(/, '').replace(/\);?$/, '');
         }
         return JSON.parse(text);
       } catch (error) {
         console.error("Gagal dapet data:", error);
-        document.getElementById('loading-workers').innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
         throw error;
       }
     }
 
-    // Fungsi lainnya tetap menggunakan logika lo...
-    // (Lanjutkan dengan sisa script JavaScript asli lo)
+    // Navigasi halaman sederhana
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById(pageId);
+      if(target) target.classList.add('active');
+      
+      const header = document.getElementById('main-header');
+      header.classList.toggle('hidden', pageId === 'page-login');
+    }
+
+    // Handle Login
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      
+      if (user === 'archipelago' && pass === 'balivibes') {
+        showPage('page-attendance');
+        // Trigger load data jika diperlukan
+      } else {
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    });
+
+    // Mockup fungsi lainnya biar gak error saat tombol diklik
+    function setAllPresent() { alert('Fitur Hadir Semua dipicu'); }
+    function resetAllStatus() { alert('Status direset'); }
   </script>
- </body>
+</body>
 </html>
