@@ -1175,47 +1175,44 @@ function applyColorsToAllData() {
       }
     } catch (e) { console.error("Share failed", e); }
   } else {
-    // LOGIKA ANDROID & LAPTOP: Langsung Download ke Galeri/Folder Download
-    for (let i = 0; i < photos.length; i++) {
-      try {
+    // BAGIAN LOGIKA ANDROID & LAPTOP (REVISI)
+for (let i = 0; i < photos.length; i++) {
+    try {
         const base64Data = photos[i];
         const fileName = `Absen_${safeDate}_${safeTime}_${i + 1}.jpg`;
         
-        // Konversi Base64 ke Blob agar dianggap sebagai file asli oleh sistem
-        const byteString = atob(base64Data.split(',')[1]);
+        // Konversi ke Blob
+        const parts = base64Data.split(',');
+        const byteString = atob(parts[1]);
+        const mimeString = parts[0].split(':')[1].split(';')[0];
         const ab = new ArrayBuffer(byteString.length);
         const ia = new Uint8Array(ab);
         for (let j = 0; j < byteString.length; j++) {
-          ia[j] = byteString.charCodeAt(j);
+            ia[j] = byteString.charCodeAt(j);
         }
-        const blob = new Blob([ab], { type: 'image/jpeg' });
+        const blob = new Blob([ab], { type: mimeString });
         const blobUrl = URL.createObjectURL(blob);
 
-        // Buat elemen link tersembunyi
+        // Membuat element link sementara
         const link = document.createElement('a');
         link.href = blobUrl;
         link.download = fileName;
-        link.style.display = 'none';
         
+        // Memaksa browser menganggap ini file yang harus segera diunduh
+        link.setAttribute('target', '_self'); 
         document.body.appendChild(link);
-        link.click(); // Memicu unduhan langsung
+        link.click(); 
         
-        // Bersihkan memory dan elemen
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-          document.body.removeChild(link);
-        }, 100);
-
-        // JEDA KRUSIAL: Memberi waktu sistem Android memproses file satu per satu
-        // Jika terlalu cepat, Android seringkali hanya mendownload file terakhir saja.
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Hapus segera setelah instruksi jalan
+        document.body.removeChild(link);
         
-      } catch (err) {
-        console.error("Gagal mendownload foto ke-" + (i+1), err);
-      }
+        // Beri jeda 300ms agar browser tidak panik menerima banyak file sekaligus
+        await new Promise(resolve => setTimeout(resolve, 300));
+        URL.revokeObjectURL(blobUrl);
+        
+    } catch (err) {
+        console.error("Download error:", err);
     }
-    showNotification(`${photos.length} Foto masuk ke folder Download/Galeri`);
-  }
 }
     function directDownload(dataUrl, fileName) {
       const link = document.createElement('a');
