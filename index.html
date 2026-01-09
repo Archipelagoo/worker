@@ -1153,55 +1153,70 @@ function applyColorsToAllData() {
     }
 
     async function downloadPhotosToDevice(photos, tanggal, jam) {
-  const formattedDate = tanggal.replace(/\//g, '-'); // Ubah 07/01/2026 jadi 07-01-2026
-  const formattedTime = jam.replace(/:/g, '.');
+  // Format tanggal agar aman untuk nama file (mengganti / dengan -)
+  const safeDate = tanggal.replace(/\//g, '-');
+  const safeTime = jam.replace(/:/g, '.');
   
-  // Deteksi jika perangkat adalah iOS (iPhone/iPad)
-  const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  // Deteksi iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  if (isIOSDevice) {
+  if (isIOS) {
+    // LOGIKA KHUSUS IOS: Menggunakan Share Sheet (Satu-satunya cara di iPhone)
     try {
       const files = [];
       for (let i = 0; i < photos.length; i++) {
         const response = await fetch(photos[i]);
         const blob = await response.blob();
-        const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-        files.push(new File([blob], fileName, { type: 'image/jpeg' }));
+        files.push(new File([blob], `Absen_${safeDate}_${safeTime}_${i + 1}.jpg`, { type: 'image/jpeg' }));
       }
-
-      // Memicu Share Sheet bawaan iOS
-      if (navigator.canShare && navigator.canShare({ files: files })) {
-        await navigator.share({
-          files: files,
-          title: 'Simpan Foto Absensi',
-          text: `Foto Absen ${tanggal} jam ${jam}`
-        });
-      } else {
-        // Fallback jika browser iOS tidak mendukung Web Share API untuk file
-        photos.forEach(p => window.open(p, '_blank'));
-        showNotification('Tekan lama foto untuk simpan ke galeri', true);
+      if (navigator.canShare && navigator.canShare({ files })) {
+        await navigator.share({ files, title: 'Simpan Absensi' });
       }
-    } catch (error) {
-      console.error('iOS Share Error:', error);
-    }
+    } catch (e) { console.error("Share failed", e); }
   } else {
-    // Logika untuk Android / Laptop (Unduh Otomatis)
+    // LOGIKA ANDROID & LAPTOP: Langsung Download ke Galeri/Folder Download
     for (let i = 0; i < photos.length; i++) {
-      const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-      const link = document.createElement('a');
-      link.href = photos[i];
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      // Beri jeda sedikit antar unduhan agar tidak diblokir browser
-      await new Promise(r => setTimeout(r, 300));
+      try {
+        const base64Data = photos[i];
+        const fileName = `Absen_${safeDate}_${safeTime}_${i + 1}.jpg`;
+        
+        // Konversi Base64 ke Blob agar dianggap sebagai file asli oleh sistem
+        const byteString = atob(base64Data.split(',')[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let j = 0; j < byteString.length; j++) {
+          ia[j] = byteString.charCodeAt(j);
+        }
+        const blob = new Blob([ab], { type: 'image/jpeg' });
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Buat elemen link tersembunyi
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click(); // Memicu unduhan langsung
+        
+        // Bersihkan memory dan elemen
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+          document.body.removeChild(link);
+        }, 100);
+
+        // JEDA KRUSIAL: Memberi waktu sistem Android memproses file satu per satu
+        // Jika terlalu cepat, Android seringkali hanya mendownload file terakhir saja.
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+      } catch (err) {
+        console.error("Gagal mendownload foto ke-" + (i+1), err);
+      }
     }
-    showNotification(`${photos.length} Foto otomatis tersimpan!`);
+    showNotification(`${photos.length} Foto masuk ke folder Download/Galeri`);
   }
 }
-
     function directDownload(dataUrl, fileName) {
       const link = document.createElement('a');
       link.href = dataUrl;
