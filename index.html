@@ -1152,7 +1152,7 @@ function applyColorsToAllData() {
              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
-    async function downloadPhotosToDevice(photos, tanggal, jam) {
+   async function downloadPhotosToDevice(photos, tanggal, jam) {
   // Format tanggal agar aman untuk nama file (mengganti / dengan -)
   const safeDate = tanggal.replace(/\//g, '-');
   const safeTime = jam.replace(/:/g, '.');
@@ -1175,44 +1175,47 @@ function applyColorsToAllData() {
       }
     } catch (e) { console.error("Share failed", e); }
   } else {
-    // BAGIAN LOGIKA ANDROID & LAPTOP (REVISI)
-for (let i = 0; i < photos.length; i++) {
-    try {
+    // LOGIKA ANDROID & LAPTOP: Langsung Download ke Galeri/Folder Download
+    for (let i = 0; i < photos.length; i++) {
+      try {
         const base64Data = photos[i];
         const fileName = `Absen_${safeDate}_${safeTime}_${i + 1}.jpg`;
         
-        // Konversi ke Blob
-        const parts = base64Data.split(',');
-        const byteString = atob(parts[1]);
-        const mimeString = parts[0].split(':')[1].split(';')[0];
+        // Konversi Base64 ke Blob agar dianggap sebagai file asli oleh sistem
+        const byteString = atob(base64Data.split(',')[1]);
         const ab = new ArrayBuffer(byteString.length);
         const ia = new Uint8Array(ab);
         for (let j = 0; j < byteString.length; j++) {
-            ia[j] = byteString.charCodeAt(j);
+          ia[j] = byteString.charCodeAt(j);
         }
-        const blob = new Blob([ab], { type: mimeString });
+        const blob = new Blob([ab], { type: 'image/jpeg' });
         const blobUrl = URL.createObjectURL(blob);
 
-        // Membuat element link sementara
+        // Buat elemen link tersembunyi
         const link = document.createElement('a');
         link.href = blobUrl;
         link.download = fileName;
+        link.style.display = 'none';
         
-        // Memaksa browser menganggap ini file yang harus segera diunduh
-        link.setAttribute('target', '_self'); 
         document.body.appendChild(link);
-        link.click(); 
+        link.click(); // Memicu unduhan langsung
         
-        // Hapus segera setelah instruksi jalan
-        document.body.removeChild(link);
+        // Bersihkan memory dan elemen
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+          document.body.removeChild(link);
+        }, 100);
+
+        // JEDA KRUSIAL: Memberi waktu sistem Android memproses file satu per satu
+        // Jika terlalu cepat, Android seringkali hanya mendownload file terakhir saja.
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Beri jeda 300ms agar browser tidak panik menerima banyak file sekaligus
-        await new Promise(resolve => setTimeout(resolve, 300));
-        URL.revokeObjectURL(blobUrl);
-        
-    } catch (err) {
-        console.error("Download error:", err);
+      } catch (err) {
+        console.error("Gagal mendownload foto ke-" + (i+1), err);
+      }
     }
+    showNotification(`${photos.length} Foto masuk ke folder Download/Galeri`);
+  }
 }
     function directDownload(dataUrl, fileName) {
       const link = document.createElement('a');
