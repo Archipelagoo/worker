@@ -1153,55 +1153,54 @@ function applyColorsToAllData() {
     }
 
     async function downloadPhotosToDevice(photos, tanggal, jam) {
-      const formattedDate = tanggal.replace(/ /g, '_');
-      const formattedTime = jam.replace(/:/g, '-');
-      
-      if (isIOS()) {
-        try {
-          const files = [];
-          for (let i = 0; i < photos.length; i++) {
-            const photo = photos[i];
-            const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-            const byteString = atob(photo.split(',')[1]);
-            const mimeType = 'image/jpeg';
-            const ab = new ArrayBuffer(byteString.length);
-            const ia = new Uint8Array(ab);
-            for (let j = 0; j < byteString.length; j++) {
-              ia[j] = byteString.charCodeAt(j);
-            }
-            const blob = new Blob([ab], { type: mimeType });
-            const file = new File([blob], fileName, { type: mimeType });
-            files.push(file);
-          }
-          
-          if (navigator.share && navigator.canShare && navigator.canShare({ files })) {
-            await navigator.share({
-              files: files,
-              title: 'Foto Absensi',
-              text: `${files.length} Foto Absen ${tanggal} ${jam}`
-            });
-            showNotification(`${files.length} foto siap disimpan!`);
-          } else {
-            for (let i = 0; i < photos.length; i++) {
-              window.open(photos[i], '_blank');
-            }
-            showNotification('Tekan lama foto untuk simpan');
-          }
-        } catch (error) {
-          if (error.name !== 'AbortError') {
-            console.log('Share cancelled or failed:', error);
-          }
-        }
-      } else {
-        for (let i = 0; i < photos.length; i++) {
-          const photo = photos[i];
-          const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-          if (i > 0) await new Promise(r => setTimeout(r, 200));
-          directDownload(photo, fileName);
-        }
-        showNotification(`${photos.length} foto berhasil diunduh!`);
+  const formattedDate = tanggal.replace(/\//g, '-'); // Ubah 07/01/2026 jadi 07-01-2026
+  const formattedTime = jam.replace(/:/g, '.');
+  
+  // Deteksi jika perangkat adalah iOS (iPhone/iPad)
+  const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  if (isIOSDevice) {
+    try {
+      const files = [];
+      for (let i = 0; i < photos.length; i++) {
+        const response = await fetch(photos[i]);
+        const blob = await response.blob();
+        const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+        files.push(new File([blob], fileName, { type: 'image/jpeg' }));
       }
+
+      // Memicu Share Sheet bawaan iOS
+      if (navigator.canShare && navigator.canShare({ files: files })) {
+        await navigator.share({
+          files: files,
+          title: 'Simpan Foto Absensi',
+          text: `Foto Absen ${tanggal} jam ${jam}`
+        });
+      } else {
+        // Fallback jika browser iOS tidak mendukung Web Share API untuk file
+        photos.forEach(p => window.open(p, '_blank'));
+        showNotification('Tekan lama foto untuk simpan ke galeri', true);
+      }
+    } catch (error) {
+      console.error('iOS Share Error:', error);
     }
+  } else {
+    // Logika untuk Android / Laptop (Unduh Otomatis)
+    for (let i = 0; i < photos.length; i++) {
+      const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+      const link = document.createElement('a');
+      link.href = photos[i];
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      // Beri jeda sedikit antar unduhan agar tidak diblokir browser
+      await new Promise(r => setTimeout(r, 300));
+    }
+    showNotification(`${photos.length} Foto otomatis tersimpan!`);
+  }
+}
 
     function directDownload(dataUrl, fileName) {
       const link = document.createElement('a');
