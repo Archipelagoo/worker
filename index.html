@@ -1422,23 +1422,24 @@ function applyColorsToAllData() {
     const usernameInput = document.getElementById('username').value.toLowerCase().trim();
     const passwordInput = document.getElementById('password').value;
     
+    // Mencari user di database
     const user = USERS_DB[usernameInput];
     
     if (user && user.password === passwordInput) {
         isLoggedIn = true;
-        currentUser = { username: usernameInput, ...user }; // Simpan data user aktif
+        currentUser = { username: usernameInput, ...user }; // Simpan info user login
         
         document.getElementById('page-login').style.display = 'none';
         showPage('page-attendance');
         
-        // LOGIKA HAK AKSES: Sembunyikan tombol Recap & Script jika bukan Admin
+        // LOGIKA HAK AKSES: Sembunyikan menu Admin jika role adalah 'user'
         const attendancePage = document.getElementById('page-attendance');
         const adminButtons = attendancePage.querySelectorAll("button[onclick*='page-recap'], button[onclick*='page-apps-script']");
         
         if (user.role === 'admin') {
             adminButtons.forEach(btn => btn.classList.remove('hidden'));
         } else {
-            // Jika akun archi1 - archi5, sembunyikan fitur admin
+            // Sembunyikan tombol Recap dan Script untuk archi1 - archi5
             adminButtons.forEach(btn => btn.classList.add('hidden'));
         }
         
@@ -1960,18 +1961,84 @@ function applyColorsToAllData() {
     }
 
     async function submitAttendance() {
-    // ... (kode pengambilan data foto, lokasi, dll tetap sama) ...
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
 
-    const attendancePayload = {
-        action: 'submitAttendance',
-        tanggal: document.getElementById('attendance-date').value,
-        jam: document.getElementById('attendance-time').value,
-        attendance: attendanceData,
-        // LOGIKA PENCATATAN AKUN:
-        adminUser: currentUser ? currentUser.username : 'Unknown' 
-    };
+    const now = new Date();
+    const tanggal = formatTanggalIndo(now);
+    const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-    // ... (proses fetch ke google script tetap sama) ...
+    // Mengambil data absensi dari tampilan grid
+    const attendance = workers.map(w => ({
+        name: w.name,
+        status: attendanceStatus[w.id] || '-'
+    }));
+
+    showUploadProgress();
+    
+    try {
+        updateUploadProgress('Mengirim absensi...', 'Data pekerja', 20);
+        
+        const attendancePayload = {
+            action: 'submitAttendance',
+            tanggal,
+            jam,
+            attendance,
+            // LOGIKA PENCATATAN AKUN: Mengirim nama akun yang login ke server
+            adminUser: currentUser ? currentUser.username : 'Unknown' 
+        };
+        
+        const formData = new FormData();
+        formData.append('data', JSON.stringify(attendancePayload));
+        
+        // Kirim data absen utama
+        await fetch(scriptUrl, { method: 'POST', body: formData, redirect: 'follow' });
+        
+        updateUploadProgress('Absensi terkirim!', 'Menyimpan foto...', 60);
+        
+        // Download foto ke HP/Laptop jika ada
+        if (uploadedPhotos.length > 0) {
+            downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
+        }
+        
+        // Upload foto ke Google Drive
+        if (uploadedPhotosCompressed.length > 0) {
+            updateUploadProgress('Upload foto...', 'Ke Google Drive', 80);
+            
+            const photoPayload = {
+                action: 'uploadPhotos',
+                tanggal,
+                jam,
+                photos: uploadedPhotosCompressed
+            };
+            
+            const photoFormData = new FormData();
+            photoFormData.append('data', JSON.stringify(photoPayload));
+            
+            fetch(scriptUrl, { method: 'POST', body: photoFormData, redirect: 'follow' }).catch(() => {});
+        }
+        
+        updateUploadProgress('Selesai!', 'Absensi berhasil', 100);
+        
+        // Reset form setelah berhasil
+        attendanceStatus = {};
+        uploadedPhotos = [];
+        uploadedPhotosCompressed = [];
+        renderPhotoThumbnails();
+        renderWorkers(workers);
+        updateCounter();
+        
+        setTimeout(() => {
+            hideUploadProgress();
+            showNotification('Absen berhasil dikirim!');
+        }, 500);
+        
+    } catch (error) {
+        hideUploadProgress();
+        showNotification('Gagal mengirim. Cek koneksi.', true);
+    } finally {
+        btn.disabled = false;
+    }
 }
         
         const formData = new FormData();
