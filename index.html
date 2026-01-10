@@ -1096,6 +1096,16 @@ function applyColorsToAllData() {
     let currentPhotoIndex = 0;
     let currentCalendarDate = new Date();
     let isLoggedIn = false;
+    // DATABASE USER & HAK AKSES (Tambahkan ini mulai baris 1899)
+    const USERS_DB = {
+        'archipelago': { password: 'balivibes', role: 'admin', displayName: 'Super Admin' },
+        'archi1': { password: 'balivibes', role: 'user', displayName: 'Akun 1' },
+        'archi2': { password: 'balivibes', role: 'user', displayName: 'Akun 2' },
+        'archi3': { password: 'balivibes', role: 'user', displayName: 'Akun 3' },
+        'archi4': { password: 'balivibes', role: 'user', displayName: 'Akun 4' },
+        'archi5': { password: 'balivibes', role: 'user', displayName: 'Akun 5' }
+    };
+    let currentUser = null;
     let currentRecapDate = '';
     let currentRecapData = null;
     let recapSource = 'today';
@@ -1408,20 +1418,37 @@ function applyColorsToAllData() {
     }
 
     document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      
-      if (username === 'archipelago' && password === 'balivibes') {
+    e.preventDefault();
+    const usernameInput = document.getElementById('username').value.toLowerCase().trim();
+    const passwordInput = document.getElementById('password').value;
+    
+    const user = USERS_DB[usernameInput];
+    
+    if (user && user.password === passwordInput) {
         isLoggedIn = true;
+        currentUser = { username: usernameInput, ...user }; // Simpan data user aktif
+        
         document.getElementById('page-login').style.display = 'none';
         showPage('page-attendance');
-      } else {
+        
+        // LOGIKA HAK AKSES: Sembunyikan tombol Recap & Script jika bukan Admin
+        const attendancePage = document.getElementById('page-attendance');
+        const adminButtons = attendancePage.querySelectorAll("button[onclick*='page-recap'], button[onclick*='page-apps-script']");
+        
+        if (user.role === 'admin') {
+            adminButtons.forEach(btn => btn.classList.remove('hidden'));
+        } else {
+            // Jika akun archi1 - archi5, sembunyikan fitur admin
+            adminButtons.forEach(btn => btn.classList.add('hidden'));
+        }
+        
+        showNotification(`Selamat datang, ${user.displayName}!`);
+    } else {
         const errorEl = document.getElementById('login-error');
         errorEl.textContent = 'Username atau password salah!';
         errorEl.classList.remove('hidden');
-      }
-    });
+    }
+});
 
     function getTimezone() {
       const offset = new Date().getTimezoneOffset();
@@ -1933,29 +1960,19 @@ function applyColorsToAllData() {
     }
 
     async function submitAttendance() {
-      const btn = document.getElementById('submit-btn');
-      btn.disabled = true;
+    // ... (kode pengambilan data foto, lokasi, dll tetap sama) ...
 
-      const now = new Date();
-      const tanggal = formatTanggalIndo(now);
-      const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const attendancePayload = {
+        action: 'submitAttendance',
+        tanggal: document.getElementById('attendance-date').value,
+        jam: document.getElementById('attendance-time').value,
+        attendance: attendanceData,
+        // LOGIKA PENCATATAN AKUN:
+        adminUser: currentUser ? currentUser.username : 'Unknown' 
+    };
 
-      const attendance = workers.map(w => ({
-        name: w.name,
-        status: attendanceStatus[w.id] || '-'
-      }));
-
-      showUploadProgress();
-      
-      try {
-        updateUploadProgress('Mengirim absensi...', 'Data pekerja', 20);
-        
-        const attendancePayload = {
-          action: 'submitAttendance',
-          tanggal,
-          jam,
-          attendance
-        };
+    // ... (proses fetch ke google script tetap sama) ...
+}
         
         const formData = new FormData();
         formData.append('data', JSON.stringify(attendancePayload));
