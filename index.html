@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Absen Archipelago</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="hfttps://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
@@ -857,12 +857,19 @@ function getPhotoFolders() {
 function getPhotos(date) {
   try {
     const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
-    const folderName = date.replace(/ /g, '_');
-    const subFolders = folder.getFoldersByName(folderName);
     
+    // Logic 1: Cek format asli (misal: 10/01/2026)
+    let folderName = date; 
+    let subFolders = folder.getFoldersByName(folderName);
+    
+    // Logic 2: Jika tidak ketemu, cek format strip (misal: 10-01-2026)
     if (!subFolders.hasNext()) {
-      return { success: true, photos: [] };
+      folderName = date.replace(/\//g, '-');
+      subFolders = folder.getFoldersByName(folderName);
     }
+    
+    // Jika keduanya tetap tidak ditemukan
+    if (!subFolders.hasNext()) return { success: true, photos: [] };
     
     const dateFolder = subFolders.next();
     const files = dateFolder.getFiles();
@@ -873,15 +880,13 @@ function getPhotos(date) {
       if (file.getMimeType().startsWith('image/')) {
         photos.push({
           name: file.getName(),
-          url: 'https://lh3.googleusercontent.com/d/' + file.getId()
+          url: file.getThumbnailUrl().replace(/=s128$/, "=s1000") // Perbaikan link foto
         });
       }
     }
-    
-    photos.sort((a, b) =&gt; a.name.localeCompare(b.name));
-    return { success: true, photos };
-  } catch(err) {
-    return { success: false, error: err.toString() };
+    return { success: true, photos: photos.sort((a,b) => a.name.localeCompare(b.name)) };
+  } catch(err) { 
+    return { success: false, error: err.toString() }; 
   }
 }
 
