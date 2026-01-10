@@ -2586,36 +2586,79 @@ function applyColorsToAllData() {
 }
 
     async function downloadRecapJamPDF() {
-    const workerName = document.getElementById('jam-worker-name').textContent;
-    const totalJam = document.getElementById('jam-total').textContent;
-    if (!workerName) return showNotification('Pilih pekerja terlebih dahulu', true);
-
+    if (!currentRecapData) return showNotification('Data tidak tersedia', true);
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
-
+    
+    // Header Laporan
+    if (cachedLogoBase64) doc.addImage(cachedLogoBase64, 'PNG', 14, 10, 20, 20);
     doc.setFontSize(16);
-    doc.text("Detail Jam Kerja Worker", 14, 20);
-    doc.setFontSize(12);
-    doc.text(`Nama: ${workerName}`, 14, 30);
-    doc.text(`Tanggal: ${currentRecapDate}`, 14, 37);
-    doc.text(`Total Durasi: ${totalJam}`, 14, 44);
+    doc.text(config.company_name, 40, 18);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Laporan Rekap Jam Kerja & Lembur Seluruh Pekerja`, 40, 24);
+    doc.text(`Tanggal: ${currentRecapDate}`, 40, 29);
+    doc.line(14, 34, 196, 34);
 
-    const sessions = [];
-    document.querySelectorAll('#jam-sessions > div').forEach(div => {
-        sessions.push([
-            div.querySelector('span:nth-child(1)').textContent,
-            div.querySelector('span:nth-child(2)').textContent,
-            div.querySelector('span:nth-child(3)').textContent
-        ]);
+    // Persiapkan Data Tabel
+    const tableData = [];
+    const standardMinutes = 12 * 60; // Batas 12 Jam
+
+    currentRecapData.workers.forEach(worker => {
+        const times = Object.keys(worker.statuses).sort();
+        let firstStart = null;
+        let lastFinish = null;
+
+        times.forEach(jam => {
+            const status = worker.statuses[jam];
+            if (status === 'Start Work' && !firstStart) firstStart = jam;
+            if (status === 'Finish Work') lastFinish = jam;
+        });
+
+        if (firstStart && lastFinish) {
+            const totalMin = calculateMinutes(firstStart, lastFinish);
+            const h = Math.floor(totalMin / 60);
+            const m = totalMin % 60;
+            
+            let overtimeText = "0j 0m";
+            if (totalMin > standardMinutes) {
+                const diff = totalMin - standardMinutes;
+                overtimeText = `${Math.floor(diff/60)}j ${diff%60}m`;
+            }
+
+            tableData.push([
+                worker.name,
+                firstStart,
+                lastFinish,
+                `${h}j ${m}m`,
+                overtimeText
+            ]);
+        } else {
+            // Jika data tidak lengkap tetap masukkan ke list dengan keterangan
+            tableData.push([worker.name, firstStart || '-', lastFinish || '-', '-', '-']);
+        }
     });
 
+    // Buat Tabel di PDF
     doc.autoTable({
-        head: [['Sesi', 'Waktu', 'Durasi']],
-        body: sessions,
-        startY: 50,
-        theme: 'striped'
+        head: [['Nama Pekerja', 'Start Awal', 'Finish Akhir', 'Total Jam', 'Lembur']],
+        body: tableData,
+        startY: 40,
+        theme: 'grid',
+        headStyles: { fillColor: [6, 182, 212] }, // Warna Cyan (sesuai tema Recap Jam)
+        styles: { fontSize: 8 },
+        didParseCell: function(data) {
+            // Warnai baris yang ada lemburnya agar admin mudah melihat
+            if (data.section === 'body' && data.column.index === 4 && data.cell.text[0] !== '0j 0m' && data.cell.text[0] !== '-') {
+                data.cell.styles.textColor = [220, 38, 38]; // Warna merah untuk teks lembur
+                data.cell.styles.fontStyle = 'bold';
+            }
+        }
     });
-    doc.save(`Jam_Kerja_${workerName}_${currentRecapDate}.pdf`);
+
+    doc.save(`Rekap_Lembur_Semua_${currentRecapDate.replace(/\//g, '-')}.pdf`);
+    showNotification('Laporan Lembur Semua Pekerja berhasil dibuat');
 }
 
     async function onConfigChange(newConfig) {
