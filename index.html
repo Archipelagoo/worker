@@ -2221,85 +2221,113 @@ function applyColorsToAllData() {
       `).join('');
     });
 
-    function showWorkerJamDetail(workerName) {
-      const resultsContainer = document.getElementById('jam-search-results');
-      const resultContainer = document.getElementById('jam-result-container');
-      const noResult = document.getElementById('jam-no-result');
-      
-      resultsContainer.innerHTML = '';
-      noResult.classList.add('hidden');
-      
-      const worker = workers.find(w => w.name === workerName);
-      const photoUrl = worker ? convertDriveLink(worker.photo) : '';
-      
-      const recapWorker = currentRecapData.workers.find(w => w.name === workerName);
-      if (!recapWorker) return;
-      
-      const photoContainer = document.getElementById('jam-worker-photo');
-      if (photoUrl && photoUrl.startsWith('http')) {
-        photoContainer.innerHTML = `<img src="${photoUrl}" alt="${workerName}" class="w-16 h-16 rounded-full object-cover" onerror="this.outerHTML='${workerName.charAt(0).toUpperCase()}'">`;
-      } else {
+   function showWorkerJamDetail(workerName) {
+    const resultsContainer = document.getElementById('jam-search-results');
+    const resultContainer = document.getElementById('jam-result-container');
+    const noResult = document.getElementById('jam-no-result');
+    
+    resultsContainer.innerHTML = '';
+    noResult.classList.add('hidden');
+    
+    const worker = workers.find(w => w.name === workerName);
+    const photoUrl = worker ? convertDriveLink(worker.photo) : '';
+    const recapWorker = currentRecapData.workers.find(w => w.name === workerName);
+    
+    if (!recapWorker) return;
+    
+    // Tampilkan Foto & Nama
+    const photoContainer = document.getElementById('jam-worker-photo');
+    if (photoUrl && photoUrl.startsWith('http')) {
+        photoContainer.innerHTML = `<img src="${photoUrl}" class="w-16 h-16 rounded-full object-cover">`;
+    } else {
         photoContainer.textContent = workerName.charAt(0).toUpperCase();
-      }
-      
-      document.getElementById('jam-worker-name').textContent = workerName;
-      
-      const sessions = [];
-      const times = Object.keys(recapWorker.statuses).sort();
-      
-      let currentStart = null;
-      times.forEach(jam => {
+    }
+    document.getElementById('jam-worker-name').textContent = workerName;
+    
+    // LOGIKA: MENCARI AWAL DAN AKHIR
+    const times = Object.keys(recapWorker.statuses).sort(); 
+    let firstStart = null;
+    let lastFinish = null;
+
+    times.forEach(jam => {
         const status = recapWorker.statuses[jam];
         if (status === 'Start Work') {
-          currentStart = jam;
-        } else if (status === 'Finish Work' && currentStart) {
-          sessions.push({ start: currentStart, finish: jam });
-          currentStart = null;
+            if (!firstStart) firstStart = jam; 
+        } else if (status === 'Finish Work') {
+            lastFinish = jam; 
         }
-      });
-      
-      const sessionsContainer = document.getElementById('jam-sessions');
-      if (sessions.length === 0) {
-        sessionsContainer.innerHTML = `<p class="text-slate-400 text-sm text-center">Tidak ada sesi kerja lengkap (Start - Finish)</p>`;
-      } else {
-        sessionsContainer.innerHTML = sessions.map((s, i) => {
-          const duration = calculateDuration(s.start, s.finish);
-          return `
-            <div class="flex justify-between items-center bg-slate-700/50 rounded-lg px-4 py-2">
-              <span class="text-slate-300 text-sm">Sesi ${i + 1}</span>
-              <span class="text-white font-medium">${s.start} - ${s.finish}</span>
-              <span class="text-cyan-400 font-semibold">${duration}</span>
+    });
+
+    const sessionsContainer = document.getElementById('jam-sessions');
+    
+    if (firstStart && lastFinish) {
+        const totalMinutes = calculateMinutes(firstStart, lastFinish);
+        
+        // Kalkulasi Jam Kerja Reguler vs Lembur
+        const standardMinutes = 12 * 60; // 12 Jam = 720 Menit
+        let overtimeMinutes = 0;
+        let overtimeText = "";
+
+        if (totalMinutes > standardMinutes) {
+            overtimeMinutes = totalMinutes - standardMinutes;
+            const oh = Math.floor(overtimeMinutes / 60);
+            const om = overtimeMinutes % 60;
+            overtimeText = `${oh} Jam ${om} Menit`;
+        }
+
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+
+        // Render Tampilan
+        sessionsContainer.innerHTML = `
+            <div class="flex flex-col gap-3 bg-slate-700/50 rounded-lg px-4 py-3">
+                <div class="flex justify-between border-b border-slate-600 pb-2">
+                    <span class="text-slate-400 text-xs text-left">Start Pertama:</span>
+                    <span class="text-green-400 font-bold">${firstStart}</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-600 pb-2">
+                    <span class="text-slate-400 text-xs text-left">Finish Terakhir:</span>
+                    <span class="text-blue-400 font-bold">${lastFinish}</span>
+                </div>
+                ${overtimeMinutes > 0 ? `
+                <div class="flex justify-between bg-yellow-500/10 p-2 rounded border border-yellow-500/30">
+                    <span class="text-yellow-500 text-xs font-bold uppercase text-left">Lembur:</span>
+                    <span class="text-yellow-400 font-bold">${overtimeText}</span>
+                </div>
+                ` : `
+                <div class="flex justify-between p-2">
+                    <span class="text-slate-500 text-xs text-left">Lembur:</span>
+                    <span class="text-slate-500 font-medium">0 Jam 0 Menit</span>
+                </div>
+                `}
             </div>
-          `;
-        }).join('');
-      }
-      
-      let totalMinutes = 0;
-      sessions.forEach(s => {
-        totalMinutes += calculateMinutes(s.start, s.finish);
-      });
-      
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      document.getElementById('jam-total').textContent = `${hours} Jam ${minutes} Menit`;
-      
-      resultContainer.classList.remove('hidden');
+        `;
+        document.getElementById('jam-total').textContent = `${h} Jam ${m} Menit`;
+    } else {
+        sessionsContainer.innerHTML = `<p class="text-red-400 text-sm text-center font-medium p-4">Data tidak lengkap.<br><span class="text-xs opacity-70 text-left">Pekerja harus memiliki status Start Work dan Finish Work.</span></p>`;
+        document.getElementById('jam-total').textContent = "0 Jam 0 Menit";
     }
+    
+    resultContainer.classList.remove('hidden');
+}
 
     function calculateDuration(start, finish) {
-      const minutes = calculateMinutes(start, finish);
-      const h = Math.floor(minutes / 60);
-      const m = minutes % 60;
-      if (h === 0) return `${m} Menit`;
-      return `${h}j ${m}m`;
-    }
+  const minutes = calculateMinutes(start, finish);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  
+  // Jika durasi kurang dari 1 jam, tampilkan menit saja
+  if (h === 0) return `${m} Menit`;
+  // Jika lebih, tampilkan format jam dan menit
+  return `${h} Jam ${m} Menit`;
+}
 
     function calculateMinutes(start, finish) {
   if (!start || !finish) return 0;
 
   const parseTime = (timeStr) => {
     // Menghapus detik jika ada (misal 23:05:04 jadi 23:05)
-    // Dan mengubah titik (.) menjadi titik dua (:) agar seragam
+    // Dan mengubah titik (.) menjadi titik dua (:) agar seragam di semua browser
     const cleanTime = timeStr.toString().replace(/\./g, ':');
     const parts = cleanTime.split(':');
     
