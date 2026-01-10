@@ -227,10 +227,10 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Reset
           </button>
           <div class="flex-1"></div>
-          <button onclick="showPage('page-recap')" class="admin-only px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+          <button id="nav-btn-recap" onclick="showPage('page-recap')" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Recap
           </button>
-          <button onclick="showPage('page-apps-script')" class="admin-only px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+          <button id="nav-btn-script" onclick="showPage('page-apps-script')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> Script
           </button>
         </div>
@@ -303,7 +303,7 @@
         <div class="nav-buttons">
           <button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
         </div>
-        <h2 class="text-xl md:text-2xl font-bold text-white text-center mb-4 uppercase">RECAP ABSEN DAILY WORKER</h2>
+        <h2 class="text-xl md:text-2xl font-bold text-white text-center mb-4">RECAP ABSEN DAILY WORKER</h2>
         <div class="flex flex-row gap-3 overflow-x-auto pb-2">
           <button onclick="showRecapToday()" class="flex-1 min-w-[140px] bg-white p-4 rounded-xl text-center shadow-lg border border-slate-200">
             <div class="flex flex-col items-center gap-2">
@@ -326,20 +326,138 @@
               <div class="w-12 h-12 bg-blue-900/10 rounded-lg flex items-center justify-center">
                 <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               </div>
-              <h2 class="text-xs md:text-sm font-bold text-blue-900">Galeri Foto</h2>
+              <h2 class="text-xs md:text-sm font-bold text-blue-900">Recap Foto Absen</h2>
             </div>
           </button>
         </div>
       </main>
     </div>
 
+    <div id="page-calendar" class="page min-h-full bg-primary">
+      <main class="p-3 max-w-md mx-auto">
+        <div class="nav-buttons">
+          <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
+        </div>
+        <div class="bg-slate-800/70 rounded-2xl p-4 shadow-xl border border-slate-700">
+          <div class="flex items-center justify-between mb-4">
+            <button onclick="prevMonth()" class="p-2 hover:bg-slate-700 rounded-full transition-colors text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+            <h2 id="calendar-month" class="text-base font-bold text-white"></h2>
+            <button onclick="nextMonth()" class="p-2 hover:bg-slate-700 rounded-full transition-colors text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></button>
+          </div>
+          <div class="grid grid-cols-7 gap-1 mb-2">
+            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">MIN</div>
+            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">SEN</div>
+            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">SEL</div>
+            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">RAB</div>
+            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">KAM</div>
+            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">JUM</div>
+            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">SAB</div>
+          </div>
+          <div id="calendar-days" class="grid grid-cols-7 gap-1"></div>
+          <div id="calendar-loading" class="hidden text-center py-4">
+            <div class="inline-block w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </main>
     </div>
+
+    <div id="page-recap-detail" class="page min-h-full bg-primary">
+      <main class="p-3 max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-3">
+          <button onclick="showPage('page-recap-jam')" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Recap Jam Kerja</button>
+          <button onclick="goBackFromRecapDetail()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
+        </div>
+        <div class="mb-3 flex items-center justify-between">
+          <div>
+            <h2 id="recap-title" class="text-lg font-bold text-white">Recap Absen</h2>
+            <p id="recap-date-label" class="text-yellow-400 text-sm font-medium"></p>
+          </div>
+          <button id="download-pdf-btn" onclick="downloadRecapPDF()" class="hidden px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Download PDF</button>
+        </div>
+        <div id="recap-loading" class="text-center py-8">
+          <div class="inline-block w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <div id="recap-content" class="hidden"></div>
+        <div id="recap-empty" class="hidden text-center py-12">
+          <p class="text-slate-400 text-sm">Tidak ada data absensi untuk tanggal ini</p>
+        </div>
+      </main>
+    </div>
+
+    <div id="page-photo-gallery" class="page min-h-full bg-primary">
+      <main class="p-3 max-w-4xl mx-auto">
+        <div class="nav-buttons">
+          <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
+        </div>
+        <h2 class="text-lg font-bold text-white mb-3">Galeri Foto Absen</h2>
+        <div id="gallery-loading" class="text-center py-8">
+          <div class="inline-block w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <div id="gallery-folders" class="hidden grid grid-cols-3 md:grid-cols-4 gap-2"></div>
+      </main>
+    </div>
+
+    <div id="page-photo-detail" class="page min-h-full bg-primary">
+      <main class="p-3 max-w-4xl mx-auto">
+        <div class="nav-buttons">
+          <button onclick="showPage('page-photo-gallery')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
+        </div>
+        <h2 id="photo-folder-date" class="text-lg font-bold text-white mb-3">Foto Absen</h2>
+        <div id="photo-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+      </main>
+    </div>
+
+    <div id="page-apps-script" class="page min-h-full bg-primary">
+      <main class="p-3 max-w-4xl mx-auto">
+        <div class="nav-buttons">
+          <button onclick="goBackFromAppsScript()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
+        </div>
+        <h2 class="text-lg font-bold text-white mb-4">Setup Apps Script</h2>
+        <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+          <h3 class="text-sm text-white mb-3">Paste URL Apps Script</h3>
+          <div class="flex gap-2">
+            <input type="url" id="script-url-input" class="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm">
+            <button onclick="saveScriptUrl()" class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm">Simpan</button>
+          </div>
+          <p id="script-url-status" class="mt-2 text-xs"></p>
+        </div>
+      </main>
+    </div>
+
+    <div id="page-recap-jam" class="page min-h-full bg-primary">
+      <main class="p-3 max-w-2xl mx-auto">
+        <div class="nav-buttons">
+          <button onclick="showPage('page-recap-detail')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
+        </div>
+        <div class="text-center mb-4">
+          <h2 class="text-xl font-bold text-white uppercase">Recap Jam Kerja Worker</h2>
+          <p id="recap-jam-date" class="text-yellow-400 text-sm"></p>
+        </div>
+        <div class="flex justify-end mb-2">
+          <button onclick="downloadRecapJamPDF()" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs">Download PDF Semua Pekerja</button>
+        </div>
+        <div class="relative mb-4">
+          <input type="text" id="jam-search-input" placeholder="Cari nama pekerja..." class="w-full pl-4 pr-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm">
+        </div>
+        <div id="jam-search-results" class="space-y-2 mb-4"></div>
+        <div id="jam-result-container" class="hidden">
+          <div class="jam-result-card">
+            <h3 id="jam-worker-name" class="text-white font-bold text-lg mb-2"></h3>
+            <div id="jam-sessions" class="space-y-2"></div>
+            <div class="mt-4 border-t border-slate-600 pt-2 flex justify-between items-center">
+              <span class="text-slate-400">Total Jam:</span>
+              <span id="jam-total" class="text-cyan-400 font-bold text-xl"></span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
 
   <script>
     const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw';
     const TIMEMARK_LOGO_URL = 'https://lh3.googleusercontent.com/d/1zaavYZSem-yNHztE724qeIAWw9uGJgen';
     let cachedTimemarkLogoBase64 = null;
-    
     const BULAN_INDO = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     
     const defaultConfig = {
@@ -357,7 +475,7 @@
     let currentCalendarDate = new Date();
     
     // ==========================================
-    // PERBAIKAN LOGIKA AKUN & HAK AKSES
+    // DATABASE USER & HAK AKSES
     // ==========================================
     let isLoggedIn = false;
     const USERS_DB = {
@@ -393,29 +511,30 @@
     }
 
     // ==========================================
-    // PERBAIKAN FUNGSI LOGIN
+    // PERBAIKAN FUNGSI LOGIN & HAK AKSES
     // ==========================================
     document.getElementById('login-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const usernameInput = document.getElementById('username').value.toLowerCase().trim();
         const passwordInput = document.getElementById('password').value;
-        
         const user = USERS_DB[usernameInput];
         
         if (user && user.password === passwordInput) {
             isLoggedIn = true;
             currentUser = { username: usernameInput, ...user }; 
-            
             document.getElementById('page-login').style.display = 'none';
             showPage('page-attendance');
             
-            // LOGIKA HAK AKSES TOMBOL
-            const adminButtons = document.querySelectorAll(".admin-only, button[onclick*='page-recap'], button[onclick*='page-apps-script']");
+            // Atur Visibilitas Tombol Berdasarkan Role
+            const btnRecap = document.getElementById('nav-btn-recap');
+            const btnScript = document.getElementById('nav-btn-script');
             
             if (user.role === 'admin') {
-                adminButtons.forEach(btn => btn.style.display = 'inline-flex');
+                btnRecap.style.display = 'inline-flex';
+                btnScript.style.display = 'inline-flex';
             } else {
-                adminButtons.forEach(btn => btn.style.display = 'none');
+                btnRecap.style.display = 'none';
+                btnScript.style.display = 'none';
             }
             
             showNotification(`Selamat datang, ${user.displayName}!`);
@@ -436,11 +555,10 @@
     // TAMBAHAN KEAMANAN PADA SHOWPAGE
     // ==========================================
     function showPage(pageId) {
-      // Proteksi Halaman Admin
       if (currentUser && currentUser.role !== 'admin') {
           const adminPages = ['page-recap', 'page-calendar', 'page-recap-detail', 'page-apps-script', 'page-photo-gallery', 'page-photo-detail', 'page-recap-jam'];
           if (adminPages.includes(pageId)) {
-              showNotification('Akses Dibatasi! Halaman ini hanya untuk Admin.', true);
+              showNotification('Akses Dibatasi! Hanya untuk Admin.', true);
               return;
           }
       }
@@ -505,7 +623,6 @@
                 tanggal,
                 jam,
                 attendance,
-                // MENGIRIM NAMA AKUN KE SPREADSHEET
                 adminUser: currentUser ? currentUser.username : 'Unknown' 
             };
             
@@ -513,11 +630,10 @@
             formData.append('data', JSON.stringify(attendancePayload));
             
             await fetch(scriptUrl, { method: 'POST', body: formData, redirect: 'follow' });
-            
             updateUploadProgress('Absensi terkirim!', 'Menyimpan foto...', 60);
             
             if (uploadedPhotos.length > 0) {
-                downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
+                await downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
             }
             
             if (uploadedPhotosCompressed.length > 0) {
@@ -530,12 +646,11 @@
                 };
                 const photoFormData = new FormData();
                 photoFormData.append('data', JSON.stringify(photoPayload));
-                fetch(scriptUrl, { method: 'POST', body: photoFormData, redirect: 'follow' }).catch(() => {});
+                await fetch(scriptUrl, { method: 'POST', body: photoFormData, redirect: 'follow' }).catch(() => {});
             }
             
             updateUploadProgress('Selesai!', 'Absensi berhasil', 100);
             
-            // Reset state
             attendanceStatus = {};
             uploadedPhotos = [];
             uploadedPhotosCompressed = [];
@@ -556,7 +671,7 @@
         }
     }
 
-    // --- SISA FUNGSI (Perhitungan Menit, PDF, dll) Tetap Ada ---
+    // --- FUNGSI PENDUKUNG (CALCULATE, RENDER, DLL) ---
     
     function calculateMinutes(start, finish) {
       if (!start || !finish) return 0;
@@ -608,22 +723,108 @@
         resultContainer.classList.remove('hidden');
     }
 
-    // Fungsi utilitas lainnya (loadWorkers, renderWorkers, updateDateTime, dll) 
-    // tetap disertakan di bawah ini secara implisit sesuai kode original Anda...
-    
-    // (Tambahkan sisa fungsi pendukung dari kode lama Anda di sini untuk fungsionalitas penuh)
-    
-    async function fetchWithCallback(url) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-        try {
-            const response = await fetch(url, { method: 'GET', redirect: 'follow', signal: controller.signal });
-            clearTimeout(timeoutId);
-            const text = await response.text();
-            return JSON.parse(text);
-        } catch (error) {
-            throw error;
+    async function loadWorkers() {
+      if (!scriptUrl) return document.getElementById('no-script-warning').classList.remove('hidden');
+      try {
+        const data = await fetchWithCallback(`${scriptUrl}?action=getWorkers`);
+        if (data.success) {
+          workers = data.workers;
+          renderWorkers(workers);
+          updateCounter();
+          document.getElementById('loading-workers').classList.add('hidden');
+          document.getElementById('workers-grid').classList.remove('hidden');
+          document.getElementById('search-container').classList.remove('hidden');
+          document.getElementById('photo-section').classList.remove('hidden');
+          document.getElementById('submit-section').classList.remove('hidden');
         }
+      } catch (e) { console.error(e); }
+    }
+
+    function renderWorkers(list) {
+      const grid = document.getElementById('workers-grid');
+      grid.innerHTML = list.map(w => {
+        const status = attendanceStatus[w.id] || '';
+        return `
+          <div class="card-worker bg-white rounded-xl p-3 border-2 ${status ? 'status-selected' : 'border-slate-200'}" onclick="event.stopPropagation()">
+            <div class="flex flex-col items-center gap-2">
+               <img src="${convertDriveLink(w.photo)}" class="w-16 h-16 rounded-full object-cover" onerror="this.src='https://via.placeholder.com/150'">
+               <p class="text-xs font-bold text-slate-800 text-center">${w.name}</p>
+               <div class="grid grid-cols-2 gap-1 w-full mt-2">
+                  <button onclick="setStatus(${w.id}, 'Start Work')" class="py-1 bg-green-500 text-white text-[10px] rounded">Start</button>
+                  <button onclick="setStatus(${w.id}, 'Finish Work')" class="py-1 bg-blue-500 text-white text-[10px] rounded">Finish</button>
+                  <button onclick="setStatus(${w.id}, 'Sakit')" class="py-1 bg-orange-500 text-white text-[10px] rounded">Sakit</button>
+                  <button onclick="setStatus(${w.id}, 'Standby')" class="py-1 bg-purple-500 text-white text-[10px] rounded">Standby</button>
+               </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function setStatus(id, status) {
+      if (attendanceStatus[id] === status) delete attendanceStatus[id];
+      else attendanceStatus[id] = status;
+      renderWorkers(workers);
+      updateCounter();
+    }
+
+    function updateCounter() {
+      const sel = Object.keys(attendanceStatus).length;
+      document.getElementById('counter-selected').textContent = sel;
+      document.getElementById('counter-unselected').textContent = workers.length - sel;
+    }
+
+    function updateDateTime() {
+      const now = new Date();
+      document.getElementById('header-date').textContent = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+      document.getElementById('header-time').textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function requestLocationPermission() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(p => {
+          cachedLocation = p.coords;
+          document.getElementById('location-text').textContent = "Lokasi aktif: " + p.coords.latitude.toFixed(4) + ", " + p.coords.longitude.toFixed(4);
+        });
+      }
+    }
+
+    async function fetchWithCallback(url) {
+        const res = await fetch(url);
+        return await res.json();
+    }
+
+    function convertDriveLink(url) {
+      if(!url) return "";
+      const match = url.match(/[-\w]{25,}/);
+      return match ? `https://lh3.googleusercontent.com/d/${match[0]}` : url;
+    }
+
+    // PDF Global Laporan Jam Kerja
+    async function downloadRecapJamPDF() {
+        if (!currentRecapData) return;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const data = currentRecapData.workers.map(w => {
+            const times = Object.keys(w.statuses).sort();
+            let s = null, f = null;
+            times.forEach(j => {
+                if(w.statuses[j] === 'Start Work' && !s) s = j;
+                if(w.statuses[j] === 'Finish Work') f = j;
+            });
+            let tot = "-", lem = "-";
+            if(s && f) {
+                const min = calculateMinutes(s, f);
+                tot = `${Math.floor(min/60)}j ${min%60}m`;
+                if(min > 720) {
+                  const d = min - 720;
+                  lem = `${Math.floor(d/60)}j ${d%60}m`;
+                }
+            }
+            return [w.name, s || "-", f || "-", tot, lem];
+        });
+        doc.text("Laporan Jam Kerja Seluruh Pekerja", 14, 15);
+        doc.autoTable({ head: [['Nama', 'Start', 'Finish', 'Total', 'Lembur']], body: data, startY: 20 });
+        doc.save(`Rekap_Jam_${currentRecapDate}.pdf`);
     }
 
     // Inisialisasi awal
