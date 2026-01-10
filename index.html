@@ -12,160 +12,43 @@
   <style>
     body { box-sizing: border-box; }
     * { font-family: 'Poppins', sans-serif; }
-    
-    :root {
-      --bg-primary: #0a1628;
-      --bg-header: #1a2d4a;
-      --pink-bold: #ff1493;
-      --orange: #ff8c00;
-    }
-    
+    :root { --bg-primary: #0a1628; --bg-header: #1a2d4a; --pink-bold: #ff1493; --orange: #ff8c00; }
     .bg-primary { background-color: var(--bg-primary); }
     .bg-header { background-color: var(--bg-header); }
-    .text-orange { color: var(--orange); }
-    .bg-pink-bold { background-color: var(--pink-bold); }
-    
-    .status-selected {
-      background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%) !important;
-      border: 2px solid #fff !important;
-      box-shadow: 0 0 12px rgba(255, 20, 147, 0.5) !important;
-      transform: scale(1.02);
-    }
-    
+    .status-selected { background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%) !important; border: 2px solid #fff !important; box-shadow: 0 0 12px rgba(255, 20, 147, 0.5) !important; transform: scale(1.02); }
     .card-worker { transition: all 0.3s ease; }
     .card-worker:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-    
     .btn-status { transition: all 0.2s ease; }
     .btn-status:hover { transform: scale(1.05); }
     .btn-status:active { transform: scale(0.95); }
-    
     .page { display: none; }
     .page.active { display: flex; }
     #page-login.active { display: flex; align-items: center; justify-content: center; }
     #page-attendance.active, #page-recap.active, #page-calendar.active, 
     #page-recap-detail.active, #page-photo-gallery.active, #page-photo-detail.active, 
     #page-apps-script.active, #page-recap-jam.active { display: block; }
-    
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.3s ease-out; }
-    
-    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0.7); } 50% { box-shadow: 0 0 0 8px rgba(255, 20, 147, 0); } }
-    .pulse-pink { animation: pulse 2s infinite; }
-    
-    .calendar-day { transition: all 0.2s ease; cursor: pointer; }
-    .calendar-day:hover { background-color: rgba(255, 140, 0, 0.4); transform: scale(1.05); }
-    .calendar-day.has-data { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-    .calendar-day.today { ring: 2px; ring-color: #ff8c00; }
-    
-    .gallery-folder { transition: all 0.3s ease; }
-    .gallery-folder:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-    
     .notification { animation: slideDown 0.3s ease-out; }
     @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    
-    .code-block { background: #1e1e1e; border-radius: 8px; overflow-x: auto; }
-    .code-block pre { margin: 0; padding: 16px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; color: #d4d4d4; }
-    
-    .copy-btn { transition: all 0.2s ease; }
-    .copy-btn:hover { background-color: #ff8c00; }
-    
     .worker-photo { object-fit: cover; border: 2px solid rgba(255,255,255,0.3); }
     .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    
-    .photo-thumbnail { position: relative; cursor: pointer; transition: transform 0.2s ease; }
-    .photo-thumbnail:hover { transform: scale(1.05); }
-    .photo-thumbnail .delete-btn { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
-    .photo-thumbnail:hover .delete-btn { opacity: 1; }
-    
-    .fullscreen-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
-    .fullscreen-overlay img { max-width: 90%; max-height: 90%; object-fit: contain; }
-    
-    .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease; }
-    .nav-arrow:hover { background: rgba(255,255,255,0.4); }
-    .nav-arrow.left { left: 20px; }
-    .nav-arrow.right { right: 20px; }
-    
-    .recap-table { width: 100%; border-collapse: collapse; }
-    .recap-table th, .recap-table td { border: 1px solid #334155; padding: 8px 12px; text-align: center; }
-    .recap-table th { background: #1e293b; color: #fff; font-weight: 600; position: sticky; top: 0; z-index: 10; }
-    .recap-table th.sticky-col { position: sticky; left: 0; z-index: 20; background: #1e293b; }
-    .recap-table td.sticky-col { position: sticky; left: 0; background: #0f172a; z-index: 5; }
-    .recap-table tr:nth-child(even) td { background: #1e293b; }
-    .recap-table tr:nth-child(even) td.sticky-col { background: #1e293b; }
-    .recap-table tr:nth-child(odd) td { background: #0f172a; }
-    
-    .logo-img { width: 100%; height: 100%; object-fit: cover; }
-    
-    .nav-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
-    
-    .status-card { cursor: pointer; transition: all 0.2s ease; }
-    .status-card:hover { transform: scale(1.03); opacity: 0.9; }
-    .status-card.clickable { cursor: pointer; }
-    
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .modal-content { background: #1e293b; border-radius: 16px; max-width: 500px; width: 100%; max-height: 80%; overflow-y: auto; }
-    .modal-header { padding: 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #1e293b; z-index: 10; }
-    .modal-body { padding: 16px; }
-    
-    .worker-list-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #0f172a; border-radius: 12px; margin-bottom: 8px; }
-    .worker-list-item img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-    .worker-list-item .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
-    
-    .jam-result-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-top: 16px; }
-    
-    .mini-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .upload-progress { background: rgba(0,0,0,0.8); border-radius: 12px; padding: 20px; }
-    .progress-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); transition: width 0.3s ease; }
   </style>
-  <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
 </head>
 <body class="h-full m-0 p-0 overflow-hidden bg-primary">
   <div id="app" class="h-full w-full overflow-auto">
     <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
       <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
         <span id="notification-text">Berhasil!</span>
       </div>
     </div>
 
     <div id="upload-progress-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div class="upload-progress w-full max-w-sm text-center">
-        <div class="mb-4">
-          <div class="inline-block w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <p id="upload-status" class="text-white font-semibold mb-2">Mengirim absensi...</p>
-        <p id="upload-detail" class="text-slate-400 text-sm mb-4">Mengkompresi foto...</p>
-        <div class="progress-bar">
-          <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
-        </div>
-        <p id="progress-text" class="text-slate-400 text-xs mt-2">0%</p>
-      </div>
-    </div>
-
-    <div id="fullscreen-viewer" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
-      <div class="nav-arrow left" onclick="handleNavClick(-1, event)">
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-      </div>
-      <img id="fullscreen-image" src="" alt="Preview" onclick="event.stopPropagation()">
-      <div class="nav-arrow right" onclick="handleNavClick(1, event)">
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-      </div>
-      <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm"><span id="photo-counter">1 / 1</span></div>
-    </div>
-
-    <div id="status-modal" class="modal-overlay hidden" onclick="closeStatusModal(event)">
-      <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <h3 id="modal-title" class="text-white font-bold text-lg">Daftar Pekerja</h3>
-          <button onclick="closeStatusModal()" class="text-slate-400 hover:text-white">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-        <div class="modal-body" id="modal-body"></div>
+      <div class="bg-slate-800 p-6 rounded-xl w-full max-w-sm text-center">
+        <div class="inline-block w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p id="upload-status" class="text-white font-semibold">Mengirim absensi...</p>
+        <p id="upload-detail" class="text-slate-400 text-sm mt-2">Sabar ya...</p>
       </div>
     </div>
 
@@ -173,311 +56,60 @@
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div id="header-logo" class="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
-            <img id="header-logo-img" class="w-full h-full object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-            <span id="header-logo-fallback" class="hidden text-white text-2xl md:text-3xl font-bold">A</span>
+            <img id="header-logo-img" class="w-full h-full object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo">
           </div>
-          <div>
-            <h1 id="header-title" class="text-lg md:text-2xl font-bold text-white uppercase">ABSEN ONLINE DAILY WORKER</h1>
-          </div>
+          <h1 id="header-title" class="text-lg md:text-2xl font-bold text-white uppercase">ABSEN ONLINE DAILY WORKER</h1>
         </div>
-        <div class="text-right flex flex-col items-end gap-1">
-          <p id="header-date" class="text-white text-xs md:text-sm font-medium"></p>
+        <div class="text-right">
+          <p id="header-date" class="text-white text-xs font-medium"></p>
           <div class="flex items-center justify-end gap-1">
-            <p id="header-time" class="text-yellow-400 text-base md:text-xl font-bold"></p><span id="timezone-badge" class="text-yellow-400 text-base md:text-xl font-bold"></span>
+            <p id="header-time" class="text-yellow-400 text-base md:text-xl font-bold"></p>
           </div>
-          <button onclick="logout()" class="text-[10px] bg-red-500/20 text-red-400 border border-red-500/50 px-2 py-0.5 rounded hover:bg-red-500 hover:text-white transition-all">Logout</button>
+          <button onclick="logout()" class="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded mt-1">Logout</button>
         </div>
       </div>
     </header>
 
-    <div id="page-login" class="page active h-full w-full" style="display: flex; align-items: center; justify-content: center; min-height: 100%;">
-      <div class="bg-white rounded-3xl shadow-2xl overflow-hidden fade-in" style="width: 100%; max-width: 400px;">
-        <div class="flex flex-col items-center justify-center p-8 text-center">
-          <div class="mb-2">
-            <div id="login-logo" class="w-32 h-32 md:w-40 md:h-40 mx-auto flex items-center justify-center">
-              <img id="login-logo-img" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-              <span id="login-logo-fallback" class="hidden text-slate-800 text-6xl font-bold">A</span>
-            </div>
-          </div>
-          <h1 id="login-company-name" class="text-xl font-bold text-slate-800 mb-4 text-center" style="margin-top: -8px;">ABSEN ARCHIPELAGO</h1>
-          <form id="login-form" class="w-full space-y-3">
-            <div>
-              <label for="username" class="block text-left text-slate-600 text-xs font-medium mb-1">Username</label>
-              <input type="text" id="username" placeholder="Masukkan username" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
-            </div>
-            <div>
-              <label for="password" class="block text-left text-slate-600 text-xs font-medium mb-1">Password</label>
-              <input type="password" id="password" placeholder="Masukkan password" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
-            </div>
-            <p id="login-error" class="hidden text-red-500 text-xs"></p>
-            <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all shadow-lg text-sm">Login</button>
-          </form>
-          <button onclick="showPage('page-apps-script')" class="mt-3 text-slate-400 hover:text-green-500 text-xs underline transition-colors">⚙️ Setup Apps Script</button>
-        </div>
+    <div id="page-login" class="page active h-full w-full">
+      <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm fade-in">
+        <h1 class="text-xl font-bold text-slate-800 mb-6 text-center">ABSEN ARCHIPELAGO</h1>
+        <form id="login-form" class="space-y-4">
+          <input type="text" id="username" placeholder="Username" class="w-full px-4 py-2.5 bg-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+          <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2.5 bg-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" required>
+          <button type="submit" class="w-full py-3 bg-green-500 text-white font-semibold rounded-xl transition-all shadow-lg text-sm">Login</button>
+        </form>
       </div>
     </div>
 
     <div id="page-attendance" class="page min-h-full">
       <main class="p-3 max-w-7xl mx-auto">
         <div class="flex flex-wrap items-center gap-2 mb-3">
-          <button onclick="setAllPresent()" class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all flex items-center gap-1 font-medium text-xs">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Hadir Semua
-          </button>
-          <button onclick="resetAllStatus()" class="px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all flex items-center gap-1 font-medium text-xs">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Reset
-          </button>
+          <button onclick="setAllPresent()" class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg text-xs font-medium">Hadir Semua</button>
+          <button onclick="resetAllStatus()" class="px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-xs font-medium">Reset</button>
           <div class="flex-1"></div>
-          <button id="nav-btn-recap" onclick="showPage('page-recap')" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Recap
-          </button>
-          <button id="nav-btn-script" onclick="showPage('page-apps-script')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> Script
-          </button>
+          <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-medium">Recap</button>
+          <button onclick="showPage('page-apps-script')" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg text-xs font-medium">Script</button>
         </div>
-
-        <div id="search-container" class="hidden mb-3">
-          <div class="flex gap-2 items-stretch">
-            <div class="relative flex-1">
-              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              <input type="text" id="search-input" placeholder="Cari nama..." class="w-full h-full pl-9 pr-8 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
-              <button id="clear-search" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs">
-              <div class="flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> <span id="counter-selected" class="text-green-600 font-semibold">0</span></div>
-              <div class="w-px h-4 bg-slate-300"></div>
-              <div class="flex items-center gap-1"><span class="w-2 h-2 bg-red-500 rounded-full"></span> <span id="counter-unselected" class="text-red-500 font-semibold">0</span></div>
-            </div>
-          </div>
-        </div>
-
         <div id="loading-workers" class="text-center py-12">
-          <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-slate-400 mt-4 text-sm">Memuat data pekerja...</p>
+          <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p class="text-slate-400 text-sm">Memuat data pekerja...</p>
         </div>
-
         <div id="workers-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
-        <div id="search-results" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
-
-        <div id="photo-section" class="hidden mb-4">
-          <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-3 shadow-lg">
-            <div class="flex items-center justify-between mb-2">
-              <p class="text-slate-300 text-sm font-semibold">Upload foto absen (max 10)</p>
-              <span id="photo-count-badge" class="hidden px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">0 foto</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <label class="flex-1 cursor-pointer">
-                <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoUpload(event)">
-                <div class="py-2 bg-slate-700/70 hover:bg-slate-600 border border-slate-600 text-white rounded-lg transition-all flex items-center justify-center gap-2 font-medium text-sm">
-                  <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  <span>Ambil Foto</span>
-                </div>
-              </label>
-            </div>
-            <div id="photo-thumbnails" class="hidden mt-3 grid grid-cols-5 gap-2"></div>
-            <div id="location-status" class="mt-2 text-xs text-slate-400 flex items-center gap-1">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              <span id="location-text">Mengambil lokasi...</span>
-            </div>
-          </div>
-        </div>
-
         <div id="submit-section" class="hidden">
-          <button id="submit-btn" onclick="submitAttendance()" class="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold text-sm rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md shadow-green-500/30 border border-green-400/30">
-            <span class="inline-flex items-center gap-2">
-              <svg class="w-4 h-4 transform rotate-[-35deg]" fill="currentColor" viewbox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg> Kirim Absensi
-            </span>
-          </button>
-        </div>
-
-        <div id="no-script-warning" class="hidden bg-amber-500/20 border border-amber-500/50 rounded-xl p-3 text-center">
-          <p class="text-amber-400 text-sm">Apps Script URL belum diatur.</p>
-          <button onclick="showPage('page-apps-script')" class="mt-2 text-orange-400 hover:text-orange-300 underline text-sm">Setup Apps Script</button>
+          <button id="submit-btn" onclick="submitAttendance()" class="w-full py-3 bg-green-600 text-white font-bold rounded-xl shadow-md">KIRIM ABSENSI</button>
         </div>
       </main>
     </div>
 
-    <div id="page-recap" class="page min-h-full bg-primary">
-      <main class="p-3 max-w-7xl mx-auto">
-        <div class="nav-buttons">
-          <button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
-        </div>
-        <h2 class="text-xl md:text-2xl font-bold text-white text-center mb-4">RECAP ABSEN DAILY WORKER</h2>
-        <div class="flex flex-row gap-3 overflow-x-auto pb-2">
-          <button onclick="showRecapToday()" class="flex-1 min-w-[140px] bg-white p-4 rounded-xl text-center shadow-lg border border-slate-200">
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-12 h-12 bg-blue-900/10 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-              </div>
-              <h2 class="text-xs md:text-sm font-bold text-blue-900">Recap Hari Ini</h2>
-            </div>
-          </button>
-          <button onclick="showPage('page-calendar')" class="flex-1 min-w-[140px] bg-white p-4 rounded-xl text-center shadow-lg border border-slate-200">
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-12 h-12 bg-blue-900/10 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              </div>
-              <h2 class="text-xs md:text-sm font-bold text-blue-900">Berdasarkan Tanggal</h2>
-            </div>
-          </button>
-          <button onclick="showPage('page-photo-gallery')" class="flex-1 min-w-[140px] bg-white p-4 rounded-xl text-center shadow-lg border border-slate-200">
-            <div class="flex flex-col items-center gap-2">
-              <div class="w-12 h-12 bg-blue-900/10 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              </div>
-              <h2 class="text-xs md:text-sm font-bold text-blue-900">Recap Foto Absen</h2>
-            </div>
-          </button>
-        </div>
-      </main>
+    <div id="page-recap" class="page min-h-full p-3 text-white">
+      <button onclick="showPage('page-attendance')" class="bg-slate-700 px-4 py-2 rounded mb-4">Kembali</button>
+      <h2 class="text-xl font-bold">RECAP ABSEN</h2>
     </div>
 
-    <div id="page-calendar" class="page min-h-full bg-primary">
-      <main class="p-3 max-w-md mx-auto">
-        <div class="nav-buttons">
-          <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
-        </div>
-        <div class="bg-slate-800/70 rounded-2xl p-4 shadow-xl border border-slate-700">
-          <div class="flex items-center justify-between mb-4">
-            <button onclick="prevMonth()" class="p-2 hover:bg-slate-700 rounded-full transition-colors text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-            <h2 id="calendar-month" class="text-base font-bold text-white"></h2>
-            <button onclick="nextMonth()" class="p-2 hover:bg-slate-700 rounded-full transition-colors text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></button>
-          </div>
-          <div class="grid grid-cols-7 gap-1 mb-2">
-            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">MIN</div>
-            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">SEN</div>
-            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">SEL</div>
-            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">RAB</div>
-            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">KAM</div>
-            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">JUM</div>
-            <div class="text-center text-slate-500 text-[10px] font-semibold py-1">SAB</div>
-          </div>
-          <div id="calendar-days" class="grid grid-cols-7 gap-1"></div>
-          <div id="calendar-loading" class="hidden text-center py-4">
-            <div class="inline-block w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <div id="page-recap-detail" class="page min-h-full bg-primary">
-      <main class="p-3 max-w-7xl mx-auto">
-        <div class="flex justify-between items-center mb-3">
-          <button onclick="showPage('page-recap-jam')" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Recap Jam Kerja</button>
-          <button onclick="goBackFromRecapDetail()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
-        </div>
-        <div class="mb-3 flex items-center justify-between">
-          <div>
-            <h2 id="recap-title" class="text-lg font-bold text-white">Recap Absen</h2>
-            <p id="recap-date-label" class="text-yellow-400 text-sm font-medium"></p>
-          </div>
-          <button id="download-pdf-btn" onclick="downloadRecapPDF()" class="hidden px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Download PDF</button>
-        </div>
-        <div id="recap-loading" class="text-center py-8">
-          <div class="inline-block w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <div id="recap-content" class="hidden"></div>
-        <div id="recap-empty" class="hidden text-center py-12">
-          <p class="text-slate-400 text-sm">Tidak ada data absensi untuk tanggal ini</p>
-        </div>
-      </main>
-    </div>
-
-    <div id="page-photo-gallery" class="page min-h-full bg-primary">
-      <main class="p-3 max-w-4xl mx-auto">
-        <div class="nav-buttons">
-          <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
-        </div>
-        <h2 class="text-lg font-bold text-white mb-3">Galeri Foto Absen</h2>
-        <div id="gallery-loading" class="text-center py-8">
-          <div class="inline-block w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <div id="gallery-folders" class="hidden grid grid-cols-3 md:grid-cols-4 gap-2"></div>
-      </main>
-    </div>
-
-    <div id="page-photo-detail" class="page min-h-full bg-primary">
-      <main class="p-3 max-w-4xl mx-auto">
-        <div class="nav-buttons">
-          <button onclick="showPage('page-photo-gallery')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
-        </div>
-        <h2 id="photo-folder-date" class="text-lg font-bold text-white mb-3">Foto Absen</h2>
-        <div id="photo-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
-      </main>
-    </div>
-
-    <div id="page-apps-script" class="page min-h-full bg-primary">
-      <main class="p-3 max-w-4xl mx-auto">
-        <div class="nav-buttons">
-          <button onclick="goBackFromAppsScript()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
-        </div>
-        <h2 class="text-lg font-bold text-white mb-4">Setup Apps Script</h2>
-        <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-          <h3 class="text-sm text-white mb-3">Paste URL Apps Script</h3>
-          <div class="flex gap-2">
-            <input type="url" id="script-url-input" class="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm">
-            <button onclick="saveScriptUrl()" class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm">Simpan</button>
-          </div>
-          <p id="script-url-status" class="mt-2 text-xs"></p>
-        </div>
-      </main>
-    </div>
-
-    <div id="page-recap-jam" class="page min-h-full bg-primary">
-      <main class="p-3 max-w-2xl mx-auto">
-        <div class="nav-buttons">
-          <button onclick="showPage('page-recap-detail')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali</button>
-        </div>
-        <div class="text-center mb-4">
-          <h2 class="text-xl font-bold text-white uppercase">Recap Jam Kerja Worker</h2>
-          <p id="recap-jam-date" class="text-yellow-400 text-sm"></p>
-        </div>
-        <div class="flex justify-end mb-2">
-          <button onclick="downloadRecapJamPDF()" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs">Download PDF Semua Pekerja</button>
-        </div>
-        <div class="relative mb-4">
-          <input type="text" id="jam-search-input" placeholder="Cari nama pekerja..." class="w-full pl-4 pr-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm">
-        </div>
-        <div id="jam-search-results" class="space-y-2 mb-4"></div>
-        <div id="jam-result-container" class="hidden">
-          <div class="jam-result-card">
-            <h3 id="jam-worker-name" class="text-white font-bold text-lg mb-2"></h3>
-            <div id="jam-sessions" class="space-y-2"></div>
-            <div class="mt-4 border-t border-slate-600 pt-2 flex justify-between items-center">
-              <span class="text-slate-400">Total Jam:</span>
-              <span id="jam-total" class="text-cyan-400 font-bold text-xl"></span>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
   </div>
 
   <script>
-    const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw';
-    const TIMEMARK_LOGO_URL = 'https://lh3.googleusercontent.com/d/1zaavYZSem-yNHztE724qeIAWw9uGJgen';
-    let cachedTimemarkLogoBase64 = null;
-    const BULAN_INDO = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-    
-    const defaultConfig = {
-      app_title: 'ABSEN ONLINE DAILY WORKER',
-      company_name: 'ABSEN ARCHIPELAGO',
-      logo_url: APP_LOGO_URL
-    };
-
-    let config = { ...defaultConfig };
-    let workers = [];
-    let attendanceStatus = {};
-    let uploadedPhotos = [];
-    let uploadedPhotosCompressed = [];
-    let currentPhotoIndex = 0;
-    let currentCalendarDate = new Date();
-    
-    // ==========================================
-    // DATABASE USER & HAK AKSES
-    // ==========================================
-    let isLoggedIn = false;
+    // DATABASE 6 AKUN
     const USERS_DB = {
         'archipelago': { password: 'balivibes', role: 'admin', displayName: 'Super Admin' },
         'archi1': { password: 'balivibes', role: 'user', displayName: 'Akun 1' },
@@ -486,351 +118,177 @@
         'archi4': { password: 'balivibes', role: 'user', displayName: 'Akun 4' },
         'archi5': { password: 'balivibes', role: 'user', displayName: 'Akun 5' }
     };
-    let currentUser = null; 
 
-    let currentRecapDate = '';
-    let currentRecapData = null;
-    let recapSource = 'today';
-    let calendarDataCache = {};
+    let isLoggedIn = false;
+    let currentUser = null;
+    let workers = [];
+    let attendanceStatus = {};
     const SAVED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykHilTCxFbqVnxOCbPxAl733dR2KHx7z0Z6TIMBGV4DbmiZru_ksbhd2kgH2pj1kKfZw/exec';
     let scriptUrl = localStorage.getItem('appsScriptUrl') || SAVED_SCRIPT_URL;
-    let cachedLocation = null;
-    let cachedAddress = null;
-    let cachedLogoBase64 = null;
-    const MAX_PHOTOS = 10;
 
-    window.currentStatusWorkers = { 'Start Work': [], 'Finish Work': [], 'Sakit': [], 'Standby': [], 'Belum Absen': [] };
-    let galleryPhotos = [];
-    let currentGalleryIndex = 0;
-
-    function formatTanggalIndo(date) {
-        const d = String(date.getDate()).padStart(2, '0');
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const y = date.getFullYear();
-        return `${d}-${m}-${y}`; 
-    }
-
-    // ==========================================
-    // PERBAIKAN FUNGSI LOGIN & HAK AKSES
-    // ==========================================
+    // LOGIN LOGIC
     document.getElementById('login-form').addEventListener('submit', (e) => {
         e.preventDefault();
-        const usernameInput = document.getElementById('username').value.toLowerCase().trim();
-        const passwordInput = document.getElementById('password').value;
-        const user = USERS_DB[usernameInput];
+        const u = document.getElementById('username').value.toLowerCase().trim();
+        const p = document.getElementById('password').value;
+        const user = USERS_DB[u];
         
-        if (user && user.password === passwordInput) {
+        if (user && user.password === p) {
             isLoggedIn = true;
-            currentUser = { username: usernameInput, ...user }; 
+            currentUser = { username: u, ...user };
             document.getElementById('page-login').style.display = 'none';
+            document.getElementById('main-header').classList.remove('hidden');
             showPage('page-attendance');
-            
-            // Atur Visibilitas Tombol Berdasarkan Role
-            const btnRecap = document.getElementById('nav-btn-recap');
-            const btnScript = document.getElementById('nav-btn-script');
-            
-            if (user.role === 'admin') {
-                btnRecap.style.display = 'inline-flex';
-                btnScript.style.display = 'inline-flex';
-            } else {
-                btnRecap.style.display = 'none';
-                btnScript.style.display = 'none';
-            }
-            
             showNotification(`Selamat datang, ${user.displayName}!`);
         } else {
-            const errorEl = document.getElementById('login-error');
-            errorEl.textContent = 'Username atau password salah!';
-            errorEl.classList.remove('hidden');
+            alert('Username atau password salah!');
         }
     });
 
-    function logout() {
-        isLoggedIn = false;
-        currentUser = null;
-        location.reload(); 
-    }
+    function logout() { location.reload(); }
 
-    // ==========================================
-    // TAMBAHAN KEAMANAN PADA SHOWPAGE
-    // ==========================================
     function showPage(pageId) {
-      if (currentUser && currentUser.role !== 'admin') {
-          const adminPages = ['page-recap', 'page-calendar', 'page-recap-detail', 'page-apps-script', 'page-photo-gallery', 'page-photo-detail', 'page-recap-jam'];
-          if (adminPages.includes(pageId)) {
-              showNotification('Akses Dibatasi! Hanya untuk Admin.', true);
-              return;
-          }
-      }
-
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      const targetPage = document.getElementById(pageId);
-      if(targetPage) targetPage.classList.add('active');
-      
-      const mainHeader = document.getElementById('main-header');
-      if (pageId === 'page-login') {
-        mainHeader.classList.add('hidden');
-      } else {
-        mainHeader.classList.remove('hidden');
-      }
-      
-      if (pageId === 'page-attendance') {
-        if (workers.length > 0) {
-          renderWorkers(workers);
-          updateCounter();
-          document.getElementById('loading-workers').classList.add('hidden');
-          document.getElementById('workers-grid').classList.remove('hidden');
-          document.getElementById('search-container').classList.remove('hidden');
-          document.getElementById('photo-section').classList.remove('hidden');
-          document.getElementById('submit-section').classList.remove('hidden');
-        } else {
-          loadWorkers();
+        // KEAMANAN: Blokir akses user ke halaman admin
+        if (currentUser && currentUser.role !== 'admin') {
+            const adminPages = ['page-recap', 'page-apps-script'];
+            if (adminPages.includes(pageId)) {
+                showNotification('MAAF! Akun Anda tidak punya akses ke halaman ini.', true);
+                return;
+            }
         }
-        updateDateTime();
-      } else if (pageId === 'page-calendar') {
-        renderCalendar();
-      } else if (pageId === 'page-photo-gallery') {
-        loadPhotoFolders();
-      } else if (pageId === 'page-apps-script') {
-        document.getElementById('script-url-input').value = scriptUrl;
-        updateScriptUrlStatus();
-      }
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        if (pageId === 'page-attendance' && workers.length === 0) loadWorkers();
     }
 
-    // ==========================================
-    // PERBAIKAN FUNGSI SUBMIT ATTENDANCE (UTUH)
-    // ==========================================
+    async function loadWorkers() {
+        try {
+            const res = await fetch(`${scriptUrl}?action=getWorkers`);
+            const data = await res.json();
+            if (data.success) {
+                workers = data.workers;
+                renderWorkers(workers);
+                document.getElementById('loading-workers').classList.add('hidden');
+                document.getElementById('workers-grid').classList.remove('hidden');
+                document.getElementById('submit-section').classList.remove('hidden');
+            }
+        } catch (e) { showNotification('Gagal memuat data pekerja', true); }
+    }
+
+    // LAYOUT KARTU PEKERJA ASLI (Foto Kiri, Tombol Kanan)
+    function renderWorkers(workerList) {
+        const grid = document.getElementById('workers-grid');
+        grid.innerHTML = workerList.map(worker => {
+            const status = attendanceStatus[worker.id] || '';
+            const isSelected = status !== '';
+            return `
+              <div class="card-worker bg-white rounded-xl p-3 border-2 ${isSelected ? 'status-selected' : 'border-slate-200'}">
+                <div class="flex gap-3">
+                  <div class="w-1/2 flex flex-col items-center justify-center gap-2">
+                    <img src="${convertDriveLink(worker.photo)}" class="w-20 h-20 rounded-full worker-photo mx-auto" onerror="this.src='https://via.placeholder.com/150'">
+                    <p class="text-slate-800 font-semibold text-xs text-center leading-tight line-clamp-2">${worker.name}</p>
+                  </div>
+                  <div class="w-1/2 flex flex-col gap-1.5">
+                    <div class="text-center py-1 rounded-lg ${status ? 'bg-pink-100' : 'bg-slate-100'}">
+                      <p class="text-[10px] ${status ? 'text-pink-500 font-semibold' : 'text-slate-500'}">${status || 'Belum dipilih'}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1 flex-1">
+                      <button onclick="setStatus(${worker.id}, 'Start Work')" class="btn-status py-2 bg-green-500 text-white rounded-lg text-[10px] font-semibold">Start</button>
+                      <button onclick="setStatus(${worker.id}, 'Finish Work')" class="btn-status py-2 bg-blue-500 text-white rounded-lg text-[10px] font-semibold">Finish</button>
+                      <button onclick="setStatus(${worker.id}, 'Sakit')" class="btn-status py-2 bg-orange-500 text-white rounded-lg text-[10px] font-semibold">Sakit</button>
+                      <button onclick="setStatus(${worker.id}, 'Standby')" class="btn-status py-2 bg-purple-500 text-white rounded-lg text-[10px] font-semibold">Standby</button>
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+        }).join('');
+    }
+
+    function setStatus(workerId, status) {
+        if (attendanceStatus[workerId] === status) delete attendanceStatus[workerId];
+        else attendanceStatus[workerId] = status;
+        renderWorkers(workers);
+    }
+
+    function setAllPresent() {
+        workers.forEach(w => { attendanceStatus[w.id] = 'Start Work'; });
+        renderWorkers(workers);
+    }
+
+    function resetAllStatus() {
+        attendanceStatus = {};
+        renderWorkers(workers);
+    }
+
+    // PERBAIKAN FUNGSI SUBMIT (UTUH & KIRIM ADMINUSER)
     async function submitAttendance() {
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
-
         const now = new Date();
-        const tanggal = formatTanggalIndo(now);
+        const tgl = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth()+1).padStart(2, '0')}-${now.getFullYear()}`;
         const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-        const attendance = workers.map(w => ({
-            name: w.name,
-            status: attendanceStatus[w.id] || '-'
-        }));
+        const attendance = workers.map(w => ({ name: w.name, status: attendanceStatus[w.id] || '-' }));
 
-        showUploadProgress();
+        document.getElementById('upload-progress-modal').classList.remove('hidden');
         
         try {
-            updateUploadProgress('Mengirim absensi...', 'Data pekerja', 20);
-            
-            const attendancePayload = {
+            const payload = {
                 action: 'submitAttendance',
-                tanggal,
-                jam,
-                attendance,
-                adminUser: currentUser ? currentUser.username : 'Unknown' 
+                tanggal: tgl,
+                jam: jam,
+                attendance: attendance,
+                adminUser: currentUser ? currentUser.username : 'Unknown'
             };
             
             const formData = new FormData();
-            formData.append('data', JSON.stringify(attendancePayload));
+            formData.append('data', JSON.stringify(payload));
             
             await fetch(scriptUrl, { method: 'POST', body: formData, redirect: 'follow' });
-            updateUploadProgress('Absensi terkirim!', 'Menyimpan foto...', 60);
             
-            if (uploadedPhotos.length > 0) {
-                await downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
-            }
-            
-            if (uploadedPhotosCompressed.length > 0) {
-                updateUploadProgress('Upload foto...', 'Ke Google Drive', 80);
-                const photoPayload = {
-                    action: 'uploadPhotos',
-                    tanggal,
-                    jam,
-                    photos: uploadedPhotosCompressed
-                };
-                const photoFormData = new FormData();
-                photoFormData.append('data', JSON.stringify(photoPayload));
-                await fetch(scriptUrl, { method: 'POST', body: photoFormData, redirect: 'follow' }).catch(() => {});
-            }
-            
-            updateUploadProgress('Selesai!', 'Absensi berhasil', 100);
-            
+            showNotification('Absensi Berhasil Terkirim!');
             attendanceStatus = {};
-            uploadedPhotos = [];
-            uploadedPhotosCompressed = [];
-            renderPhotoThumbnails();
             renderWorkers(workers);
-            updateCounter();
-            
-            setTimeout(() => {
-                hideUploadProgress();
-                showNotification('Absen berhasil dikirim!');
-            }, 500);
             
         } catch (error) {
-            hideUploadProgress();
-            showNotification('Gagal mengirim. Cek koneksi.', true);
+            showNotification('Gagal mengirim absensi!', true);
         } finally {
+            document.getElementById('upload-progress-modal').classList.add('hidden');
             btn.disabled = false;
         }
     }
 
-    // --- FUNGSI PENDUKUNG (CALCULATE, RENDER, DLL) ---
-    
-    function calculateMinutes(start, finish) {
-      if (!start || !finish) return 0;
-      const parseTime = (timeStr) => {
-        const cleanTime = timeStr.toString().replace(/\./g, ':');
-        const parts = cleanTime.split(':');
-        const hours = parseInt(parts[0]) || 0;
-        const minutes = parseInt(parts[1]) || 0;
-        return (hours * 60) + minutes;
-      };
-      const startTotal = parseTime(start);
-      const finishTotal = parseTime(finish);
-      let diff = finishTotal - startTotal;
-      if (diff < 0) diff += 1440; 
-      return diff;
+    // UTILITIES
+    function convertDriveLink(url) {
+        if(!url) return "";
+        const match = url.match(/[-\w]{25,}/);
+        return match ? `https://lh3.googleusercontent.com/d/${match[0]}` : url;
     }
 
-    function showWorkerJamDetail(workerName) {
-        const resultContainer = document.getElementById('jam-result-container');
-        const recapWorker = currentRecapData.workers.find(w => w.name === workerName);
-        if (!recapWorker) return;
-        
-        document.getElementById('jam-worker-name').textContent = workerName;
-        const times = Object.keys(recapWorker.statuses).sort(); 
-        let firstStart = null;
-        let lastFinish = null;
-        times.forEach(jam => {
-            const status = recapWorker.statuses[jam];
-            if (status === 'Start Work' && !firstStart) firstStart = jam; 
-            if (status === 'Finish Work') lastFinish = jam; 
-        });
-
-        if (firstStart && lastFinish) {
-            const totalMinutes = calculateMinutes(firstStart, lastFinish);
-            const standardMin = 12 * 60;
-            let overtimeText = "0 Jam 0 Menit";
-            if (totalMinutes > standardMin) {
-                const diff = totalMinutes - standardMin;
-                overtimeText = `${Math.floor(diff/60)} Jam ${diff%60} Menit`;
-            }
-            document.getElementById('jam-sessions').innerHTML = `
-                <div class="bg-slate-700/50 p-3 rounded-lg text-sm text-white space-y-2">
-                    <div class="flex justify-between"><span>Start Awal:</span><span class="text-green-400 font-bold">${firstStart}</span></div>
-                    <div class="flex justify-between"><span>Finish Akhir:</span><span class="text-blue-400 font-bold">${lastFinish}</span></div>
-                    <div class="flex justify-between border-t border-slate-600 pt-2 text-yellow-400"><span>Lembur:</span><span class="font-bold">${overtimeText}</span></div>
-                </div>`;
-            document.getElementById('jam-total').textContent = `${Math.floor(totalMinutes/60)} Jam ${totalMinutes%60} Menit`;
-        }
-        resultContainer.classList.remove('hidden');
-    }
-
-    async function loadWorkers() {
-      if (!scriptUrl) return document.getElementById('no-script-warning').classList.remove('hidden');
-      try {
-        const data = await fetchWithCallback(`${scriptUrl}?action=getWorkers`);
-        if (data.success) {
-          workers = data.workers;
-          renderWorkers(workers);
-          updateCounter();
-          document.getElementById('loading-workers').classList.add('hidden');
-          document.getElementById('workers-grid').classList.remove('hidden');
-          document.getElementById('search-container').classList.remove('hidden');
-          document.getElementById('photo-section').classList.remove('hidden');
-          document.getElementById('submit-section').classList.remove('hidden');
-        }
-      } catch (e) { console.error(e); }
-    }
-
-    function renderWorkers(list) {
-      const grid = document.getElementById('workers-grid');
-      grid.innerHTML = list.map(w => {
-        const status = attendanceStatus[w.id] || '';
-        return `
-          <div class="card-worker bg-white rounded-xl p-3 border-2 ${status ? 'status-selected' : 'border-slate-200'}" onclick="event.stopPropagation()">
-            <div class="flex flex-col items-center gap-2">
-               <img src="${convertDriveLink(w.photo)}" class="w-16 h-16 rounded-full object-cover" onerror="this.src='https://via.placeholder.com/150'">
-               <p class="text-xs font-bold text-slate-800 text-center">${w.name}</p>
-               <div class="grid grid-cols-2 gap-1 w-full mt-2">
-                  <button onclick="setStatus(${w.id}, 'Start Work')" class="py-1 bg-green-500 text-white text-[10px] rounded">Start</button>
-                  <button onclick="setStatus(${w.id}, 'Finish Work')" class="py-1 bg-blue-500 text-white text-[10px] rounded">Finish</button>
-                  <button onclick="setStatus(${w.id}, 'Sakit')" class="py-1 bg-orange-500 text-white text-[10px] rounded">Sakit</button>
-                  <button onclick="setStatus(${w.id}, 'Standby')" class="py-1 bg-purple-500 text-white text-[10px] rounded">Standby</button>
-               </div>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    function setStatus(id, status) {
-      if (attendanceStatus[id] === status) delete attendanceStatus[id];
-      else attendanceStatus[id] = status;
-      renderWorkers(workers);
-      updateCounter();
-    }
-
-    function updateCounter() {
-      const sel = Object.keys(attendanceStatus).length;
-      document.getElementById('counter-selected').textContent = sel;
-      document.getElementById('counter-unselected').textContent = workers.length - sel;
+    function showNotification(m, isErr = false) {
+        const n = document.getElementById('notification');
+        const t = document.getElementById('notification-text');
+        t.textContent = m;
+        n.querySelector('div').className = isErr ? "bg-red-600 text-white px-6 py-3 rounded-xl shadow-lg" : "bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg";
+        n.classList.remove('hidden');
+        setTimeout(() => n.classList.add('hidden'), 3000);
     }
 
     function updateDateTime() {
-      const now = new Date();
-      document.getElementById('header-date').textContent = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-      document.getElementById('header-time').textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+        const now = new Date();
+        document.getElementById('header-date').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('header-time').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     }
 
     function requestLocationPermission() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(p => {
-          cachedLocation = p.coords;
-          document.getElementById('location-text').textContent = "Lokasi aktif: " + p.coords.latitude.toFixed(4) + ", " + p.coords.longitude.toFixed(4);
-        });
-      }
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(() => {}, () => {});
+        }
     }
 
-    async function fetchWithCallback(url) {
-        const res = await fetch(url);
-        return await res.json();
-    }
-
-    function convertDriveLink(url) {
-      if(!url) return "";
-      const match = url.match(/[-\w]{25,}/);
-      return match ? `https://lh3.googleusercontent.com/d/${match[0]}` : url;
-    }
-
-    // PDF Global Laporan Jam Kerja
-    async function downloadRecapJamPDF() {
-        if (!currentRecapData) return;
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const data = currentRecapData.workers.map(w => {
-            const times = Object.keys(w.statuses).sort();
-            let s = null, f = null;
-            times.forEach(j => {
-                if(w.statuses[j] === 'Start Work' && !s) s = j;
-                if(w.statuses[j] === 'Finish Work') f = j;
-            });
-            let tot = "-", lem = "-";
-            if(s && f) {
-                const min = calculateMinutes(s, f);
-                tot = `${Math.floor(min/60)}j ${min%60}m`;
-                if(min > 720) {
-                  const d = min - 720;
-                  lem = `${Math.floor(d/60)}j ${d%60}m`;
-                }
-            }
-            return [w.name, s || "-", f || "-", tot, lem];
-        });
-        doc.text("Laporan Jam Kerja Seluruh Pekerja", 14, 15);
-        doc.autoTable({ head: [['Nama', 'Start', 'Finish', 'Total', 'Lembur']], body: data, startY: 20 });
-        doc.save(`Rekap_Jam_${currentRecapDate}.pdf`);
-    }
-
-    // Inisialisasi awal
+    setInterval(updateDateTime, 1000);
     updateDateTime();
     requestLocationPermission();
-    setInterval(updateDateTime, 1000);
   </script>
 </body>
 </html>
