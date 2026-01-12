@@ -1628,11 +1628,14 @@ function applyColorsToAllData() {
       const file = event.target.files[0];
       if (!file) return;
       
-      if (uploadedPhotos.length >= MAX_PHOTOS) {
-        showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
-        event.target.value = '';
-        return;
-      }
+     if (uploadedPhotos.length > 0) {
+    // Jika iOS, kita panggil fungsi yang sudah dioptimasi
+    if (isIOS()) {
+        await triggerIOSShare(uploadedPhotos, tanggal, jam);
+    } else {
+        downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
+    }
+}
 
       const reader = new FileReader();
       reader.onload = async (e) => {
