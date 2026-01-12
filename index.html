@@ -29,171 +29,74 @@
     #page-attendance.active, #page-recap.active, #page-calendar.active, #page-recap-detail.active, #page-photo-gallery.active, #page-photo-detail.active, #page-apps-script.active, #page-recap-jam.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.3s ease-out; }
-    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0.7); } 50% { box-shadow: 0 0 0 8px rgba(255, 20, 147, 0); } }
-    .pulse-pink { animation: pulse 2s infinite; }
-    .calendar-day { transition: all 0.2s ease; cursor: pointer; }
-    .calendar-day:hover { background-color: rgba(255, 140, 0, 0.4); transform: scale(1.05); }
-    .calendar-day.has-data { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-    .calendar-day.today { ring: 2px; ring-color: #ff8c00; }
-    .gallery-folder { transition: all 0.3s ease; }
-    .gallery-folder:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
     .notification { animation: slideDown 0.3s ease-out; }
     @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .code-block { background: #1e1e1e; border-radius: 8px; overflow-x: auto; }
-    .code-block pre { margin: 0; padding: 16px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; color: #d4d4d4; }
-    .copy-btn { transition: all 0.2s ease; }
-    .copy-btn:hover { background-color: #ff8c00; }
-    .worker-photo { object-fit: cover; border: 2px solid rgba(255,255,255,0.3); }
-    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .photo-thumbnail { position: relative; cursor: pointer; transition: transform 0.2s ease; }
-    .photo-thumbnail:hover { transform: scale(1.05); }
-    .photo-thumbnail .delete-btn { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
-    .photo-thumbnail:hover .delete-btn { opacity: 1; }
-    .fullscreen-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
-    .fullscreen-overlay img { max-width: 90%; max-height: 90%; object-fit: contain; }
-    .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease; }
-    .nav-arrow:hover { background: rgba(255,255,255,0.4); }
-    .nav-arrow.left { left: 20px; }
-    .nav-arrow.right { right: 20px; }
-    .recap-table { width: 100%; border-collapse: collapse; }
-    .recap-table th, .recap-table td { border: 1px solid #334155; padding: 8px 12px; text-align: center; }
-    .recap-table th { background: #1e293b; color: #fff; font-weight: 600; position: sticky; top: 0; z-index: 10; }
-    .recap-table th.sticky-col { position: sticky; left: 0; z-index: 20; background: #1e293b; }
-    .recap-table td.sticky-col { position: sticky; left: 0; background: #0f172a; z-index: 5; }
-    .recap-table tr:nth-child(even) td { background: #1e293b; }
-    .recap-table tr:nth-child(even) td.sticky-col { background: #1e293b; }
-    .recap-table tr:nth-child(odd) td { background: #0f172a; }
-    .logo-img { width: 100%; height: 100%; object-fit: cover; }
-    .nav-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
-    .status-card { cursor: pointer; transition: all 0.2s ease; }
-    .status-card:hover { transform: scale(1.03); opacity: 0.9; }
-    .status-card.clickable { cursor: pointer; }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .modal-content { background: #1e293b; border-radius: 16px; max-width: 500px; width: 100%; max-height: 80%; overflow-y: auto; }
-    .modal-header { padding: 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #1e293b; z-index: 10; }
-    .modal-body { padding: 16px; }
-    .worker-list-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #0f172a; border-radius: 12px; margin-bottom: 8px; }
-    .worker-list-item img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-    .worker-list-item .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
-    .jam-result-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-top: 16px; }
-    .mini-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
     .upload-progress { background: rgba(0,0,0,0.8); border-radius: 12px; padding: 20px; }
     .progress-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); transition: width 0.3s ease; }
   </style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full m-0 p-0 overflow-hidden bg-primary">
   <div id="app" class="h-full w-full overflow-auto">
+   
    <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
     <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
-     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
      <span id="notification-text">Berhasil!</span>
     </div>
    </div>
+
    <div id="upload-progress-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
     <div class="upload-progress w-full max-w-sm text-center">
      <div class="mb-4"><div class="inline-block w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>
-     <p id="upload-status" class="text-white font-semibold mb-2">Mengirim absensi...</p>
-     <p id="upload-detail" class="text-slate-400 text-sm mb-4">Proses...</p>
+     <p id="upload-status" class="text-white font-semibold mb-2">Mengirim...</p>
      <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: 0%"></div></div>
      <p id="progress-text" class="text-slate-400 text-xs mt-2">0%</p>
     </div>
    </div>
+
    <header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-     <div class="flex items-center gap-3">
-      <div id="header-logo" class="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
-        <img id="header-logo-img" class="w-full h-full object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-        <span id="header-logo-fallback" class="hidden text-white text-2xl md:text-3xl font-bold">A</span>
-      </div>
-      <h1 id="header-title" class="text-lg md:text-2xl font-bold text-white uppercase">Absen Archipelago</h1>
-     </div>
+     <h1 id="header-title" class="text-lg font-bold text-white">Absen Archipelago</h1>
      <div class="text-right">
-      <p id="header-date" class="text-white text-xs md:text-sm font-medium"></p>
-      <div class="flex items-center justify-end gap-1">
-       <p id="header-time" class="text-yellow-400 text-base md:text-xl font-bold"></p><span id="timezone-badge" class="text-yellow-400 text-base md:text-xl font-bold"></span>
-      </div>
+      <p id="header-date" class="text-white text-xs"></p>
+      <p id="header-time" class="text-yellow-400 font-bold"></p>
      </div>
     </div>
    </header>
 
    <div id="page-login" class="page active h-full w-full flex items-center justify-center">
-    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden fade-in w-full max-w-[400px] p-8 text-center">
-      <div id="login-logo" class="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4 flex items-center justify-center">
-        <img id="login-logo-img" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-        <span id="login-logo-fallback" class="hidden text-slate-800 text-6xl font-bold">A</span>
-      </div>
-      <h1 id="login-company-name" class="text-xl font-bold text-slate-800 mb-6 uppercase">ABSEN ARCHIPELAGO</h1>
-      <form id="login-form" class="w-full space-y-4 text-left">
-       <div><label class="block text-slate-600 text-xs font-medium mb-1">Username</label><input type="text" id="username" placeholder="Username" class="w-full px-4 py-2.5 bg-slate-100 border rounded-xl text-sm" required></div>
-       <div><label class="block text-slate-600 text-xs font-medium mb-1">Password</label><input type="password" id="password" placeholder="Password" class="w-full px-4 py-2.5 bg-slate-100 border rounded-xl text-sm" required></div>
+    <div class="bg-white rounded-3xl shadow-2xl p-8 text-center w-full max-w-[400px]">
+      <h1 class="text-xl font-bold mb-6">LOGIN ABSEN</h1>
+      <form id="login-form" class="space-y-4 text-left">
+       <input type="text" id="username" placeholder="Username" class="w-full px-4 py-2 border rounded-xl" required>
+       <input type="password" id="password" placeholder="Password" class="w-full px-4 py-2 border rounded-xl" required>
        <p id="login-error" class="hidden text-red-500 text-xs"></p>
-       <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all shadow-lg text-sm">Login</button>
+       <button type="submit" class="w-full py-3 bg-green-500 text-white rounded-xl font-bold">Login</button>
       </form>
     </div>
    </div>
 
    <div id="page-attendance" class="page min-h-full">
     <main class="p-3 max-w-7xl mx-auto">
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <button onclick="setAllPresent()" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium">Hadir Semua</button>
-        <button onclick="resetAllStatus()" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium">Reset</button>
-        <div class="flex-1"></div>
-        <button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs">Recap</button>
-      </div>
-      <div id="search-container" class="mb-3">
-        <input type="text" id="search-input" placeholder="Cari nama..." class="w-full p-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm">
-      </div>
-      <div id="loading-workers" class="text-center py-12"><div class="animate-spin inline-block w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full"></div></div>
-      <div id="workers-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
-      <div id="search-results" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
+      <div id="workers-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4"></div>
       
-      <div id="photo-section" class="mb-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-        <div class="flex justify-between mb-2"><p class="text-white text-sm">Foto Absen (Maks 10)</p><span id="photo-count-badge" class="text-orange-400 text-xs">0/10</span></div>
+      <div class="mb-4 bg-slate-800/50 p-3 rounded-xl">
+        <p class="text-white text-sm mb-2">Foto Absen (Maks 10)</p>
         <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoUpload(event)">
-        <button onclick="document.getElementById('photo-input').click()" class="w-full py-2 bg-slate-700 text-white rounded-lg text-sm">Ambil Foto</button>
+        <button onclick="document.getElementById('photo-input').click()" class="w-full py-2 bg-slate-700 text-white rounded-lg">Ambil Foto</button>
         <div id="photo-thumbnails" class="mt-3 grid grid-cols-5 gap-2"></div>
-        <div id="location-status" class="mt-2 text-xs text-slate-400">📍 <span id="location-text">Mencari lokasi...</span></div>
       </div>
       
       <button id="submit-btn" onclick="submitAttendance()" class="w-full py-3 bg-green-500 text-white font-bold rounded-lg shadow-lg">KIRIM ABSENSI</button>
     </main>
    </div>
-
-   <div id="page-recap" class="page min-h-full bg-primary p-4">
-     <button onclick="showPage('page-attendance')" class="mb-4 text-white text-sm underline">← Kembali</button>
-     <div class="grid grid-cols-1 gap-4">
-       <button onclick="showRecapToday()" class="p-4 bg-white rounded-xl text-blue-900 font-bold">Recap Hari Ini</button>
-       <button onclick="showPage('page-calendar')" class="p-4 bg-white rounded-xl text-blue-900 font-bold">Pilih Tanggal</button>
-     </div>
-   </div>
-
-   <div id="page-calendar" class="page min-h-full bg-primary p-4">
-     <button onclick="showPage('page-recap')" class="mb-4 text-white text-sm underline">← Kembali</button>
-     <div class="bg-slate-800 p-4 rounded-xl">
-       <div id="calendar-days" class="grid grid-cols-7 gap-1 text-center"></div>
-     </div>
-   </div>
-
-   <div id="page-recap-detail" class="page min-h-full bg-primary p-4">
-     <button onclick="showPage('page-recap')" class="mb-4 text-white text-sm underline">← Kembali</button>
-     <h2 id="recap-title" class="text-white font-bold"></h2>
-     <div id="recap-content" class="mt-4"></div>
-   </div>
   </div>
 
   <script>
-    // --- CONFIG & GLOBAL VAR ---
-    const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw';
     let workers = [], attendanceStatus = {}, uploadedPhotos = [], uploadedPhotosCompressed = [];
-    let scriptUrl = localStorage.getItem('appsScriptUrl') || 'https://script.google.com/macros/s/AKfycbykHilTCxFbqVnxOCbPxAl733dR2KHx7z0Z6TIMBGV4DbmiZru_ksbhd2kgH2pj1kKfZw/exec';
-    let cachedAddress = null, cachedLogoBase64 = null;
-    const MAX_PHOTOS = 10;
-    let currentRecapData = null, currentRecapDate = '';
+    let scriptUrl = 'https://script.google.com/macros/s/AKfycbykHilTCxFbqVnxOCbPxAl733dR2KHx7z0Z6TIMBGV4DbmiZru_ksbhd2kgH2pj1kKfZw/exec';
+    let isLoggedIn = false;
 
-    // --- UTILS ---
     function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
     function formatTanggalIndo(date) { 
         const d = String(date.getDate()).padStart(2, '0');
@@ -202,51 +105,58 @@
         return `${d}-${m}-${y}`; 
     }
 
-    // --- FUNGSI DOWNLOAD ANDROID / PC ---
-    async function downloadPhotosToDevice(photos, tanggal, jam) {
+    function showPage(id) { 
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        if(id !== 'page-login') document.getElementById('main-header').classList.remove('hidden');
+    }
+
+    // --- LOGIN HANDLER ---
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      if (u === 'archipelago' && p === 'balivibes') {
+        isLoggedIn = true;
+        showPage('page-attendance');
+        loadWorkers();
+      } else {
+        const err = document.getElementById('login-error');
+        err.textContent = 'Salah!'; err.classList.remove('hidden');
+      }
+    });
+
+    // --- FUNGSI DOWNLOAD/SHARE ---
+    async function downloadPhotosToDevice(photos, tgl) {
       for (let i = 0; i < photos.length; i++) {
-        const link = document.createElement('a');
-        link.href = photos[i];
-        link.download = `Absen_${tanggal}_${i+1}.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const a = document.createElement('a');
+        a.href = photos[i]; a.download = `Absen_${tgl}_${i+1}.jpg`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
         await new Promise(r => setTimeout(r, 300));
       }
     }
 
-    // --- FUNGSI KHUSUS IOS SHARE SHEET (STANDALONE) ---
-    async function triggerIOSShare(files, tanggal, jam) {
-        try {
-            if (navigator.canShare && navigator.canShare({ files })) {
-                await navigator.share({
-                    files: files,
-                    title: 'Foto Absensi',
-                    text: `Absen ${tanggal} ${jam}`
-                });
-            } else {
-                uploadedPhotos.forEach(p => window.open(p, '_blank'));
-            }
-        } catch (err) {
-            console.error('Share failed:', err);
+    async function triggerIOSShare(files, tgl, jam) {
+        if (navigator.canShare && navigator.canShare({ files })) {
+            await navigator.share({ files: files, title: 'Absen', text: `Absen ${tgl} ${jam}` });
         }
     }
 
-    // --- CORE ATTENDANCE LOGIC ---
+    // --- SUBMIT ABSENSI ---
     async function submitAttendance() {
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
         const now = new Date();
-        const tanggal = formatTanggalIndo(now);
+        const tgl = formatTanggalIndo(now);
         const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
-        const attendance = workers.map(w => ({ name: w.name, status: attendanceStatus[w.id] || '-' }));
+        
+        document.getElementById('upload-progress-modal').classList.remove('hidden');
 
-        showUploadProgress();
         try {
-            // 1. SIAPKAN FILE IOS DI AWAL (Kunci agar Share Sheet tidak diblokir Safari)
+            // 1. Proses File iOS duluan
             let iosFiles = [];
             if (isIOS() && uploadedPhotos.length > 0) {
-                updateUploadProgress('Menyiapkan Share...', 'Memproses foto...', 10);
+                updateUploadProgress('Memproses foto...', 10);
                 for (let i = 0; i < uploadedPhotos.length; i++) {
                     const res = await fetch(uploadedPhotos[i]);
                     const blob = await res.blob();
@@ -254,100 +164,63 @@
                 }
             }
 
-            // 2. KIRIM DATA KE GOOGLE
-            updateUploadProgress('Mengirim absensi...', 'Data pekerja', 30);
+            // 2. Kirim Data
+            updateUploadProgress('Kirim data...', 40);
+            const attendance = workers.map(w => ({ name: w.name, status: attendanceStatus[w.id] || '-' }));
             const formData = new FormData();
-            formData.append('data', JSON.stringify({ action: 'submitAttendance', tanggal, jam, attendance }));
+            formData.append('data', JSON.stringify({ action: 'submitAttendance', tanggal: tgl, jam: jam, attendance }));
             await fetch(scriptUrl, { method: 'POST', body: formData, redirect: 'follow' });
-            
-            updateUploadProgress('Absensi terkirim!', 'Menyimpan foto...', 60);
 
-           // 3. TRIGGER SHARE (iOS) ATAU DOWNLOAD (Android)
+            // 3. Share Sheet / Download
             if (uploadedPhotos.length > 0) {
                 if (isIOS()) {
-                    // Tampilkan notifikasi dulu di background
-                    showNotification('Absen Berhasil! Membuka menu simpan foto...');
-                    
-                    // Langsung panggil share sheet
-                    await triggerIOSShare(iosFiles, tanggal, jam);
+                    showNotification('Membuka menu simpan...');
+                    await triggerIOSShare(iosFiles, tgl, jam);
                 } else {
-                    await downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
-                    showNotification('Absen Berhasil!');
+                    await downloadPhotosToDevice(uploadedPhotos, tgl);
                 }
-            } else {
-                showNotification('Absen Berhasil!');
             }
 
-            // 4. UPLOAD KE DRIVE (BACKEND)
-            if (uploadedPhotosCompressed.length > 0) {
-                const pFormData = new FormData();
-                pFormData.append('data', JSON.stringify({ action: 'uploadPhotos', tanggal, jam, photos: uploadedPhotosCompressed }));
-                fetch(scriptUrl, { method: 'POST', body: pFormData, redirect: 'follow' }).catch(console.error);
-            }
-
-            updateUploadProgress('Selesai!', 'Berhasil', 100);
-            
-            // Beri jeda sebentar agar user bisa lihat status "Selesai" sebelum halaman bersih kembali
-            setTimeout(() => { 
-                hideUploadProgress();
-                // Jangan pakai alert atau location.reload() otomatis agar Share Sheet tidak tertutup
-                // Kita reset manual saja variabelnya
-                attendanceStatus = {};
-                uploadedPhotos = [];
-                uploadedPhotosCompressed = [];
-                renderPhotoThumbnails();
-                renderWorkers(workers);
-                updateCounter();
-            }, 1500);
+            updateUploadProgress('Berhasil!', 100);
+            setTimeout(() => {
+                document.getElementById('upload-progress-modal').classList.add('hidden');
+                showNotification('Absen Terkirim!');
+                // Reset manual (jangan reload agar share sheet tidak mati)
+                uploadedPhotos = []; uploadedPhotosCompressed = [];
+                attendanceStatus = {}; renderPhotoThumbnails(); renderWorkers(workers);
+            }, 1000);
 
         } catch (e) {
-            hideUploadProgress();
-            showNotification('Gagal: ' + e.message, true);
-        } finally { 
-            btn.disabled = false; 
-        }
-
-    // --- PHOTO HANDLER ---
-    async function handlePhotoUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const base64 = e.target.result;
-            uploadedPhotos.push(base64);
-            // Kompresi sederhana untuk upload drive
-            uploadedPhotosCompressed.push(base64); 
-            renderPhotoThumbnails();
-        };
-        reader.readAsDataURL(file);
+            alert('Gagal: ' + e.message);
+            document.getElementById('upload-progress-modal').classList.add('hidden');
+        } finally { btn.disabled = false; }
     }
 
-    function renderPhotoThumbnails() {
-        const container = document.getElementById('photo-thumbnails');
-        container.innerHTML = uploadedPhotos.map((p, i) => `<img src="${p}" class="w-full aspect-square object-cover rounded-lg border">`).join('');
-        document.getElementById('photo-count-badge').textContent = `${uploadedPhotos.length}/10`;
+    function updateUploadProgress(s, p) {
+        document.getElementById('upload-status').textContent = s;
+        document.getElementById('progress-fill').style.width = p + '%';
+        document.getElementById('progress-text').textContent = p + '%';
     }
 
-    // --- WORKERS & APP LOGIC (SIMPLIFIED FOR PREVIEW) ---
+    function showNotification(m) {
+        const n = document.getElementById('notification');
+        document.getElementById('notification-text').textContent = m;
+        n.classList.remove('hidden'); setTimeout(() => n.classList.add('hidden'), 3000);
+    }
+
+    // --- WORKERS LOGIC ---
     async function loadWorkers() {
-      try {
-        const res = await fetch(`${scriptUrl}?action=getWorkers`);
-        const data = await res.json();
-        if(data.success) {
-          workers = data.workers;
-          renderWorkers(workers);
-          document.getElementById('loading-workers').classList.add('hidden');
-          document.getElementById('workers-grid').classList.remove('hidden');
-        }
-      } catch(e) { console.error(e); }
+      const res = await fetch(`${scriptUrl}?action=getWorkers`);
+      const data = await res.json();
+      if(data.success) { workers = data.workers; renderWorkers(workers); }
     }
 
     function renderWorkers(list) {
       const grid = document.getElementById('workers-grid');
       grid.innerHTML = list.map(w => `
         <div class="bg-white p-3 rounded-xl border text-center">
-          <p class="font-bold text-xs mb-2">${w.name}</p>
-          <div class="grid grid-cols-2 gap-1">
+          <p class="font-bold text-xs">${w.name}</p>
+          <div class="grid grid-cols-2 gap-1 mt-2">
             <button onclick="setStatus(${w.id}, 'Start Work')" class="bg-green-500 text-white text-[10px] py-1 rounded">Start</button>
             <button onclick="setStatus(${w.id}, 'Finish Work')" class="bg-blue-500 text-white text-[10px] py-1 rounded">Finish</button>
           </div>
@@ -355,26 +228,30 @@
       `).join('');
     }
 
-    function setStatus(id, stat) { attendanceStatus[id] = stat; alert(stat + ' terpilih'); }
-    function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-    function showUploadProgress() { document.getElementById('upload-progress-modal').classList.remove('hidden'); }
-    function hideUploadProgress() { document.getElementById('upload-progress-modal').classList.add('hidden'); }
-    function updateUploadProgress(s, d, p) { 
-        document.getElementById('upload-status').textContent = s;
-        document.getElementById('progress-fill').style.width = p + '%';
-        document.getElementById('progress-text').textContent = p + '%';
+    function setStatus(id, s) { attendanceStatus[id] = s; showNotification(s + ' dipilih'); }
+
+    function handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            uploadedPhotos.push(e.target.result);
+            uploadedPhotosCompressed.push(e.target.result);
+            renderPhotoThumbnails();
+        };
+        reader.readAsDataURL(file);
     }
 
-    // INIT
-    window.onload = () => {
-        updateDateTime();
-        loadWorkers();
-    };
+    function renderPhotoThumbnails() {
+        document.getElementById('photo-thumbnails').innerHTML = uploadedPhotos.map(p => `<img src="${p}" class="w-full aspect-square object-cover rounded border">`).join('');
+    }
 
     function updateDateTime() {
-      const now = new Date();
-      document.getElementById('header-date').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      document.getElementById('header-time').textContent = now.toLocaleTimeString('id-ID');
+        const now = new Date();
+        const dateEl = document.getElementById('header-date');
+        const timeEl = document.getElementById('header-time');
+        if(dateEl) dateEl.textContent = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        if(timeEl) timeEl.textContent = now.toLocaleTimeString('id-ID');
     }
     setInterval(updateDateTime, 1000);
   </script>
