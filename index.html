@@ -262,13 +262,20 @@
             
             updateUploadProgress('Absensi terkirim!', 'Menyimpan foto...', 60);
 
-            // 3. TRIGGER SHARE (iOS) ATAU DOWNLOAD (Android)
+           // 3. TRIGGER SHARE (iOS) ATAU DOWNLOAD (Android)
             if (uploadedPhotos.length > 0) {
                 if (isIOS()) {
+                    // Tampilkan notifikasi dulu di background
+                    showNotification('Absen Berhasil! Membuka menu simpan foto...');
+                    
+                    // Langsung panggil share sheet
                     await triggerIOSShare(iosFiles, tanggal, jam);
                 } else {
                     await downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
+                    showNotification('Absen Berhasil!');
                 }
+            } else {
+                showNotification('Absen Berhasil!');
             }
 
             // 4. UPLOAD KE DRIVE (BACKEND)
@@ -279,12 +286,26 @@
             }
 
             updateUploadProgress('Selesai!', 'Berhasil', 100);
-            setTimeout(() => { location.reload(); }, 1500);
+            
+            // Beri jeda sebentar agar user bisa lihat status "Selesai" sebelum halaman bersih kembali
+            setTimeout(() => { 
+                hideUploadProgress();
+                // Jangan pakai alert atau location.reload() otomatis agar Share Sheet tidak tertutup
+                // Kita reset manual saja variabelnya
+                attendanceStatus = {};
+                uploadedPhotos = [];
+                uploadedPhotosCompressed = [];
+                renderPhotoThumbnails();
+                renderWorkers(workers);
+                updateCounter();
+            }, 1500);
+
         } catch (e) {
             hideUploadProgress();
-            alert('Gagal: ' + e.message);
-        } finally { btn.disabled = false; }
-    }
+            showNotification('Gagal: ' + e.message, true);
+        } finally { 
+            btn.disabled = false; 
+        }
 
     // --- PHOTO HANDLER ---
     async function handlePhotoUpload(event) {
