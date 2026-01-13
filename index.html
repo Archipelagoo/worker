@@ -1156,50 +1156,50 @@ function applyColorsToAllData() {
     }
 
 async function downloadPhotosToDevice(photos, tanggal, jam) {
-    const formattedDate = tanggal.replace(/ /g, '_');
+    // jam formatnya HH:mm, kita ubah : menjadi - agar aman untuk nama file
     const formattedTime = jam.replace(/:/g, '-');
     
-    // 1. Cek apakah ini perangkat iOS atau mendukung Share API dengan File
+    // 1. Cek apakah ini perangkat iOS/Safari
     const isIOSDevice = isIOS() || (navigator.maxTouchPoints > 0 && /Macintosh/.test(navigator.userAgent));
     
-    if (isIOSDevice && navigator.canShare) {
+    if (isIOSDevice && navigator.share) {
         try {
             const filesArray = [];
             
             for (let i = 0; i < photos.length; i++) {
                 const photoDataUrl = photos[i];
-                // Konversi DataURL ke Blob
+                // Konversi DataURL ke Blob (Wajib untuk iOS agar file asli terbaca)
                 const response = await fetch(photoDataUrl);
                 const blob = await response.blob();
                 
-                // Buat objek File dari Blob agar bisa dibaca Share Sheet
-                const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+                // Gunakan format DD-MM-YYYY langsung dari variabel tanggal
+                const fileName = `Absen_${tanggal}_${formattedTime}_${i + 1}.jpg`;
                 const file = new File([blob], fileName, { type: 'image/jpeg' });
                 filesArray.push(file);
             }
 
-            // Cek apakah browser benar-benar bisa men-share file tersebut
-            if (navigator.canShare({ files: filesArray })) {
+            // Cek apakah browser mendukung sharing file
+            if (navigator.canShare && navigator.canShare({ files: filesArray })) {
                 await navigator.share({
                     files: filesArray,
                     title: 'Foto Absensi',
                     text: `Data Absen ${tanggal} ${jam}`
                 });
-                showNotification(`${filesArray.length} foto siap dibagikan/disimpan!`);
+                showNotification(`${filesArray.length} foto siap dibagikan!`);
             } else {
-                throw new Error("Share API tidak mendukung file ini.");
+                throw new Error("Share API tidak mendukung file.");
             }
         } catch (error) {
             console.error('Gagal Share Sheet:', error);
-            // Fallback: Jika Share API gagal, buka foto di tab baru satu per satu
+            // Fallback: Jika Share Sheet gagal/dibatalkan, buka foto satu per satu
             photos.forEach(p => window.open(p, '_blank'));
-            showNotification('Gagal membuka Share Sheet, foto dibuka di tab baru.', true);
+            showNotification('Gagal share, foto dibuka di tab baru.', true);
         }
     } else {
         // 2. Logika untuk Android / Desktop (Download Langsung)
         for (let i = 0; i < photos.length; i++) {
-            const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-            if (i > 0) await new Promise(r => setTimeout(r, 300)); // Delay agar tidak dianggap spam
+            const fileName = `Absen_${tanggal}_${formattedTime}_${i + 1}.jpg`;
+            if (i > 0) await new Promise(r => setTimeout(r, 400)); // Delay agar download lancar
             directDownload(photos[i], fileName);
         }
         showNotification(`${photos.length} foto berhasil diunduh!`);
