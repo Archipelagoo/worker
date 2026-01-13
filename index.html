@@ -1610,33 +1610,33 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
       renderWorkers(workers);
     }
 
-    async function handlePhotoUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    if (uploadedPhotos.length >= MAX_PHOTOS) {
-        showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
-        return;
-    }
+  async function handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        if (uploadedPhotos.length >= MAX_PHOTOS) {
+            showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
+            return;
+        }
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const originalImage = e.target.result;
-        
-        // 1. Tambahkan Watermark (Hasil ini tetap High Res untuk preview/download lokal)
-        const timestampedImage = await addTimemark(originalImage);
-        uploadedPhotos.push(timestampedImage);
-        
-        // 2. KOMPRESI 0.7 UNTUK GOOGLE DRIVE (Medium Res)
-        // Kita kecilkan max size ke 1200px agar upload sangat ringan tapi tetap jelas
-        const optimizedImage = await compressImageForUpload(timestampedImage, 0.7, 1200);
-        uploadedPhotosCompressed.push(optimizedImage); 
-        
-        renderPhotoThumbnails();
-        event.target.value = '';
-    };
-    reader.readAsDataURL(file);
-}
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const originalImage = e.target.result;
+            
+            // 1. Tambahkan Watermark (Tetap simpan versi tajam untuk Share/Download Lokal)
+            const timestampedImage = await addTimemark(originalImage);
+            uploadedPhotos.push(timestampedImage);
+            
+            // 2. KOMPRESI 0.5 (Sangat Cepat & Ringan) untuk Google Drive
+            // Ukuran 1000px sudah sangat cukup untuk dilihat di layar HP/Monitor
+            const optimizedImage = await compressImageForUpload(timestampedImage, 0.5, 1000);
+            uploadedPhotosCompressed.push(optimizedImage); 
+            
+            renderPhotoThumbnails();
+            event.target.value = '';
+        };
+        reader.readAsDataURL(file);
+    }
 
     async function addTimemark(imageDataUrl) {
       return new Promise((resolve) => {
