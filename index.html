@@ -1923,7 +1923,7 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
       document.getElementById('photo-counter').textContent = `${currentPhotoIndex + 1} / ${uploadedPhotos.length}`;
     }
 
-   async function submitAttendance() {
+  async function submitAttendance() {
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
 
@@ -1936,7 +1936,7 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
         status: attendanceStatus[w.id] || '-'
     }));
 
-    // --- STRATEGI 1: SIAPKAN FILE SECARA INSTAN ---
+    // --- LANGKAH 1: PRE-LOAD FILE UNTUK iOS ---
     let filesForShare = [];
     if (isIOS() && uploadedPhotos.length > 0) {
         filesForShare = await Promise.all(uploadedPhotos.map(async (base64, i) => {
@@ -1946,7 +1946,7 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
         }));
     }
 
-    // --- STRATEGI 2: PANGGIL SHARE SHEET DULUAN (KUNCI UTAMA) ---
+    // --- LANGKAH 2: TRIGGER SHARE SHEET (PRIORITAS iOS) ---
     if (isIOS() && filesForShare.length > 0) {
         try {
             await navigator.share({
@@ -1954,20 +1954,15 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
                 title: 'Simpan Foto Absensi',
                 text: `Data Absen ${tanggal} ${jam}`
             });
-        } catch (shareErr) {
-            console.log("Share dibatalkan atau gagal");
-        }
+        } catch (shareErr) { console.log("Share dibatalkan/gagal"); }
     }
 
-    // --- STRATEGI 3: PROSES PENGIRIMAN DATA DI BELAKANG LAYAR ---
+    // --- LANGKAH 3: PROSES PENGIRIMAN DATA (SANGAT PENTING) ---
     showUploadProgress();
-    updateUploadProgress('Mengirim data...', 'Ke Spreadsheet & Drive', 30);
+    updateUploadProgress('Mengirim data...', 'Harap jangan tutup browser', 30);
 
     try {
-        // Ambil data foto ke dalam variabel lokal agar tidak hilang saat di-reset
-        const photosToUpload = [...uploadedPhotosCompressed]; 
-
-        // 1. Kirim data absen (tetap pakai await agar sinkron)
+        // 1. Kirim data absen ke Spreadsheet
         await fetch(scriptUrl, { 
             method: 'POST', 
             body: new URLSearchParams({ 
@@ -1975,39 +1970,46 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
             })
         });
 
-        // 2. Kirim foto ke Drive di background (pakai variabel lokal 'photosToUpload')
-        if (photosToUpload.length > 0) {
-            fetch(scriptUrl, { 
+        // 2. Kirim foto ke Drive (Sekarang pakai AWAIT agar PASTI terupload)
+        if (uploadedPhotosCompressed.length > 0) {
+            updateUploadProgress('Mengunggah foto...', 'Sedang menyimpan foto tajam ke Drive', 70);
+            
+            await fetch(scriptUrl, { 
                 method: 'POST', 
                 body: new URLSearchParams({ 
                     data: JSON.stringify({ 
                         action: 'uploadPhotos', 
                         tanggal, 
                         jam, 
-                        photos: photosToUpload 
+                        photos: uploadedPhotosCompressed 
                     }) 
                 })
-            }).catch(e => console.error("Upload Drive gagal", e));
+            });
         }
 
-        updateUploadProgress('Selesai!', 'Absensi berhasil dikirim', 100);
-        setTimeout(hideUploadProgress, 1000);
-        showNotification('Absen berhasil dikirim!');
+        updateUploadProgress('Selesai!', 'Semua data dan foto telah tersimpan aman', 100);
         
-        // Sekarang aman untuk me-reset variabel utama
+        // Reset UI
         attendanceStatus = {};
         uploadedPhotos = [];
-        uploadedPhotosCompressed = []; 
+        uploadedPhotosCompressed = [];
         renderPhotoThumbnails();
         renderWorkers(workers);
         updateCounter();
 
+        // Berikan jeda sebentar agar user bisa melihat status 100%
+        setTimeout(() => {
+            hideUploadProgress();
+            showNotification('Absen & Foto berhasil dikirim!');
+        }, 1500);
+
     } catch (error) {
         hideUploadProgress();
-        showNotification('Data gagal terkirim!', true);
+        showNotification('Gagal mengirim! Cek koneksi internet Anda.', true);
     } finally {
         btn.disabled = false;
     }
+}
     async function showRecapToday() {
       recapSource = 'today';
       const today = formatTanggalIndo(new Date());
