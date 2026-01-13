@@ -1106,7 +1106,7 @@ function applyColorsToAllData() {
     return `${d}-${m}-${y}`; 
 }
 
-   async function compressImageForUpload(dataUrl, quality = 0.5, maxSize = 1000) {
+ async function compressImageForUpload(dataUrl, quality = 0.5, maxSize = 1000) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -1114,7 +1114,6 @@ function applyColorsToAllData() {
       let width = img.width;
       let height = img.height;
       
-      // Tetapkan di 1920px (Full HD) agar tetap tajam
       if (width > maxSize || height > maxSize) {
         if (width > height) {
           height = Math.round((height * maxSize) / width);
@@ -1129,13 +1128,11 @@ function applyColorsToAllData() {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      // Kualitas 0.9 (90%) sangat tajam dan ukuran file tetap efisien
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
     img.src = dataUrl;
   });
 }
-
     function isIOS() {
       return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1611,31 +1608,35 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
     }
 
 async function handlePhotoUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        if (uploadedPhotos.length >= MAX_PHOTOS) {
-            showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const originalImage = e.target.result;
-            const timestampedImage = await addTimemark(originalImage);
-            
-            // Tetap simpan High Res untuk Share lokal
-            uploadedPhotos.push(timestampedImage);
-            
-            // KOMPRESI 0.5 untuk upload ke Google Drive (Sangat Cepat)
-            const optimizedImage = await compressImageForUpload(timestampedImage, 0.5, 1000);
-            uploadedPhotosCompressed.push(optimizedImage); 
-            
-            renderPhotoThumbnails();
-            event.target.value = '';
-        };
-        reader.readAsDataURL(file);
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (uploadedPhotos.length >= MAX_PHOTOS) {
+        showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
+        return;
     }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const originalImage = e.target.result;
+        
+        // 1. Tambahkan Watermark
+        const timestampedImage = await addTimemark(originalImage);
+        
+        // 2. SIMPAN VERSI TAJAM (High Res) 
+        // Ini yang nanti dipakai untuk fungsi Download/Share ke HP
+        uploadedPhotos.push(timestampedImage);
+        
+        // 3. SIMPAN VERSI KOMPRES 0.5 (Low Res)
+        // Ini yang nanti dikirim ke Google Drive agar hemat kuota & cepat
+        const lowResImage = await compressImageForUpload(timestampedImage, 0.5, 1000);
+        uploadedPhotosCompressed.push(lowResImage); 
+        
+        renderPhotoThumbnails();
+        event.target.value = '';
+    };
+    reader.readAsDataURL(file);
+}
 
     async function addTimemark(imageDataUrl) {
       return new Promise((resolve) => {
@@ -1971,20 +1972,20 @@ async function handlePhotoUpload(event) {
 
         // 2. Kirim foto ke Drive (Sekarang pakai AWAIT agar PASTI terupload)
         if (uploadedPhotosCompressed.length > 0) {
-            updateUploadProgress('Mengunggah foto...', 'Sedang menyimpan foto tajam ke Drive', 70);
-            
-            await fetch(scriptUrl, { 
-                method: 'POST', 
-                body: new URLSearchParams({ 
-                    data: JSON.stringify({ 
-                        action: 'uploadPhotos', 
-                        tanggal, 
-                        jam, 
-                        photos: uploadedPhotosCompressed 
-                    }) 
-                })
-            });
-        }
+    updateUploadProgress('Mengunggah foto...', 'Menyimpan versi ringan ke Drive', 70);
+    
+    await fetch(scriptUrl, { 
+        method: 'POST', 
+        body: new URLSearchParams({ 
+            data: JSON.stringify({ 
+                action: 'uploadPhotos', 
+                tanggal, 
+                jam, 
+                photos: uploadedPhotosCompressed // <--- Menggunakan variabel kompresi
+            }) 
+        })
+    });
+}
 
         updateUploadProgress('Selesai!', 'Semua data dan foto telah tersimpan aman', 100);
         
