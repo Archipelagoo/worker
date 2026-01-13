@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     body { box-sizing: border-box; }
     * { font-family: 'Poppins', sans-serif; }
@@ -124,14 +124,12 @@
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
  <body class="h-full m-0 p-0 overflow-hidden bg-primary">
-  <div id="app" class="h-full w-full overflow-auto"><!-- NOTIFICATION -->
-   <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
+  <div id="app" class="h-full w-full overflow-auto"><div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
     <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
      </svg><span id="notification-text">Berhasil!</span>
     </div>
-   </div><!-- UPLOAD PROGRESS MODAL -->
-   <div id="upload-progress-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+   </div><div id="upload-progress-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
     <div class="upload-progress w-full max-w-sm text-center">
      <div class="mb-4">
       <div class="inline-block w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
@@ -143,8 +141,7 @@
      </div>
      <p id="progress-text" class="text-slate-400 text-xs mt-2">0%</p>
     </div>
-   </div><!-- FULLSCREEN PHOTO VIEWER -->
-   <div id="fullscreen-viewer" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
+   </div><div id="fullscreen-viewer" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
     <div class="nav-arrow left" onclick="handleNavClick(-1, event)">
      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
      </svg>
@@ -155,8 +152,7 @@
     </div>
     <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm"><span id="photo-counter">1 / 1</span>
     </div>
-   </div><!-- STATUS MODAL -->
-   <div id="status-modal" class="modal-overlay hidden" onclick="closeStatusModal(event)">
+   </div><div id="status-modal" class="modal-overlay hidden" onclick="closeStatusModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
      <div class="modal-header">
       <h3 id="modal-title" class="text-white font-bold text-lg">Daftar Pekerja</h3><button onclick="closeStatusModal()" class="text-slate-400 hover:text-white">
@@ -165,8 +161,7 @@
      </div>
      <div class="modal-body" id="modal-body"></div>
     </div>
-   </div><!-- SHARED HEADER COMPONENT -->
-   <header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
+   </div><header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
      <div class="flex items-center gap-3">
       <div id="header-logo" class="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center"><img id="header-logo-img" class="w-full h-full object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"> <span id="header-logo-fallback" class="hidden text-white text-2xl md:text-3xl font-bold">A</span>
@@ -182,8 +177,7 @@
       </div>
      </div>
     </div>
-   </header><!-- PAGE 1: LOGIN -->
-   <div id="page-login" class="page active h-full w-full" style="display: flex; align-items: center; justify-content: center; min-height: 100%;">
+   </header><div id="page-login" class="page active h-full w-full" style="display: flex; align-items: center; justify-content: center; min-height: 100%;">
     <div class="bg-white rounded-3xl shadow-2xl overflow-hidden fade-in" style="width: 100%; max-width: 400px;">
      <div class="flex flex-col items-center justify-center p-8 text-center">
       <div class="mb-2">
@@ -200,8 +194,7 @@
       </form><button onclick="showPage('page-apps-script')" class="mt-3 text-slate-400 hover:text-green-500 text-xs underline transition-colors">⚙️ Setup Apps Script</button>
      </div>
     </div>
-   </div><!-- PAGE 2: MAIN ATTENDANCE -->
-   <div id="page-attendance" class="page min-h-full">
+   </div><div id="page-attendance" class="page min-h-full">
     <main class="p-3 max-w-7xl mx-auto">
      <div class="flex flex-wrap items-center gap-2 mb-3"><button onclick="setAllPresent()" class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all flex items-center gap-1 font-medium text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -272,8 +265,7 @@
       <p class="text-amber-400 text-sm">Apps Script URL belum diatur.</p><button onclick="showPage('page-apps-script')" class="mt-2 text-orange-400 hover:text-orange-300 underline text-sm">Setup Apps Script</button>
      </div>
     </main>
-   </div><!-- PAGE 3: RECAP MENU -->
-   <div id="page-recap" class="page min-h-full bg-primary">
+   </div><div id="page-recap" class="page min-h-full bg-primary">
     <main class="p-3 max-w-7xl mx-auto">
      <div class="nav-buttons"><button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -317,8 +309,7 @@
        </div></button>
      </div>
     </main>
-   </div><!-- PAGE 4: CALENDAR -->
-   <div id="page-calendar" class="page min-h-full bg-primary">
+   </div><div id="page-calendar" class="page min-h-full bg-primary">
     <main class="p-3 max-w-md mx-auto">
      <div class="nav-buttons"><button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -367,8 +358,7 @@
       </div>
      </div>
     </main>
-   </div><!-- PAGE 5: RECAP DETAIL -->
-   <div id="page-recap-detail" class="page min-h-full bg-primary">
+   </div><div id="page-recap-detail" class="page min-h-full bg-primary">
     <main class="p-3 max-w-7xl mx-auto">
      <div class="flex justify-between items-center mb-3"><button onclick="showRecapJam()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -404,8 +394,7 @@
       <p class="text-slate-400 text-sm">Tidak ada data absensi untuk tanggal ini</p>
      </div>
     </main>
-   </div><!-- PAGE 6: PHOTO GALLERY -->
-   <div id="page-photo-gallery" class="page min-h-full bg-primary">
+   </div><div id="page-photo-gallery" class="page min-h-full bg-primary">
     <main class="p-3 max-w-4xl mx-auto">
      <div class="nav-buttons"><button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -428,8 +417,7 @@
       <p class="text-slate-400 text-sm">Belum ada foto absen</p>
      </div>
     </main>
-   </div><!-- PAGE 7: PHOTO DETAIL -->
-   <div id="page-photo-detail" class="page min-h-full bg-primary">
+   </div><div id="page-photo-detail" class="page min-h-full bg-primary">
     <main class="p-3 max-w-4xl mx-auto">
      <div class="nav-buttons"><button onclick="showPage('page-photo-gallery')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -451,8 +439,7 @@
       <p class="text-slate-400 text-sm">Tidak ada foto</p>
      </div>
     </main>
-   </div><!-- PAGE 8: APPS SCRIPT SETUP -->
-   <div id="page-apps-script" class="page min-h-full bg-primary">
+   </div><div id="page-apps-script" class="page min-h-full bg-primary">
     <main class="p-3 max-w-4xl mx-auto">
      <div class="nav-buttons"><button onclick="goBackFromAppsScript()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -472,13 +459,13 @@
       </div>
       <div class="bg-slate-800/50 rounded-xl p-3 md:p-4 border border-slate-700">
        <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2"><span class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-xs">2</span> Copy Kode Apps Script</h3>
-       <p class="text-green-400 text-xs mb-2">✅ v8 - Tambah fungsi sortir &amp; rapikan data</p>
+       <p class="text-green-400 text-xs mb-2">✅ v8 - Tambah fungsi sortir & rapikan data</p>
        <p class="text-yellow-400 text-xs mb-2">⚠️ Setelah deploy, jalankan fungsi <strong>runFullFix()</strong> SEKALI untuk merapikan data!</p>
        <div class="relative"><button onclick="copyScript()" class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-600 hover:bg-orange-500 text-white text-xs rounded transition-all z-10">Copy</button>
         <div class="code-block max-h-64 overflow-y-auto">
          <pre id="apps-script-code">// ========================================
 // ABSEN ARCHIPELAGO - Google Apps Script v8
-// FITUR BARU: Fungsi sortir &amp; rapikan data
+// FITUR BARU: Fungsi sortir & rapikan data
 // Jalankan runFullFix() SEKALI setelah deploy!
 // ========================================
 
@@ -489,400 +476,400 @@ const BULAN_INDO = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Ag
 
 // Warna status (solid)
 const STATUS_COLORS = {
-  'Start Work': '#22c55e',
-  'Finish Work': '#3b82f6',
-  'Sakit': '#f97316',
-  'Standby': '#a855f7',
-  '-': '#ef4444'
+  'Start Work': '#22c55e',
+  'Finish Work': '#3b82f6',
+  'Sakit': '#f97316',
+  'Standby': '#a855f7',
+  '-': '#ef4444'
 };
 
 function doGet(e) {
-  const action = e.parameter.action;
-  let result;
-  
-  try {
-    switch(action) {
-      case 'getWorkers':
-        result = getWorkers();
-        break;
-      case 'getAttendance':
-        result = getAttendance(e.parameter.date);
-        break;
-      case 'getMonthData':
-        result = getMonthData(e.parameter.month, e.parameter.year);
-        break;
-      case 'getPhotoFolders':
-        result = getPhotoFolders();
-        break;
-      case 'getPhotos':
-        result = getPhotos(e.parameter.date);
-        break;
-      default:
-        result = { success: false, error: 'Unknown action' };
-    }
-  } catch(err) {
-    result = { success: false, error: err.toString() };
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
+  const action = e.parameter.action;
+  let result;
+  
+  try {
+    switch(action) {
+      case 'getWorkers':
+        result = getWorkers();
+        break;
+      case 'getAttendance':
+        result = getAttendance(e.parameter.date);
+        break;
+      case 'getMonthData':
+        result = getMonthData(e.parameter.month, e.parameter.year);
+        break;
+      case 'getPhotoFolders':
+        result = getPhotoFolders();
+        break;
+      case 'getPhotos':
+        result = getPhotos(e.parameter.date);
+        break;
+      default:
+        result = { success: false, error: 'Unknown action' };
+    }
+  } catch(err) {
+    result = { success: false, error: err.toString() };
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doPost(e) {
-  try {
-    const data = JSON.parse(e.parameter.data);
-    let result;
-    
-    switch(data.action) {
-      case 'submitAttendance':
-        result = submitAttendance(data);
-        break;
-      case 'uploadPhotos':
-        result = uploadPhotos(data);
-        break;
-      default:
-        result = { success: false, error: 'Unknown action' };
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ 
-      success: false, 
-      error: err.toString() 
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
+  try {
+    const data = JSON.parse(e.parameter.data);
+    let result;
+    
+    switch(data.action) {
+      case 'submitAttendance':
+        result = submitAttendance(data);
+        break;
+      case 'uploadPhotos':
+        result = uploadPhotos(data);
+        break;
+      default:
+        result = { success: false, error: 'Unknown action' };
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+} catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ 
+      success: false, 
+      error: err.toString() 
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 function getWorkers() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName('Form Responses 1');
-  if (!sheet) return { success: true, workers: [] };
-  
-  const data = sheet.getDataRange().getValues();
-  const workers = [];
-  
-  for (let i = 1; i &lt; data.length; i++) {
-    const nama = data[i][1];
-    const photo = data[i][2] || '';
-    
-    if (nama &amp;&amp; nama.toString().trim() !== '') {
-      workers.push({
-        id: i,
-        name: nama.toString().trim(),
-        photo: photo.toString().trim()
-      });
-    }
-  }
-  
-  workers.sort((a, b) =&gt; a.name.localeCompare(b.name));
-  return { success: true, workers };
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Form Responses 1');
+  if (!sheet) return { success: true, workers: [] };
+  
+  const data = sheet.getDataRange().getValues();
+  const workers = [];
+  
+  for (let i = 1; i < data.length; i++) {
+    const nama = data[i][1];
+    const photo = data[i][2] || '';
+    
+    if (nama && nama.toString().trim() !== '') {
+      workers.push({
+        id: i,
+        name: nama.toString().trim(),
+        photo: photo.toString().trim()
+      });
+    }
+  }
+  
+  workers.sort((a, b) => a.name.localeCompare(b.name));
+  return { success: true, workers };
 }
 
 function submitAttendance(data) {
-  const { tanggal, jam, attendance } = data;
-  
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  let sheet = ss.getSheetByName('Absen Recap');
-  
-  if (!sheet) {
-    sheet = ss.insertSheet('Absen Recap');
-    sheet.getRange(1, 1).setValue('Tanggal');
-    sheet.getRange(2, 1).setValue('Jam');
-  }
-  
-  // Sync nama dari Form Responses 1
-  syncWorkerNames(sheet);
-  
-  const lastCol = sheet.getLastColumn();
-  const newCol = lastCol &lt; 1 ? 2 : lastCol + 1;
-  
-  // Tulis tanggal dan jam
-  sheet.getRange(1, newCol).setValue(tanggal);
-  sheet.getRange(2, newCol).setValue(jam);
-  
-  const lastRow = sheet.getLastRow();
-  if (lastRow &lt; 3) return { success: true };
-  
-  // Ambil semua nama di kolom A (mulai baris 3)
-  const workerNames = sheet.getRange(3, 1, lastRow - 2, 1).getValues().flat().map(n =&gt; n.toString().trim());
-  
-  // Tulis status untuk setiap pekerja
-  attendance.forEach(a =&gt; {
-    const cleanName = a.name.toString().trim();
-    const rowIndex = workerNames.findIndex(n =&gt; n === cleanName);
-    
-    if (rowIndex !== -1) {
-      const cell = sheet.getRange(rowIndex + 3, newCol);
-      const status = a.status || '-';
-      cell.setValue(status);
-      
-      // Terapkan warna
-      const color = STATUS_COLORS[status] || STATUS_COLORS['-'];
-      cell.setBackground(color);
-      cell.setFontColor('#ffffff');
-      cell.setFontWeight('bold');
-      cell.setHorizontalAlignment('center');
-    }
-  });
-  
-  // Terapkan warna tanggal
-  applyDateRowColors(sheet);
-  
-  return { success: true };
+  const { tanggal, jam, attendance } = data;
+  
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName('Absen Recap');
+  
+  if (!sheet) {
+    sheet = ss.insertSheet('Absen Recap');
+    sheet.getRange(1, 1).setValue('Tanggal');
+    sheet.getRange(2, 1).setValue('Jam');
+  }
+  
+  // Sync nama dari Form Responses 1
+  syncWorkerNames(sheet);
+  
+  const lastCol = sheet.getLastColumn();
+  const newCol = lastCol < 1 ? 2 : lastCol + 1;
+  
+  // Tulis tanggal dan jam
+  sheet.getRange(1, newCol).setValue(tanggal);
+  sheet.getRange(2, newCol).setValue(jam);
+  
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 3) return { success: true };
+  
+  // Ambil semua nama di kolom A (mulai baris 3)
+  const workerNames = sheet.getRange(3, 1, lastRow - 2, 1).getValues().flat().map(n => n.toString().trim());
+  
+  // Tulis status untuk setiap pekerja
+  attendance.forEach(a => {
+    const cleanName = a.name.toString().trim();
+    const rowIndex = workerNames.findIndex(n => n === cleanName);
+    
+    if (rowIndex !== -1) {
+      const cell = sheet.getRange(rowIndex + 3, newCol);
+      const status = a.status || '-';
+      cell.setValue(status);
+      
+      // Terapkan warna
+      const color = STATUS_COLORS[status] || STATUS_COLORS['-'];
+      cell.setBackground(color);
+      cell.setFontColor('#ffffff');
+      cell.setFontWeight('bold');
+      cell.setHorizontalAlignment('center');
+    }
+  });
+  
+  // Terapkan warna tanggal
+  applyDateRowColors(sheet);
+  
+  return { success: true };
 }
 
 function syncWorkerNames(recapSheet) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const formSheet = ss.getSheetByName('Form Responses 1');
-  if (!formSheet) return;
-  
-  const formData = formSheet.getDataRange().getValues();
-  const newNames = [];
-  for (let i = 1; i &lt; formData.length; i++) {
-    const nama = formData[i][1];
-    if (nama &amp;&amp; nama.toString().trim() !== '') {
-      newNames.push(nama.toString().trim());
-    }
-  }
-  newNames.sort((a, b) =&gt; a.localeCompare(b, 'id'));
-  
-  if (recapSheet.getRange(1, 1).getValue() === '') {
-    recapSheet.getRange(1, 1).setValue('Tanggal');
-    recapSheet.getRange(2, 1).setValue('Jam');
-  }
-  
-  const lastRow = recapSheet.getLastRow();
-  let existingNames = [];
-  if (lastRow &gt;= 3) {
-    existingNames = recapSheet.getRange(3, 1, lastRow - 2, 1).getValues().flat().map(n =&gt; n.toString().trim()).filter(n =&gt; n !== '');
-  }
-  
-  newNames.forEach(name =&gt; {
-    if (!existingNames.includes(name)) {
-      const nextRow = recapSheet.getLastRow() + 1;
-      recapSheet.getRange(nextRow, 1).setValue(name);
-      existingNames.push(name);
-    }
-  });
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const formSheet = ss.getSheetByName('Form Responses 1');
+  if (!formSheet) return;
+  
+  const formData = formSheet.getDataRange().getValues();
+  const newNames = [];
+  for (let i = 1; i < formData.length; i++) {
+    const nama = formData[i][1];
+    if (nama && nama.toString().trim() !== '') {
+      newNames.push(nama.toString().trim());
+    }
+  }
+  newNames.sort((a, b) => a.localeCompare(b, 'id'));
+  
+  if (recapSheet.getRange(1, 1).getValue() === '') {
+    recapSheet.getRange(1, 1).setValue('Tanggal');
+    recapSheet.getRange(2, 1).setValue('Jam');
+  }
+  
+  const lastRow = recapSheet.getLastRow();
+  let existingNames = [];
+  if (lastRow >= 3) {
+    existingNames = recapSheet.getRange(3, 1, lastRow - 2, 1).getValues().flat().map(n => n.toString().trim()).filter(n => n !== '');
+  }
+  
+  newNames.forEach(name => {
+    if (!existingNames.includes(name)) {
+      const nextRow = recapSheet.getLastRow() + 1;
+      recapSheet.getRange(nextRow, 1).setValue(name);
+      existingNames.push(name);
+    }
+  });
 }
 
 function applyDateRowColors(sheet) {
-  const lastCol = sheet.getLastColumn();
-  if (lastCol &lt; 2) return;
-  
-  const dates = sheet.getRange(1, 2, 1, lastCol - 1).getValues()[0];
-  
-  let currentDate = '';
-  let colorIndex = 0;
-  const grayColor = '#6b7280';
-  const whiteColor = '#ffffff';
-  
-  for (let col = 2; col &lt;= lastCol; col++) {
-    const dateVal = dates[col - 2];
-    if (dateVal !== currentDate) {
-      currentDate = dateVal;
-      colorIndex++;
-    }
-    
-    const bgColor = colorIndex % 2 === 1 ? grayColor : whiteColor;
-    const textColor = colorIndex % 2 === 1 ? '#ffffff' : '#000000';
-    
-    const dateCell = sheet.getRange(1, col);
-    dateCell.setBackground(bgColor);
-    dateCell.setFontColor(textColor);
-    dateCell.setFontWeight('bold');
-    dateCell.setHorizontalAlignment('center');
-    
-    const jamCell = sheet.getRange(2, col);
-    jamCell.setBackground('#1e293b');
-    jamCell.setFontColor('#fbbf24');
-    jamCell.setFontWeight('bold');
-    jamCell.setHorizontalAlignment('center');
-  }
+  const lastCol = sheet.getLastColumn();
+  if (lastCol < 2) return;
+  
+  const dates = sheet.getRange(1, 2, 1, lastCol - 1).getValues()[0];
+  
+  let currentDate = '';
+  let colorIndex = 0;
+  const grayColor = '#6b7280';
+  const whiteColor = '#ffffff';
+  
+  for (let col = 2; col <= lastCol; col++) {
+    const dateVal = dates[col - 2];
+    if (dateVal !== currentDate) {
+      currentDate = dateVal;
+      colorIndex++;
+    }
+    
+    const bgColor = colorIndex % 2 === 1 ? grayColor : whiteColor;
+    const textColor = colorIndex % 2 === 1 ? '#ffffff' : '#000000';
+    
+    const dateCell = sheet.getRange(1, col);
+    dateCell.setBackground(bgColor);
+    dateCell.setFontColor(textColor);
+    dateCell.setFontWeight('bold');
+    dateCell.setHorizontalAlignment('center');
+    
+    const jamCell = sheet.getRange(2, col);
+    jamCell.setBackground('#1e293b');
+    jamCell.setFontColor('#fbbf24');
+    jamCell.setFontWeight('bold');
+    jamCell.setHorizontalAlignment('center');
+  }
 }
 
 function getAttendance(date) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName('Absen Recap');
-  if (!sheet) return { success: true, columns: [], workers: [] };
-  
-  const lastCol = sheet.getLastColumn();
-  const lastRow = sheet.getLastRow();
-  if (lastCol &lt; 2 || lastRow &lt; 3) return { success: true, columns: [], workers: [] };
-  
-  const allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
-  
-  const matchingCols = [];
-  for (let col = 1; col &lt; lastCol; col++) {
-    const cellDate = allData[0][col] ? allData[0][col].toString() : '';
-    if (cellDate === date) {
-      matchingCols.push({
-        colIndex: col,
-        tanggal: cellDate,
-        jam: allData[1][col] ? allData[1][col].toString() : ''
-      });
-    }
-  }
-  
-  if (matchingCols.length === 0) {
-    return { success: true, columns: [], workers: [] };
-  }
-  
-  const workers = [];
-  for (let row = 2; row &lt; lastRow; row++) {
-    const name = allData[row][0];
-    if (name &amp;&amp; name.toString().trim() !== '') {
-      const statuses = {};
-      matchingCols.forEach(mc =&gt; {
-        const statusVal = allData[row][mc.colIndex];
-        statuses[mc.jam] = statusVal ? statusVal.toString() : '-';
-      });
-      workers.push({ name: name.toString().trim(), statuses });
-    }
-  }
-  
-  // Sort workers by name
-  workers.sort((a, b) =&gt; a.name.localeCompare(b.name, 'id'));
-  
-  return { 
-    success: true, 
-    columns: matchingCols.map(mc =&gt; ({ tanggal: mc.tanggal, jam: mc.jam })),
-    workers 
-  };
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Absen Recap');
+  if (!sheet) return { success: true, columns: [], workers: [] };
+  
+  const lastCol = sheet.getLastColumn();
+  const lastRow = sheet.getLastRow();
+  if (lastCol < 2 || lastRow < 3) return { success: true, columns: [], workers: [] };
+  
+  const allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  
+  const matchingCols = [];
+  for (let col = 1; col < lastCol; col++) {
+    const cellDate = allData[0][col] ? allData[0][col].toString() : '';
+    if (cellDate === date) {
+      matchingCols.push({
+        colIndex: col,
+        tanggal: cellDate,
+        jam: allData[1][col] ? allData[1][col].toString() : ''
+      });
+    }
+  }
+  
+  if (matchingCols.length === 0) {
+    return { success: true, columns: [], workers: [] };
+  }
+  
+  const workers = [];
+  for (let row = 2; row < lastRow; row++) {
+    const name = allData[row][0];
+    if (name && name.toString().trim() !== '') {
+      const statuses = {};
+      matchingCols.forEach(mc => {
+        const statusVal = allData[row][mc.colIndex];
+        statuses[mc.jam] = statusVal ? statusVal.toString() : '-';
+      });
+      workers.push({ name: name.toString().trim(), statuses });
+    }
+  }
+  
+  // Sort workers by name
+  workers.sort((a, b) => a.name.localeCompare(b.name, 'id'));
+  
+  return { 
+    success: true, 
+    columns: matchingCols.map(mc => ({ tanggal: mc.tanggal, jam: mc.jam })),
+    workers 
+  };
 }
 
 function getMonthData(month, year) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName('Absen Recap');
-  if (!sheet) return { success: true, data: {} };
-  
-  const lastCol = sheet.getLastColumn();
-  if (lastCol &lt; 2) return { success: true, data: {} };
-  
-  const dates = sheet.getRange(1, 2, 1, lastCol - 1).getValues()[0];
-  const result = {};
-  
-  dates.forEach(dateStr =&gt; {
-    if (!dateStr) return;
-    const parsed = parseTanggalIndo(dateStr.toString());
-    if (parsed &amp;&amp; parsed.month == month &amp;&amp; parsed.year == year) {
-      result[parsed.day] = (result[parsed.day] || 0) + 1;
-    }
-  });
-  
-  return { success: true, data: result };
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Absen Recap');
+  if (!sheet) return { success: true, data: {} };
+  
+  const lastCol = sheet.getLastColumn();
+  if (lastCol < 2) return { success: true, data: {} };
+  
+  const dates = sheet.getRange(1, 2, 1, lastCol - 1).getValues()[0];
+  const result = {};
+  
+  dates.forEach(dateStr => {
+    if (!dateStr) return;
+    const parsed = parseTanggalIndo(dateStr.toString());
+    if (parsed && parsed.month == month && parsed.year == year) {
+      result[parsed.day] = (result[parsed.day] || 0) + 1;
+    }
+  });
+  
+  return { success: true, data: result };
 }
 
 function parseTanggalIndo(str) {
-  if (!str) return null;
-  const parts = str.toString().split(' ');
-  if (parts.length !== 3) return null;
-  
-  const day = parseInt(parts[0]);
-  const monthIndex = BULAN_INDO.indexOf(parts[1]) + 1;
-  const year = parseInt(parts[2]);
-  
-  if (isNaN(day) || monthIndex === 0 || isNaN(year)) return null;
-  return { day, month: monthIndex, year };
+  if (!str) return null;
+  const parts = str.toString().split(' ');
+  if (parts.length !== 3) return null;
+  
+  const day = parseInt(parts[0]);
+  const monthIndex = BULAN_INDO.indexOf(parts[1]) + 1;
+  const year = parseInt(parts[2]);
+  
+  if (isNaN(day) || monthIndex === 0 || isNaN(year)) return null;
+  return { day, month: monthIndex, year };
 }
 
 function uploadPhotos(data) {
-  const { tanggal, jam, photos } = data;
-  
-  if (!photos || photos.length === 0) {
-    return { success: true };
-  }
-  
-  const folder = getOrCreateDateFolder(tanggal);
-  const timeStr = jam.replace(/:/g, '-');
-  
-  photos.forEach((photoBase64, index) =&gt; {
-    try {
-      const base64Data = photoBase64.split(',')[1];
-      const blob = Utilities.newBlob(
-        Utilities.base64Decode(base64Data), 
-        'image/jpeg', 
-        `Absen_${timeStr}_${index + 1}.jpg`
-      );
-      folder.createFile(blob);
-    } catch(err) {
-      console.error('Error saving photo ' + (index + 1) + ': ' + err);
-    }
-  });
-  
-  return { success: true };
+  const { tanggal, jam, photos } = data;
+  
+  if (!photos || photos.length === 0) {
+    return { success: true };
+  }
+  
+  const folder = getOrCreateDateFolder(tanggal);
+  const timeStr = jam.replace(/:/g, '-');
+  
+  photos.forEach((photoBase64, index) => {
+    try {
+      const base64Data = photoBase64.split(',')[1];
+      const blob = Utilities.newBlob(
+        Utilities.base64Decode(base64Data), 
+        'image/jpeg', 
+        `Absen_${timeStr}_${index + 1}.jpg`
+      );
+      folder.createFile(blob);
+    } catch(err) {
+      console.error('Error saving photo ' + (index + 1) + ': ' + err);
+    }
+  });
+  
+  return { success: true };
 }
 
 function getOrCreateDateFolder(tanggal) {
-  const parentFolder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
-  const folderName = tanggal.replace(/ /g, '_');
-  
-  const folders = parentFolder.getFoldersByName(folderName);
-  if (folders.hasNext()) {
-    return folders.next();
-  }
-  return parentFolder.createFolder(folderName);
+  const parentFolder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
+  const folderName = tanggal.replace(/ /g, '_');
+  
+  const folders = parentFolder.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return parentFolder.createFolder(folderName);
 }
 
 function getPhotoFolders() {
-  try {
-    const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
-    const subFolders = folder.getFolders();
-    const folders = [];
-    
-    while (subFolders.hasNext()) {
-      const f = subFolders.next();
-      folders.push(f.getName());
-    }
-    
-    folders.sort((a, b) =&gt; {
-      const parseDate = (str) =&gt; {
-        const p = str.replace(/_/g, ' ').split(' ');
-        if (p.length !== 3) return new Date(0);
-        const day = parseInt(p[0]);
-        const monthIndex = BULAN_INDO.indexOf(p[1]);
-        const year = parseInt(p[2]);
-        return new Date(year, monthIndex, day);
-      };
-      return parseDate(b) - parseDate(a);
-    });
-    
-    return { success: true, folders };
-  } catch(err) {
-    return { success: false, error: err.toString() };
-  }
+  try {
+    const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
+    const subFolders = folder.getFolders();
+    const folders = [];
+    
+    while (subFolders.hasNext()) {
+      const f = subFolders.next();
+      folders.push(f.getName());
+    }
+    
+    folders.sort((a, b) => {
+      const parseDate = (str) => {
+        const p = str.replace(/_/g, ' ').split(' ');
+        if (p.length !== 3) return new Date(0);
+        const day = parseInt(p[0]);
+        const monthIndex = BULAN_INDO.indexOf(p[1]);
+        const year = parseInt(p[2]);
+        return new Date(year, monthIndex, day);
+      };
+      return parseDate(b) - parseDate(a);
+    });
+    
+    return { success: true, folders };
+  } catch(err) {
+    return { success: false, error: err.toString() };
+  }
 }
 
 function getPhotos(date) {
-  try {
-    const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
-    const folderName = date.replace(/ /g, '_');
-    const subFolders = folder.getFoldersByName(folderName);
-    
-    if (!subFolders.hasNext()) {
-      return { success: true, photos: [] };
-    }
-    
-    const dateFolder = subFolders.next();
-    const files = dateFolder.getFiles();
-    const photos = [];
-    
-    while (files.hasNext()) {
-      const file = files.next();
-      if (file.getMimeType().startsWith('image/')) {
-        photos.push({
-          name: file.getName(),
-          url: 'https://lh3.googleusercontent.com/d/' + file.getId()
-        });
-      }
-    }
-    
-    photos.sort((a, b) =&gt; a.name.localeCompare(b.name));
-    return { success: true, photos };
-  } catch(err) {
-    return { success: false, error: err.toString() };
-  }
+  try {
+    const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
+    const folderName = date.replace(/ /g, '_');
+    const subFolders = folder.getFoldersByName(folderName);
+    
+    if (!subFolders.hasNext()) {
+      return { success: true, photos: [] };
+    }
+    
+    const dateFolder = subFolders.next();
+    const files = dateFolder.getFiles();
+    const photos = [];
+    
+    while (files.hasNext()) {
+      const file = files.next();
+      if (file.getMimeType().startsWith('image/')) {
+        photos.push({
+          name: file.getName(),
+          url: 'https://lh3.googleusercontent.com/d/' + file.getId()
+        });
+      }
+    }
+    
+    photos.sort((a, b) => a.name.localeCompare(b.name));
+    return { success: true, photos };
+  } catch(err) {
+    return { success: false, error: err.toString() };
+  }
 }
 
 // ========================================
@@ -891,141 +878,140 @@ function getPhotos(date) {
 
 // Jalankan fungsi ini SEKALI untuk merapikan semua data
 function runFullFix() {
-  const result1 = sortAndFixRecapSheet();
-  Logger.log('Sort result: ' + JSON.stringify(result1));
-  
-  const result2 = applyColorsToAllData();
-  Logger.log('Color result: ' + JSON.stringify(result2));
-  
-  return 'Selesai! Cek sheet Absen Recap. ' + result1.message;
+  const result1 = sortAndFixRecapSheet();
+  Logger.log('Sort result: ' + JSON.stringify(result1));
+  
+  const result2 = applyColorsToAllData();
+  Logger.log('Color result: ' + JSON.stringify(result2));
+  
+  return 'Selesai! Cek sheet Absen Recap. ' + result1.message;
 }
 
 // Sortir nama pekerja berdasarkan abjad dan rapikan
 function sortAndFixRecapSheet() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName('Absen Recap');
-  if (!sheet) return { success: false, error: 'Sheet Absen Recap tidak ditemukan' };
-  
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
-  
-  if (lastRow &lt; 3 || lastCol &lt; 1) return { success: false, error: 'Data tidak cukup' };
-  
-  // Ambil semua data
-  const allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
-  
-  // Baris 1 = Tanggal, Baris 2 = Jam
-  const headerRow1 = allData[0];
-  const headerRow2 = allData[1];
-  
-  // Ambil data pekerja (mulai baris 3)
-  const workerData = [];
-  for (let i = 2; i &lt; lastRow; i++) {
-    const name = allData[i][0];
-    if (name &amp;&amp; name.toString().trim() !== '') {
-      const rowData = {
-        name: name.toString().trim(),
-        statuses: allData[i].slice(1)
-      };
-      workerData.push(rowData);
-    }
-  }
-  
-  // Sortir berdasarkan nama (abjad Indonesia)
-  workerData.sort((a, b) =&gt; a.name.localeCompare(b.name, 'id'));
-  
-  // Hapus data lama (baris 3 ke bawah)
-  if (lastRow &gt; 2) {
-    sheet.getRange(3, 1, lastRow - 2, lastCol).clear();
-  }
-  
-  // Tulis ulang data yang sudah diurutkan
-  workerData.forEach((worker, index) =&gt; {
-    const row = index + 3;
-    
-    // Tulis nama
-    const nameCell = sheet.getRange(row, 1);
-    nameCell.setValue(worker.name);
-    nameCell.setBackground('#0f172a');
-    nameCell.setFontColor('#ffffff');
-    nameCell.setFontWeight('bold');
-    
-    // Tulis status
-    worker.statuses.forEach((status, colIndex) =&gt; {
-      const col = colIndex + 2;
-      const cell = sheet.getRange(row, col);
-      
-      if (status &amp;&amp; status.toString().trim() !== '') {
-        const statusStr = status.toString().trim();
-        cell.setValue(statusStr);
-        
-        // Terapkan warna
-        const color = STATUS_COLORS[statusStr] || STATUS_COLORS['-'];
-        cell.setBackground(color);
-        cell.setFontColor('#ffffff');
-        cell.setFontWeight('bold');
-        cell.setHorizontalAlignment('center');
-      }
-    });
-  });
-  
-  // Format header
-  sheet.getRange(1, 1).setValue('Tanggal');
-  sheet.getRange(2, 1).setValue('Jam');
-  sheet.getRange(1, 1, 2, 1).setBackground('#1e293b');
-  sheet.getRange(1, 1, 2, 1).setFontColor('#ffffff');
-  sheet.getRange(1, 1, 2, 1).setFontWeight('bold');
-  
-  // Terapkan warna tanggal
-  applyDateRowColors(sheet);
-  
-  return { success: true, message: 'Total ' + workerData.length + ' pekerja diurutkan!' };
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Absen Recap');
+  if (!sheet) return { success: false, error: 'Sheet Absen Recap tidak ditemukan' };
+  
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  
+  if (lastRow < 3 || lastCol < 1) return { success: false, error: 'Data tidak cukup' };
+  
+  // Ambil semua data
+  const allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  
+  // Baris 1 = Tanggal, Baris 2 = Jam
+  const headerRow1 = allData[0];
+  const headerRow2 = allData[1];
+  
+  // Ambil data pekerja (mulai baris 3)
+  const workerData = [];
+  for (let i = 2; i < lastRow; i++) {
+    const name = allData[i][0];
+    if (name && name.toString().trim() !== '') {
+      const rowData = {
+        name: name.toString().trim(),
+        statuses: allData[i].slice(1)
+      };
+      workerData.push(rowData);
+    }
+  }
+  
+  // Sortir berdasarkan nama (abjad Indonesia)
+  workerData.sort((a, b) => a.name.localeCompare(b.name, 'id'));
+  
+  // Hapus data lama (baris 3 ke bawah)
+  if (lastRow > 2) {
+    sheet.getRange(3, 1, lastRow - 2, lastCol).clear();
+  }
+  
+  // Tulis ulang data yang sudah diurutkan
+  workerData.forEach((worker, index) => {
+    const row = index + 3;
+    
+    // Tulis nama
+    const nameCell = sheet.getRange(row, 1);
+    nameCell.setValue(worker.name);
+    nameCell.setBackground('#0f172a');
+    nameCell.setFontColor('#ffffff');
+    nameCell.setFontWeight('bold');
+    
+    // Tulis status
+    worker.statuses.forEach((status, colIndex) => {
+      const col = colIndex + 2;
+      const cell = sheet.getRange(row, col);
+      
+      if (status && status.toString().trim() !== '') {
+        const statusStr = status.toString().trim();
+        cell.setValue(statusStr);
+        
+        // Terapkan warna
+        const color = STATUS_COLORS[statusStr] || STATUS_COLORS['-'];
+        cell.setBackground(color);
+        cell.setFontColor('#ffffff');
+        cell.setFontWeight('bold');
+        cell.setHorizontalAlignment('center');
+      }
+    });
+  });
+  
+  // Format header
+  sheet.getRange(1, 1).setValue('Tanggal');
+  sheet.getRange(2, 1).setValue('Jam');
+  sheet.getRange(1, 1, 2, 1).setBackground('#1e293b');
+  sheet.getRange(1, 1, 2, 1).setFontColor('#ffffff');
+  sheet.getRange(1, 1, 2, 1).setFontWeight('bold');
+  
+  // Terapkan warna tanggal
+  applyDateRowColors(sheet);
+  
+  return { success: true, message: 'Total ' + workerData.length + ' pekerja diurutkan!' };
 }
 
 // Terapkan warna ke SEMUA sel status
 function applyColorsToAllData() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName('Absen Recap');
-  if (!sheet) return { success: false, error: 'Sheet tidak ditemukan' };
-  
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
-  
-  if (lastRow &lt; 3 || lastCol &lt; 2) return { success: false, error: 'Data tidak cukup' };
-  
-  let coloredCount = 0;
-  
-  // Loop semua sel status (mulai baris 3, kolom 2)
-  for (let row = 3; row &lt;= lastRow; row++) {
-    for (let col = 2; col &lt;= lastCol; col++) {
-      const cell = sheet.getRange(row, col);
-      const value = cell.getValue();
-      
-      if (value &amp;&amp; value.toString().trim() !== '') {
-        const status = value.toString().trim();
-        const color = STATUS_COLORS[status] || STATUS_COLORS['-'];
-        
-        cell.setBackground(color);
-        cell.setFontColor('#ffffff');
-        cell.setFontWeight('bold');
-        cell.setHorizontalAlignment('center');
-        coloredCount++;
-      }
-    }
-  }
-  
-  // Terapkan warna tanggal
-  applyDateRowColors(sheet);
-  
-  return { success: true, message: coloredCount + ' sel status diwarnai!' };
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Absen Recap');
+  if (!sheet) return { success: false, error: 'Sheet tidak ditemukan' };
+  
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  
+  if (lastRow < 3 || lastCol < 2) return { success: false, error: 'Data tidak cukup' };
+  
+  let coloredCount = 0;
+  
+  // Loop semua sel status (mulai baris 3, kolom 2)
+  for (let row = 3; row <= lastRow; row++) {
+    for (let col = 2; col <= lastCol; col++) {
+      const cell = sheet.getRange(row, col);
+      const value = cell.getValue();
+      
+      if (value && value.toString().trim() !== '') {
+        const status = value.toString().trim();
+        const color = STATUS_COLORS[status] || STATUS_COLORS['-'];
+        
+        cell.setBackground(color);
+        cell.setFontColor('#ffffff');
+        cell.setFontWeight('bold');
+        cell.setHorizontalAlignment('center');
+        coloredCount++;
+      }
+    }
+  }
+  
+  // Terapkan warna tanggal
+  applyDateRowColors(sheet);
+  
+  return { success: true, message: coloredCount + ' sel status diwarnai!' };
 }</pre>
         </div>
        </div>
       </div>
      </div>
     </main>
-   </div><!-- PAGE 9: RECAP JAM KERJA -->
-   <div id="page-recap-jam" class="page min-h-full bg-primary">
+   </div><div id="page-recap-jam" class="page min-h-full bg-primary">
     <main class="p-3 max-w-2xl mx-auto">
      <div class="nav-buttons"><button onclick="showPage('page-recap-detail')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -1120,7 +1106,7 @@ function applyColorsToAllData() {
     return `${d}-${m}-${y}`; 
 }
 
-    async function compressImageForUpload(dataUrl, quality = 0.8, maxSize = 1920) {
+    async function compressImageForUpload(dataUrl, quality = 0.9, maxSize = 1920) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -1128,7 +1114,7 @@ function applyColorsToAllData() {
       let width = img.width;
       let height = img.height;
       
-      // Menaikkan batas ukuran ke 1920px (Full HD)
+      // Tetapkan di 1920px (Full HD) agar tetap tajam
       if (width > maxSize || height > maxSize) {
         if (width > height) {
           height = Math.round((height * maxSize) / width);
@@ -1143,7 +1129,7 @@ function applyColorsToAllData() {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      // Kualitas dinaikkan ke 0.8 (80%) agar tetap tajam tapi tidak terlalu berat
+      // Kualitas 0.9 (90%) sangat tajam dan ukuran file tetap efisien
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
     img.src = dataUrl;
@@ -1625,27 +1611,32 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
     }
 
     async function handlePhotoUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      if (uploadedPhotos.length >= MAX_PHOTOS) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (uploadedPhotos.length >= MAX_PHOTOS) {
         showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
-        event.target.value = '';
         return;
-      }
+    }
 
-      const reader = new FileReader();
-      reader.onload = async (e) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
         const originalImage = e.target.result;
+        
+        // 1. Tambahkan Watermark (Ini hasil tajam/High Res)
         const timestampedImage = await addTimemark(originalImage);
+        
+        // 2. Simpan hasil tajam untuk Download & Share
         uploadedPhotos.push(timestampedImage);
-        const compressedImage = await compressImageForUpload(timestampedImage, 0.3, 600);
-        uploadedPhotosCompressed.push(compressedImage);
+        
+        // 3. Simpan JUGA hasil tajam untuk dikirim ke Google Drive
+        uploadedPhotosCompressed.push(timestampedImage); 
+        
         renderPhotoThumbnails();
         event.target.value = '';
-      };
-      reader.readAsDataURL(file);
-    }
+    };
+    reader.readAsDataURL(file);
+}
 
     async function addTimemark(imageDataUrl) {
       return new Promise((resolve) => {
@@ -1946,10 +1937,8 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
     }));
 
     // --- STRATEGI 1: SIAPKAN FILE SECARA INSTAN ---
-    // Jangan lakukan fetch di sini agar memori tetap segar untuk Share Sheet
     let filesForShare = [];
     if (isIOS() && uploadedPhotos.length > 0) {
-        // Gunakan Promise.all agar konversi Blob sangat cepat
         filesForShare = await Promise.all(uploadedPhotos.map(async (base64, i) => {
             const res = await fetch(base64);
             const blob = await res.blob();
@@ -1958,11 +1947,8 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
     }
 
     // --- STRATEGI 2: PANGGIL SHARE SHEET DULUAN (KUNCI UTAMA) ---
-    // Kita panggil Share Sheet SEBELUM melakukan fetch ke server.
-    // Ini menjamin "User Gesture" masih 100% valid dan tidak akan diblokir.
     if (isIOS() && filesForShare.length > 0) {
         try {
-            // Share sheet akan muncul seketika saat user klik tombol
             await navigator.share({
                 files: filesForShare,
                 title: 'Simpan Foto Absensi',
@@ -1978,31 +1964,32 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
     updateUploadProgress('Mengirim data...', 'Ke Spreadsheet & Drive', 30);
 
     try {
-        // Kirim data absen
-        const attendanceResponse = await fetch(scriptUrl, { 
+        await fetch(scriptUrl, { 
             method: 'POST', 
             body: new URLSearchParams({ 
                 data: JSON.stringify({ action: 'submitAttendance', tanggal, jam, attendance }) 
-            }),
-            redirect: 'follow' 
+            })
         });
 
-        // Kirim foto ke Drive (tidak perlu ditunggu/await agar lebih cepat selesai di mata user)
+        // Bagian pengiriman foto ke Drive di background
         if (uploadedPhotosCompressed.length > 0) {
             fetch(scriptUrl, { 
                 method: 'POST', 
                 body: new URLSearchParams({ 
-                    data: JSON.stringify({ action: 'uploadPhotos', tanggal, jam, photos: uploadedPhotosCompressed }) 
-                }),
-                redirect: 'follow' 
-            });
+                    data: JSON.stringify({ 
+                        action: 'uploadPhotos', 
+                        tanggal, 
+                        jam, 
+                        photos: uploadedPhotosCompressed 
+                    }) 
+                })
+            }).catch(e => console.error("Upload Drive gagal di background", e));
         }
 
         updateUploadProgress('Selesai!', 'Absensi berhasil dikirim', 100);
         setTimeout(hideUploadProgress, 1000);
         showNotification('Absen berhasil dikirim!');
         
-        // Reset Aplikasi
         attendanceStatus = {};
         uploadedPhotos = [];
         uploadedPhotosCompressed = [];
@@ -2700,5 +2687,5 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
     updateAllLogos();
     preloadTimemarkLogo();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ba4b9cdf0367d63',t:'MTc2NzgwMjIzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ </body>
 </html>
