@@ -1155,56 +1155,56 @@ function applyColorsToAllData() {
              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
-    async function downloadPhotosToDevice(photos, tanggal, jam) {
-      const formattedDate = tanggal.replace(/ /g, '_');
-      const formattedTime = jam.replace(/:/g, '-');
-      
-      if (isIOS()) {
+async function downloadPhotosToDevice(photos, tanggal, jam) {
+    const formattedDate = tanggal.replace(/ /g, '_');
+    const formattedTime = jam.replace(/:/g, '-');
+    
+    // 1. Cek apakah ini perangkat iOS atau mendukung Share API dengan File
+    const isIOSDevice = isIOS() || (navigator.maxTouchPoints > 0 && /Macintosh/.test(navigator.userAgent));
+    
+    if (isIOSDevice && navigator.canShare) {
         try {
-          const files = [];
-          for (let i = 0; i < photos.length; i++) {
-            const photo = photos[i];
-            const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-            const byteString = atob(photo.split(',')[1]);
-            const mimeType = 'image/jpeg';
-            const ab = new ArrayBuffer(byteString.length);
-            const ia = new Uint8Array(ab);
-            for (let j = 0; j < byteString.length; j++) {
-              ia[j] = byteString.charCodeAt(j);
-            }
-            const blob = new Blob([ab], { type: mimeType });
-            const file = new File([blob], fileName, { type: mimeType });
-            files.push(file);
-          }
-          
-          if (navigator.share && navigator.canShare && navigator.canShare({ files })) {
-            await navigator.share({
-              files: files,
-              title: 'Foto Absensi',
-              text: `${files.length} Foto Absen ${tanggal} ${jam}`
-            });
-            showNotification(`${files.length} foto siap disimpan!`);
-          } else {
+            const filesArray = [];
+            
             for (let i = 0; i < photos.length; i++) {
-              window.open(photos[i], '_blank');
+                const photoDataUrl = photos[i];
+                // Konversi DataURL ke Blob
+                const response = await fetch(photoDataUrl);
+                const blob = await response.blob();
+                
+                // Buat objek File dari Blob agar bisa dibaca Share Sheet
+                const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+                const file = new File([blob], fileName, { type: 'image/jpeg' });
+                filesArray.push(file);
             }
-            showNotification('Tekan lama foto untuk simpan');
-          }
+
+            // Cek apakah browser benar-benar bisa men-share file tersebut
+            if (navigator.canShare({ files: filesArray })) {
+                await navigator.share({
+                    files: filesArray,
+                    title: 'Foto Absensi',
+                    text: `Data Absen ${tanggal} ${jam}`
+                });
+                showNotification(`${filesArray.length} foto siap dibagikan/disimpan!`);
+            } else {
+                throw new Error("Share API tidak mendukung file ini.");
+            }
         } catch (error) {
-          if (error.name !== 'AbortError') {
-            console.log('Share cancelled or failed:', error);
-          }
+            console.error('Gagal Share Sheet:', error);
+            // Fallback: Jika Share API gagal, buka foto di tab baru satu per satu
+            photos.forEach(p => window.open(p, '_blank'));
+            showNotification('Gagal membuka Share Sheet, foto dibuka di tab baru.', true);
         }
-      } else {
+    } else {
+        // 2. Logika untuk Android / Desktop (Download Langsung)
         for (let i = 0; i < photos.length; i++) {
-          const photo = photos[i];
-          const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
-          if (i > 0) await new Promise(r => setTimeout(r, 200));
-          directDownload(photo, fileName);
+            const fileName = `Absen_${formattedDate}_${formattedTime}_${i + 1}.jpg`;
+            if (i > 0) await new Promise(r => setTimeout(r, 300)); // Delay agar tidak dianggap spam
+            directDownload(photos[i], fileName);
         }
         showNotification(`${photos.length} foto berhasil diunduh!`);
-      }
     }
+}
 
     function directDownload(dataUrl, fileName) {
       const link = document.createElement('a');
