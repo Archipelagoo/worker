@@ -1964,6 +1964,10 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
     updateUploadProgress('Mengirim data...', 'Ke Spreadsheet & Drive', 30);
 
     try {
+        // Ambil data foto ke dalam variabel lokal agar tidak hilang saat di-reset
+        const photosToUpload = [...uploadedPhotosCompressed]; 
+
+        // 1. Kirim data absen (tetap pakai await agar sinkron)
         await fetch(scriptUrl, { 
             method: 'POST', 
             body: new URLSearchParams({ 
@@ -1971,8 +1975,8 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
             })
         });
 
-        // Bagian pengiriman foto ke Drive di background
-        if (uploadedPhotosCompressed.length > 0) {
+        // 2. Kirim foto ke Drive di background (pakai variabel lokal 'photosToUpload')
+        if (photosToUpload.length > 0) {
             fetch(scriptUrl, { 
                 method: 'POST', 
                 body: new URLSearchParams({ 
@@ -1980,30 +1984,30 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
                         action: 'uploadPhotos', 
                         tanggal, 
                         jam, 
-                        photos: uploadedPhotosCompressed 
+                        photos: photosToUpload 
                     }) 
                 })
-            }).catch(e => console.error("Upload Drive gagal di background", e));
+            }).catch(e => console.error("Upload Drive gagal", e));
         }
 
         updateUploadProgress('Selesai!', 'Absensi berhasil dikirim', 100);
         setTimeout(hideUploadProgress, 1000);
         showNotification('Absen berhasil dikirim!');
         
+        // Sekarang aman untuk me-reset variabel utama
         attendanceStatus = {};
         uploadedPhotos = [];
-        uploadedPhotosCompressed = [];
+        uploadedPhotosCompressed = []; 
         renderPhotoThumbnails();
         renderWorkers(workers);
         updateCounter();
 
     } catch (error) {
         hideUploadProgress();
-        showNotification('Data gagal terkirim ke server!', true);
+        showNotification('Data gagal terkirim!', true);
     } finally {
         btn.disabled = false;
     }
-}
     async function showRecapToday() {
       recapSource = 'today';
       const today = formatTanggalIndo(new Date());
