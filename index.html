@@ -1106,7 +1106,7 @@ function applyColorsToAllData() {
     return `${d}-${m}-${y}`; 
 }
 
-    async function compressImageForUpload(dataUrl, quality = 0.9, maxSize = 1920) {
+   async function compressImageForUpload(dataUrl, quality = 0.5, maxSize = 1000) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -1610,7 +1610,7 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
       renderWorkers(workers);
     }
 
-  async function handlePhotoUpload(event) {
+async function handlePhotoUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
         
@@ -1622,13 +1622,12 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
         const reader = new FileReader();
         reader.onload = async (e) => {
             const originalImage = e.target.result;
-            
-            // 1. Tambahkan Watermark (Tetap simpan versi tajam untuk Share/Download Lokal)
             const timestampedImage = await addTimemark(originalImage);
+            
+            // Tetap simpan High Res untuk Share lokal
             uploadedPhotos.push(timestampedImage);
             
-            // 2. KOMPRESI 0.5 (Sangat Cepat & Ringan) untuk Google Drive
-            // Ukuran 1000px sudah sangat cukup untuk dilihat di layar HP/Monitor
+            // KOMPRESI 0.5 untuk upload ke Google Drive (Sangat Cepat)
             const optimizedImage = await compressImageForUpload(timestampedImage, 0.5, 1000);
             uploadedPhotosCompressed.push(optimizedImage); 
             
