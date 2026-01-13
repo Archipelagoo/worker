@@ -1932,79 +1932,92 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
       document.getElementById('photo-counter').textContent = `${currentPhotoIndex + 1} / ${uploadedPhotos.length}`;
     }
 
-    async function submitAttendance() {
-      const btn = document.getElementById('submit-btn');
-      btn.disabled = true;
+   async function submitAttendance() {
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
 
-      const now = new Date();
-      const tanggal = formatTanggalIndo(now);
-      const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const now = new Date();
+    const tanggal = formatTanggalIndo(now);
+    const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-      const attendance = workers.map(w => ({
+    const attendance = workers.map(w => ({
         name: w.name,
         status: attendanceStatus[w.id] || '-'
-      }));
+    }));
 
-      showUploadProgress();
-      
-      try {
-        updateUploadProgress('Mengirim absensi...', 'Data pekerja', 20);
+    showUploadProgress();
+    updateUploadProgress('Memproses...', 'Menyiapkan data & foto', 10);
+
+    try {
+        // --- TEKNIK AKALAN: PARALEL PROSES ---
+        // Kita jalankan konversi foto ke Blob (untuk Share Sheet) dan pengiriman data secara BERSAMAAN
         
-        const attendancePayload = {
-          action: 'submitAttendance',
-          tanggal,
-          jam,
-          attendance
-        };
-        
-        const formData = new FormData();
-        formData.append('data', JSON.stringify(attendancePayload));
-        
-        await fetch(scriptUrl, { method: 'POST', body: formData, redirect: 'follow' });
-        
-        updateUploadProgress('Absensi terkirim!', 'Menyimpan foto...', 60);
-        
-        if (uploadedPhotos.length > 0) {
-          downloadPhotosToDevice(uploadedPhotos, tanggal, jam);
+        const sendDataPromise = fetch(scriptUrl, { 
+            method: 'POST', 
+            body: new URLSearchParams({ 
+                data: JSON.stringify({ action: 'submitAttendance', tanggal, jam, attendance }) 
+            }),
+            redirect: 'follow' 
+        });
+
+        // Sambil nunggu data terkirim, kita siapkan file untuk iOS Share Sheet di background
+        let filesForShare = [];
+        if (isIOS() && uploadedPhotos.length > 0) {
+            filesForShare = await Promise.all(uploadedPhotos.map(async (base64, i) => {
+                const res = await fetch(base64);
+                const blob = await res.blob();
+                return new File([blob], `Absen_${tanggal}_${jam.replace(/:/g, '-')}_${i+1}.jpg`, { type: "image/jpeg" });
+            }));
         }
-        
+
+        // Tunggu hingga pengiriman data dasar selesai
+        await sendDataPromise;
+        updateUploadProgress('Data Terkirim!', 'Menyimpan foto...', 60);
+
+        // --- PANGGIL SHARE SHEET SECEPAT MUNGKIN ---
+        // Jika data utama sudah aman, kita panggil Share Sheet sebelum Safari menganggap gesture ini kadaluarsa
+        if (isIOS() && filesForShare.length > 0) {
+            try {
+                // Jangan pakai 'await' di sini agar proses upload foto ke drive tidak menghalangi Share Sheet
+                navigator.share({
+                    files: filesForShare,
+                    title: 'Foto Absensi',
+                    text: `Absen ${tanggal} ${jam}`
+                }).catch(e => console.log("Share dibatalkan user"));
+            } catch (shareErr) {
+                console.log("Share Sheet diblokir Safari karena jeda terlalu lama");
+            }
+        }
+
+        // Lanjutkan proses upload foto ke Drive (tanpa await agar Share Sheet muncul duluan)
         if (uploadedPhotosCompressed.length > 0) {
-          updateUploadProgress('Upload foto...', 'Ke Google Drive', 80);
-          
-          const photoPayload = {
-            action: 'uploadPhotos',
-            tanggal,
-            jam,
-            photos: uploadedPhotosCompressed
-          };
-          
-          const photoFormData = new FormData();
-          photoFormData.append('data', JSON.stringify(photoPayload));
-          
-          fetch(scriptUrl, { method: 'POST', body: photoFormData, redirect: 'follow' }).catch(() => {});
+            fetch(scriptUrl, { 
+                method: 'POST', 
+                body: new URLSearchParams({ 
+                    data: JSON.stringify({ action: 'uploadPhotos', tanggal, jam, photos: uploadedPhotosCompressed }) 
+                }),
+                redirect: 'follow' 
+            });
         }
+
+        hideUploadProgress();
+        showNotification('Absen berhasil dikirim!');
         
-        updateUploadProgress('Selesai!', 'Absensi berhasil', 100);
-        
+        // Reset Aplikasi
         attendanceStatus = {};
         uploadedPhotos = [];
         uploadedPhotosCompressed = [];
         renderPhotoThumbnails();
         renderWorkers(workers);
         updateCounter();
-        
-        setTimeout(() => {
-          hideUploadProgress();
-          showNotification('Absen berhasil dikirim!');
-        }, 500);
-        
-      } catch (error) {
+
+    } catch (error) {
         hideUploadProgress();
-        showNotification('Gagal mengirim. Cek koneksi.', true);
-      } finally {
+        showNotification('Gagal! Cek koneksi.', true);
+    } finally {
         btn.disabled = false;
-      }
     }
+}
 
     async function showRecapToday() {
       recapSource = 'today';
