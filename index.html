@@ -1611,32 +1611,32 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
     }
 
     async function handlePhotoUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    if (uploadedPhotos.length >= MAX_PHOTOS) {
-        showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
-        return;
-    }
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        if (uploadedPhotos.length >= MAX_PHOTOS) {
+            showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
+            return;
+        }
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const originalImage = e.target.result;
-        
-        // 1. Tambahkan Watermark (Hasil ini tetap High Res untuk preview/download lokal)
-        const timestampedImage = await addTimemark(originalImage);
-        uploadedPhotos.push(timestampedImage);
-        
-        // 2. KOMPRESI 0.7 UNTUK GOOGLE DRIVE (Medium Res)
-        // Kita kecilkan max size ke 1200px agar upload sangat ringan tapi tetap jelas
-        const optimizedImage = await compressImageForUpload(timestampedImage, 0.7, 1200);
-        uploadedPhotosCompressed.push(optimizedImage); 
-        
-        renderPhotoThumbnails();
-        event.target.value = '';
-    };
-    reader.readAsDataURL(file);
-}
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const originalImage = e.target.result;
+            
+            // 1. Tambahkan Watermark (Tetap simpan versi tajam untuk Share/Download Lokal)
+            const timestampedImage = await addTimemark(originalImage);
+            uploadedPhotos.push(timestampedImage);
+            
+            // 2. KOMPRESI 0.5 (Sangat Cepat & Ringan) untuk Google Drive
+            // Ukuran 1000px sudah sangat cukup untuk dilihat di layar HP/Monitor
+            const optimizedImage = await compressImageForUpload(timestampedImage, 0.5, 1000);
+            uploadedPhotosCompressed.push(optimizedImage); 
+            
+            renderPhotoThumbnails();
+            event.target.value = '';
+        };
+        reader.readAsDataURL(file);
+    }
 
     async function addTimemark(imageDataUrl) {
       return new Promise((resolve) => {
@@ -1957,59 +1957,53 @@ async function downloadPhotosToDevice(photos, tanggal, jam) {
         } catch (shareErr) { console.log("Share dibatalkan/gagal"); }
     }
 
-    // --- LANGKAH 3: PROSES PENGIRIMAN DATA (SANGAT PENTING) ---
+   // --- STRATEGI 3: PROSES PENGIRIMAN DATA DI BELAKANG LAYAR ---
     showUploadProgress();
-    updateUploadProgress('Mengirim data...', 'Harap jangan tutup browser', 30);
+    updateUploadProgress('Mengirim data...', 'Proses kilat...', 30);
 
     try {
-        // 1. Kirim data absen ke Spreadsheet
-        await fetch(scriptUrl, { 
-            method: 'POST', 
-            body: new URLSearchParams({ 
-                data: JSON.stringify({ action: 'submitAttendance', tanggal, jam, attendance }) 
-            })
-        });
+        // Ambil salinan foto agar data tidak hilang saat variabel di-reset di bawah
+        const photosToUpload = [...uploadedPhotosCompressed];
 
-        // 2. Kirim foto ke Drive (Sekarang pakai AWAIT agar PASTI terupload)
-        if (uploadedPhotosCompressed.length > 0) {
-            updateUploadProgress('Mengunggah foto...', 'Sedang menyimpan foto tajam ke Drive', 70);
-            
-            await fetch(scriptUrl, { 
-                method: 'POST', 
-                body: new URLSearchParams({ 
-                    data: JSON.stringify({ 
-                        action: 'uploadPhotos', 
-                        tanggal, 
-                        jam, 
-                        photos: uploadedPhotosCompressed 
-                    }) 
-                })
-            });
+        // 1. Kirim data absen (Text)
+        const formData = new FormData();
+        formData.set('data', JSON.stringify({ action: 'submitAttendance', tanggal, jam, attendance }));
+        await fetch(scriptUrl, { method: 'POST', body: formData });
+
+        // 2. Kirim foto ke Drive di background (Tanpa AWAIT agar loading cepat hilang)
+        if (photosToUpload.length > 0) {
+            const photoData = new FormData();
+            photoData.set('data', JSON.stringify({ 
+                action: 'uploadPhotos', 
+                tanggal, 
+                jam, 
+                photos: photosToUpload 
+            }));
+            // Kirim tanpa await
+            fetch(scriptUrl, { method: 'POST', body: photoData }).catch(e => console.error("Drive Error", e));
         }
 
-        updateUploadProgress('Selesai!', 'Semua data dan foto telah tersimpan aman', 100);
+        updateUploadProgress('Selesai!', 'Absen berhasil!', 100);
         
-        // Reset UI
+        // Reset UI Seketika
         attendanceStatus = {};
         uploadedPhotos = [];
-        uploadedPhotosCompressed = [];
+        uploadedPhotosCompressed = []; 
         renderPhotoThumbnails();
         renderWorkers(workers);
         updateCounter();
 
-        // Berikan jeda sebentar agar user bisa melihat status 100%
         setTimeout(() => {
             hideUploadProgress();
-            showNotification('Absen & Foto berhasil dikirim!');
-        }, 1500);
+            showNotification('Absen Berhasil!');
+        }, 800);
 
     } catch (error) {
         hideUploadProgress();
-        showNotification('Gagal mengirim! Cek koneksi internet Anda.', true);
+        showNotification('Gagal mengirim data!', true);
     } finally {
         btn.disabled = false;
     }
-}
     async function showRecapToday() {
       recapSource = 'today';
       const today = formatTanggalIndo(new Date());
