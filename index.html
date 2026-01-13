@@ -1,4 +1,1938 @@
-async function submitAttendance() {
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Absen Archipelago</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;family=Bebas+Neue&amp;display=swap" rel="stylesheet">
+  <style>
+    body { box-sizing: border-box; }
+    * { font-family: 'Poppins', sans-serif; }
+    
+    :root {
+      --bg-primary: #0a1628;
+      --bg-header: #1a2d4a;
+      --pink-bold: #ff1493;
+      --orange: #ff8c00;
+    }
+    
+    .bg-primary { background-color: var(--bg-primary); }
+    .bg-header { background-color: var(--bg-header); }
+    .text-orange { color: var(--orange); }
+    .bg-pink-bold { background-color: var(--pink-bold); }
+    
+    .status-selected {
+      background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%) !important;
+      border: 2px solid #fff !important;
+      box-shadow: 0 0 12px rgba(255, 20, 147, 0.5) !important;
+      transform: scale(1.02);
+    }
+    
+    .card-worker { transition: all 0.3s ease; }
+    .card-worker:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+    
+    .btn-status { transition: all 0.2s ease; }
+    .btn-status:hover { transform: scale(1.05); }
+    .btn-status:active { transform: scale(0.95); }
+    
+    .page { display: none; }
+    .page.active { display: flex; }
+    #page-login.active { display: flex; align-items: center; justify-content: center; }
+    #page-attendance.active, #page-recap.active, #page-calendar.active, 
+    #page-recap-detail.active, #page-photo-gallery.active, #page-photo-detail.active, 
+    #page-apps-script.active, #page-recap-jam.active { display: block; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 20, 147, 0.7); } 50% { box-shadow: 0 0 0 8px rgba(255, 20, 147, 0); } }
+    .pulse-pink { animation: pulse 2s infinite; }
+    
+    .calendar-day { transition: all 0.2s ease; cursor: pointer; }
+    .calendar-day:hover { background-color: rgba(255, 140, 0, 0.4); transform: scale(1.05); }
+    .calendar-day.has-data { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+    .calendar-day.today { ring: 2px; ring-color: #ff8c00; }
+    
+    .gallery-folder { transition: all 0.3s ease; }
+    .gallery-folder:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+    
+    .notification { animation: slideDown 0.3s ease-out; }
+    @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    .code-block { background: #1e1e1e; border-radius: 8px; overflow-x: auto; }
+    .code-block pre { margin: 0; padding: 16px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; color: #d4d4d4; }
+    
+    .copy-btn { transition: all 0.2s ease; }
+    .copy-btn:hover { background-color: #ff8c00; }
+    
+    .worker-photo { object-fit: cover; border: 2px solid rgba(255,255,255,0.3); }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    .photo-thumbnail { position: relative; cursor: pointer; transition: transform 0.2s ease; }
+    .photo-thumbnail:hover { transform: scale(1.05); }
+    .photo-thumbnail .delete-btn { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
+    .photo-thumbnail:hover .delete-btn { opacity: 1; }
+    
+    .fullscreen-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
+    .fullscreen-overlay img { max-width: 90%; max-height: 90%; object-fit: contain; }
+    
+    .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease; }
+    .nav-arrow:hover { background: rgba(255,255,255,0.4); }
+    .nav-arrow.left { left: 20px; }
+    .nav-arrow.right { right: 20px; }
+    
+    .recap-table { width: 100%; border-collapse: collapse; }
+    .recap-table th, .recap-table td { border: 1px solid #334155; padding: 8px 12px; text-align: center; }
+    .recap-table th { background: #1e293b; color: #fff; font-weight: 600; position: sticky; top: 0; z-index: 10; }
+    .recap-table th.sticky-col { position: sticky; left: 0; z-index: 20; background: #1e293b; }
+    .recap-table td.sticky-col { position: sticky; left: 0; background: #0f172a; z-index: 5; }
+    .recap-table tr:nth-child(even) td { background: #1e293b; }
+    .recap-table tr:nth-child(even) td.sticky-col { background: #1e293b; }
+    .recap-table tr:nth-child(odd) td { background: #0f172a; }
+    
+    .logo-img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .nav-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
+    
+    .status-card { cursor: pointer; transition: all 0.2s ease; }
+    .status-card:hover { transform: scale(1.03); opacity: 0.9; }
+    .status-card.clickable { cursor: pointer; }
+    
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-content { background: #1e293b; border-radius: 16px; max-width: 500px; width: 100%; max-height: 80%; overflow-y: auto; }
+    .modal-header { padding: 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #1e293b; z-index: 10; }
+    .modal-body { padding: 16px; }
+    
+    .worker-list-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #0f172a; border-radius: 12px; margin-bottom: 8px; }
+    .worker-list-item img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+    .worker-list-item .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+    
+    .jam-result-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-top: 16px; }
+    
+    .mini-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .upload-progress { background: rgba(0,0,0,0.8); border-radius: 12px; padding: 20px; }
+    .progress-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); transition: width 0.3s ease; }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full m-0 p-0 overflow-hidden bg-primary">
+  <div id="app" class="h-full w-full overflow-auto"><!-- NOTIFICATION -->
+   <div id="notification" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 notification">
+    <div class="bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+     </svg><span id="notification-text">Berhasil!</span>
+    </div>
+   </div><!-- UPLOAD PROGRESS MODAL -->
+   <div id="upload-progress-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+    <div class="upload-progress w-full max-w-sm text-center">
+     <div class="mb-4">
+      <div class="inline-block w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+     </div>
+     <p id="upload-status" class="text-white font-semibold mb-2">Mengirim absensi...</p>
+     <p id="upload-detail" class="text-slate-400 text-sm mb-4">Mengkompresi foto...</p>
+     <div class="progress-bar">
+      <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+     </div>
+     <p id="progress-text" class="text-slate-400 text-xs mt-2">0%</p>
+    </div>
+   </div><!-- FULLSCREEN PHOTO VIEWER -->
+   <div id="fullscreen-viewer" class="fullscreen-overlay hidden" onclick="closeFullscreen(event)">
+    <div class="nav-arrow left" onclick="handleNavClick(-1, event)">
+     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+     </svg>
+    </div><img id="fullscreen-image" src="" alt="Preview" onclick="event.stopPropagation()">
+    <div class="nav-arrow right" onclick="handleNavClick(1, event)">
+     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+     </svg>
+    </div>
+    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm"><span id="photo-counter">1 / 1</span>
+    </div>
+   </div><!-- STATUS MODAL -->
+   <div id="status-modal" class="modal-overlay hidden" onclick="closeStatusModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+     <div class="modal-header">
+      <h3 id="modal-title" class="text-white font-bold text-lg">Daftar Pekerja</h3><button onclick="closeStatusModal()" class="text-slate-400 hover:text-white">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div>
+     <div class="modal-body" id="modal-body"></div>
+    </div>
+   </div><!-- SHARED HEADER COMPONENT -->
+   <header id="main-header" class="hidden bg-header p-4 sticky top-0 z-40 shadow-lg">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+     <div class="flex items-center gap-3">
+      <div id="header-logo" class="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center"><img id="header-logo-img" class="w-full h-full object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"> <span id="header-logo-fallback" class="hidden text-white text-2xl md:text-3xl font-bold">A</span>
+      </div>
+      <div>
+       <h1 id="header-title" class="text-lg md:text-2xl font-bold text-white">ABSEN ONLINE DAILY WORKER</h1>
+      </div>
+     </div>
+     <div class="text-right">
+      <p id="header-date" class="text-white text-xs md:text-sm font-medium"></p>
+      <div class="flex items-center justify-end gap-1">
+       <p id="header-time" class="text-yellow-400 text-base md:text-xl font-bold"></p><span id="timezone-badge" class="text-yellow-400 text-base md:text-xl font-bold"></span>
+      </div>
+     </div>
+    </div>
+   </header><!-- PAGE 1: LOGIN -->
+   <div id="page-login" class="page active h-full w-full" style="display: flex; align-items: center; justify-content: center; min-height: 100%;">
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden fade-in" style="width: 100%; max-width: 400px;">
+     <div class="flex flex-col items-center justify-center p-8 text-center">
+      <div class="mb-2">
+       <div id="login-logo" class="w-32 h-32 md:w-40 md:h-40 mx-auto flex items-center justify-center"><img id="login-logo-img" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"> <span id="login-logo-fallback" class="hidden text-slate-800 text-6xl font-bold">A</span>
+       </div>
+      </div>
+      <h1 id="login-company-name" class="text-xl font-bold text-slate-800 mb-4 text-center" style="margin-top: -8px;">ABSEN ARCHIPELAGO</h1>
+      <form id="login-form" class="w-full space-y-3">
+       <div><label for="username" class="block text-left text-slate-600 text-xs font-medium mb-1">Username</label> <input type="text" id="username" placeholder="Masukkan username" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm" required>
+       </div>
+       <div><label for="password" class="block text-left text-slate-600 text-xs font-medium mb-1">Password</label> <input type="password" id="password" placeholder="Masukkan password" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm" required>
+       </div>
+       <p id="login-error" class="hidden text-red-500 text-xs"></p><button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-500/30 text-sm">Login</button>
+      </form><button onclick="showPage('page-apps-script')" class="mt-3 text-slate-400 hover:text-green-500 text-xs underline transition-colors">⚙️ Setup Apps Script</button>
+     </div>
+    </div>
+   </div><!-- PAGE 2: MAIN ATTENDANCE -->
+   <div id="page-attendance" class="page min-h-full">
+    <main class="p-3 max-w-7xl mx-auto">
+     <div class="flex flex-wrap items-center gap-2 mb-3"><button onclick="setAllPresent()" class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all flex items-center gap-1 font-medium text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg> Hadir Semua </button> <button onclick="resetAllStatus()" class="px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all flex items-center gap-1 font-medium text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+       </svg> Reset </button>
+      <div class="flex-1"></div><button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg> Recap </button> <button onclick="showPage('page-apps-script')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+       </svg> Script </button>
+     </div>
+     <div id="search-container" class="hidden mb-3">
+      <div class="flex gap-2 items-stretch">
+       <div class="relative flex-1">
+        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg><input type="text" id="search-input" placeholder="Cari nama..." class="w-full h-full pl-9 pr-8 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"> <button id="clear-search" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white">
+         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+         </svg></button>
+       </div>
+       <div class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs">
+        <div class="flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> <span id="counter-selected" class="text-green-600 font-semibold">0</span>
+        </div>
+        <div class="w-px h-4 bg-slate-300"></div>
+        <div class="flex items-center gap-1"><span class="w-2 h-2 bg-red-500 rounded-full"></span> <span id="counter-unselected" class="text-red-500 font-semibold">0</span>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div id="loading-workers" class="text-center py-12">
+      <div class="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-slate-400 mt-4 text-sm">Memuat data pekerja...</p>
+     </div>
+     <div id="workers-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
+     <div id="search-results" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4"></div>
+     <div id="photo-section" class="hidden mb-4">
+      <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-3 shadow-lg">
+       <div class="flex items-center justify-between mb-2">
+        <p class="text-slate-300 text-sm font-semibold">Upload foto absen (max 10)</p><span id="photo-count-badge" class="hidden px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">0 foto</span>
+       </div>
+       <div class="flex items-center gap-2"><label class="flex-1 cursor-pointer"> <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoUpload(event)">
+         <div class="py-2 bg-slate-700/70 hover:bg-slate-600 border border-slate-600 text-white rounded-lg transition-all flex items-center justify-center gap-2 font-medium text-sm">
+          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg><span>Ambil Foto</span>
+         </div></label>
+       </div>
+       <div id="photo-thumbnails" class="hidden mt-3 grid grid-cols-5 gap-2"></div>
+       <div id="location-status" class="mt-2 text-xs text-slate-400 flex items-center gap-1">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg><span id="location-text">Mengambil lokasi...</span>
+       </div>
+      </div>
+     </div>
+     <div id="submit-section" class="hidden"><button id="submit-btn" onclick="submitAttendance()" class="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold text-sm rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md shadow-green-500/30 border border-green-400/30"> <span class="inline-flex items-center gap-2">
+        <svg class="w-4 h-4 transform rotate-[-35deg]" fill="currentColor" viewbox="0 0 24 24">
+         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+        </svg> Kirim Absensi </span> </button>
+     </div>
+     <div id="no-script-warning" class="hidden bg-amber-500/20 border border-amber-500/50 rounded-xl p-3 text-center">
+      <p class="text-amber-400 text-sm">Apps Script URL belum diatur.</p><button onclick="showPage('page-apps-script')" class="mt-2 text-orange-400 hover:text-orange-300 underline text-sm">Setup Apps Script</button>
+     </div>
+    </main>
+   </div><!-- PAGE 3: RECAP MENU -->
+   <div id="page-recap" class="page min-h-full bg-primary">
+    <main class="p-3 max-w-7xl mx-auto">
+     <div class="nav-buttons"><button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+       </svg> Kembali </button> <button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+       </svg> Home </button>
+     </div>
+     <h2 class="text-xl md:text-2xl font-bold text-white text-center mb-4">RECAP ABSEN DAILY WORKER</h2>
+     <div class="flex flex-row gap-3 overflow-x-auto pb-2"><button onclick="showRecapToday()" class="flex-1 min-w-[140px] bg-white p-4 rounded-xl text-center hover:shadow-xl transition-all shadow-lg border border-slate-200">
+       <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 bg-blue-900/10 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+         </svg>
+        </div>
+        <div>
+         <h2 class="text-xs md:text-sm font-bold text-blue-900">Recap Hari Ini</h2>
+        </div>
+       </div></button> <button onclick="showPage('page-calendar')" class="flex-1 min-w-[140px] bg-white p-4 rounded-xl text-center hover:shadow-xl transition-all shadow-lg border border-slate-200">
+       <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 bg-blue-900/10 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+         </svg>
+        </div>
+        <div>
+         <h2 class="text-xs md:text-sm font-bold text-blue-900">Recap Berdasarkan Tanggal</h2>
+        </div>
+       </div></button> <button onclick="showPage('page-photo-gallery')" class="flex-1 min-w-[140px] bg-white p-4 rounded-xl text-center hover:shadow-xl transition-all shadow-lg border border-slate-200">
+       <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 bg-blue-900/10 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+         </svg>
+        </div>
+        <div>
+         <h2 class="text-xs md:text-sm font-bold text-blue-900">Recap Foto Absen</h2>
+        </div>
+       </div></button>
+     </div>
+    </main>
+   </div><!-- PAGE 4: CALENDAR -->
+   <div id="page-calendar" class="page min-h-full bg-primary">
+    <main class="p-3 max-w-md mx-auto">
+     <div class="nav-buttons"><button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+       </svg> Kembali </button> <button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+       </svg> Home </button>
+     </div>
+     <div class="bg-slate-800/70 rounded-2xl p-4 shadow-xl border border-slate-700">
+      <div class="flex items-center justify-between mb-4"><button onclick="prevMonth()" class="p-2 hover:bg-slate-700 rounded-full transition-colors text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <h2 id="calendar-month" class="text-base font-bold text-white"></h2><button onclick="nextMonth()" class="p-2 hover:bg-slate-700 rounded-full transition-colors text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+      <div class="grid grid-cols-7 gap-1 mb-2">
+       <div class="text-center text-slate-500 text-[10px] font-semibold py-1">
+        MIN
+       </div>
+       <div class="text-center text-slate-500 text-[10px] font-semibold py-1">
+        SEN
+       </div>
+       <div class="text-center text-slate-500 text-[10px] font-semibold py-1">
+        SEL
+       </div>
+       <div class="text-center text-slate-500 text-[10px] font-semibold py-1">
+        RAB
+       </div>
+       <div class="text-center text-slate-500 text-[10px] font-semibold py-1">
+        KAM
+       </div>
+       <div class="text-center text-slate-500 text-[10px] font-semibold py-1">
+        JUM
+       </div>
+       <div class="text-center text-slate-500 text-[10px] font-semibold py-1">
+        SAB
+       </div>
+      </div>
+      <div id="calendar-days" class="grid grid-cols-7 gap-1"></div>
+      <div id="calendar-loading" class="hidden text-center py-4">
+       <div class="inline-block w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+     </div>
+    </main>
+   </div><!-- PAGE 5: RECAP DETAIL -->
+   <div id="page-recap-detail" class="page min-h-full bg-primary">
+    <main class="p-3 max-w-7xl mx-auto">
+     <div class="flex justify-between items-center mb-3"><button onclick="showRecapJam()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg> Recap Jam </button>
+      <div class="flex gap-2"><button id="recap-back-btn" onclick="goBackFromRecapDetail()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg> Kembali </button> <button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg> Home </button>
+      </div>
+     </div>
+     <div class="mb-3 flex items-center justify-between">
+      <div>
+       <h2 id="recap-title" class="text-lg md:text-xl font-bold text-white">Recap Absen</h2>
+       <p id="recap-date-label" class="text-yellow-400 text-sm font-medium"></p>
+      </div><button id="download-pdf-btn" onclick="downloadRecapPDF()" class="hidden px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg> Download PDF </button>
+     </div>
+     <div id="recap-loading" class="text-center py-8">
+      <div class="inline-block w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-slate-400 mt-3 text-sm">Memuat data...</p>
+     </div>
+     <div id="recap-content" class="hidden"></div>
+     <div id="recap-empty" class="hidden text-center py-12">
+      <div class="text-5xl mb-3">
+       📋
+      </div>
+      <p class="text-slate-400 text-sm">Tidak ada data absensi untuk tanggal ini</p>
+     </div>
+    </main>
+   </div><!-- PAGE 6: PHOTO GALLERY -->
+   <div id="page-photo-gallery" class="page min-h-full bg-primary">
+    <main class="p-3 max-w-4xl mx-auto">
+     <div class="nav-buttons"><button onclick="showPage('page-recap')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+       </svg> Kembali </button> <button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+       </svg> Home </button>
+     </div>
+     <h2 class="text-lg md:text-xl font-bold text-white mb-3">Galeri Foto Absen</h2>
+     <div id="gallery-loading" class="text-center py-8">
+      <div class="inline-block w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-slate-400 mt-3 text-sm">Memuat galeri...</p>
+     </div>
+     <div id="gallery-folders" class="hidden grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2"></div>
+     <div id="gallery-empty" class="hidden text-center py-12">
+      <div class="text-5xl mb-3">
+       📁
+      </div>
+      <p class="text-slate-400 text-sm">Belum ada foto absen</p>
+     </div>
+    </main>
+   </div><!-- PAGE 7: PHOTO DETAIL -->
+   <div id="page-photo-detail" class="page min-h-full bg-primary">
+    <main class="p-3 max-w-4xl mx-auto">
+     <div class="nav-buttons"><button onclick="showPage('page-photo-gallery')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+       </svg> Kembali </button> <button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+       </svg> Home </button>
+     </div>
+     <div class="mb-3">
+      <h2 class="text-lg md:text-xl font-bold text-white">Foto Absen</h2>
+      <p id="photo-folder-date" class="text-yellow-400 text-sm font-medium"></p>
+     </div>
+     <div id="photo-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2"></div>
+     <div id="photos-empty" class="hidden text-center py-12">
+      <div class="text-5xl mb-3">
+       📷
+      </div>
+      <p class="text-slate-400 text-sm">Tidak ada foto</p>
+     </div>
+    </main>
+   </div><!-- PAGE 8: APPS SCRIPT SETUP -->
+   <div id="page-apps-script" class="page min-h-full bg-primary">
+    <main class="p-3 max-w-4xl mx-auto">
+     <div class="nav-buttons"><button onclick="goBackFromAppsScript()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+       </svg> Kembali </button> <button onclick="goBackFromAppsScript()" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+       </svg> Home </button>
+     </div>
+     <h2 class="text-lg md:text-xl font-bold text-white mb-4">Setup Apps Script</h2>
+     <div class="space-y-4">
+      <div class="bg-slate-800/50 rounded-xl p-3 md:p-4 border border-slate-700">
+       <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2"><span class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-xs">1</span> Paste URL Apps Script</h3>
+       <div class="flex gap-2"><input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/..." class="flex-1 px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"> <button onclick="saveScriptUrl()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-all text-sm">Simpan</button>
+       </div>
+       <p id="script-url-status" class="mt-2 text-xs"></p>
+      </div>
+      <div class="bg-slate-800/50 rounded-xl p-3 md:p-4 border border-slate-700">
+       <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2"><span class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-xs">2</span> Copy Kode Apps Script</h3>
+       <p class="text-green-400 text-xs mb-2">✅ v8 - Tambah fungsi sortir &amp; rapikan data</p>
+       <p class="text-yellow-400 text-xs mb-2">⚠️ Setelah deploy, jalankan fungsi <strong>runFullFix()</strong> SEKALI untuk merapikan data!</p>
+       <div class="relative"><button onclick="copyScript()" class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-600 hover:bg-orange-500 text-white text-xs rounded transition-all z-10">Copy</button>
+        <div class="code-block max-h-64 overflow-y-auto">
+         <pre id="apps-script-code">// ========================================
+// ABSEN ARCHIPELAGO - Google Apps Script v8
+// FITUR BARU: Fungsi sortir &amp; rapikan data
+// Jalankan runFullFix() SEKALI setelah deploy!
+// ========================================
+
+const SPREADSHEET_ID = '1FllBcwBjTr_jfPylhyWwHt6ZE16j6fJpSa0C9hYEw44';
+const PHOTO_FOLDER_ID = '1CJ46h8M89mzc3XKEg-4hJPV-2voMN3OD';
+
+const BULAN_INDO = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+// Warna status (solid)
+const STATUS_COLORS = {
+  'Start Work': '#22c55e',
+  'Finish Work': '#3b82f6',
+  'Sakit': '#f97316',
+  'Standby': '#a855f7',
+  '-': '#ef4444'
+};
+
+function doGet(e) {
+  const action = e.parameter.action;
+  let result;
+  
+  try {
+    switch(action) {
+      case 'getWorkers':
+        result = getWorkers();
+        break;
+      case 'getAttendance':
+        result = getAttendance(e.parameter.date);
+        break;
+      case 'getMonthData':
+        result = getMonthData(e.parameter.month, e.parameter.year);
+        break;
+      case 'getPhotoFolders':
+        result = getPhotoFolders();
+        break;
+      case 'getPhotos':
+        result = getPhotos(e.parameter.date);
+        break;
+      default:
+        result = { success: false, error: 'Unknown action' };
+    }
+  } catch(err) {
+    result = { success: false, error: err.toString() };
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.parameter.data);
+    let result;
+    
+    switch(data.action) {
+      case 'submitAttendance':
+        result = submitAttendance(data);
+        break;
+      case 'uploadPhotos':
+        result = uploadPhotos(data);
+        break;
+      default:
+        result = { success: false, error: 'Unknown action' };
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ 
+      success: false, 
+      error: err.toString() 
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function getWorkers() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Form Responses 1');
+  if (!sheet) return { success: true, workers: [] };
+  
+  const data = sheet.getDataRange().getValues();
+  const workers = [];
+  
+  for (let i = 1; i &lt; data.length; i++) {
+    const nama = data[i][1];
+    const photo = data[i][2] || '';
+    
+    if (nama &amp;&amp; nama.toString().trim() !== '') {
+      workers.push({
+        id: i,
+        name: nama.toString().trim(),
+        photo: photo.toString().trim()
+      });
+    }
+  }
+  
+  workers.sort((a, b) =&gt; a.name.localeCompare(b.name));
+  return { success: true, workers };
+}
+
+function submitAttendance(data) {
+  const { tanggal, jam, attendance } = data;
+  
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName('Absen Recap');
+  
+  if (!sheet) {
+    sheet = ss.insertSheet('Absen Recap');
+    sheet.getRange(1, 1).setValue('Tanggal');
+    sheet.getRange(2, 1).setValue('Jam');
+  }
+  
+  // Sync nama dari Form Responses 1
+  syncWorkerNames(sheet);
+  
+  const lastCol = sheet.getLastColumn();
+  const newCol = lastCol &lt; 1 ? 2 : lastCol + 1;
+  
+  // Tulis tanggal dan jam
+  sheet.getRange(1, newCol).setValue(tanggal);
+  sheet.getRange(2, newCol).setValue(jam);
+  
+  const lastRow = sheet.getLastRow();
+  if (lastRow &lt; 3) return { success: true };
+  
+  // Ambil semua nama di kolom A (mulai baris 3)
+  const workerNames = sheet.getRange(3, 1, lastRow - 2, 1).getValues().flat().map(n =&gt; n.toString().trim());
+  
+  // Tulis status untuk setiap pekerja
+  attendance.forEach(a =&gt; {
+    const cleanName = a.name.toString().trim();
+    const rowIndex = workerNames.findIndex(n =&gt; n === cleanName);
+    
+    if (rowIndex !== -1) {
+      const cell = sheet.getRange(rowIndex + 3, newCol);
+      const status = a.status || '-';
+      cell.setValue(status);
+      
+      // Terapkan warna
+      const color = STATUS_COLORS[status] || STATUS_COLORS['-'];
+      cell.setBackground(color);
+      cell.setFontColor('#ffffff');
+      cell.setFontWeight('bold');
+      cell.setHorizontalAlignment('center');
+    }
+  });
+  
+  // Terapkan warna tanggal
+  applyDateRowColors(sheet);
+  
+  return { success: true };
+}
+
+function syncWorkerNames(recapSheet) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const formSheet = ss.getSheetByName('Form Responses 1');
+  if (!formSheet) return;
+  
+  const formData = formSheet.getDataRange().getValues();
+  const newNames = [];
+  for (let i = 1; i &lt; formData.length; i++) {
+    const nama = formData[i][1];
+    if (nama &amp;&amp; nama.toString().trim() !== '') {
+      newNames.push(nama.toString().trim());
+    }
+  }
+  newNames.sort((a, b) =&gt; a.localeCompare(b, 'id'));
+  
+  if (recapSheet.getRange(1, 1).getValue() === '') {
+    recapSheet.getRange(1, 1).setValue('Tanggal');
+    recapSheet.getRange(2, 1).setValue('Jam');
+  }
+  
+  const lastRow = recapSheet.getLastRow();
+  let existingNames = [];
+  if (lastRow &gt;= 3) {
+    existingNames = recapSheet.getRange(3, 1, lastRow - 2, 1).getValues().flat().map(n =&gt; n.toString().trim()).filter(n =&gt; n !== '');
+  }
+  
+  newNames.forEach(name =&gt; {
+    if (!existingNames.includes(name)) {
+      const nextRow = recapSheet.getLastRow() + 1;
+      recapSheet.getRange(nextRow, 1).setValue(name);
+      existingNames.push(name);
+    }
+  });
+}
+
+function applyDateRowColors(sheet) {
+  const lastCol = sheet.getLastColumn();
+  if (lastCol &lt; 2) return;
+  
+  const dates = sheet.getRange(1, 2, 1, lastCol - 1).getValues()[0];
+  
+  let currentDate = '';
+  let colorIndex = 0;
+  const grayColor = '#6b7280';
+  const whiteColor = '#ffffff';
+  
+  for (let col = 2; col &lt;= lastCol; col++) {
+    const dateVal = dates[col - 2];
+    if (dateVal !== currentDate) {
+      currentDate = dateVal;
+      colorIndex++;
+    }
+    
+    const bgColor = colorIndex % 2 === 1 ? grayColor : whiteColor;
+    const textColor = colorIndex % 2 === 1 ? '#ffffff' : '#000000';
+    
+    const dateCell = sheet.getRange(1, col);
+    dateCell.setBackground(bgColor);
+    dateCell.setFontColor(textColor);
+    dateCell.setFontWeight('bold');
+    dateCell.setHorizontalAlignment('center');
+    
+    const jamCell = sheet.getRange(2, col);
+    jamCell.setBackground('#1e293b');
+    jamCell.setFontColor('#fbbf24');
+    jamCell.setFontWeight('bold');
+    jamCell.setHorizontalAlignment('center');
+  }
+}
+
+function getAttendance(date) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Absen Recap');
+  if (!sheet) return { success: true, columns: [], workers: [] };
+  
+  const lastCol = sheet.getLastColumn();
+  const lastRow = sheet.getLastRow();
+  if (lastCol &lt; 2 || lastRow &lt; 3) return { success: true, columns: [], workers: [] };
+  
+  const allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  
+  const matchingCols = [];
+  for (let col = 1; col &lt; lastCol; col++) {
+    const cellDate = allData[0][col] ? allData[0][col].toString() : '';
+    if (cellDate === date) {
+      matchingCols.push({
+        colIndex: col,
+        tanggal: cellDate,
+        jam: allData[1][col] ? allData[1][col].toString() : ''
+      });
+    }
+  }
+  
+  if (matchingCols.length === 0) {
+    return { success: true, columns: [], workers: [] };
+  }
+  
+  const workers = [];
+  for (let row = 2; row &lt; lastRow; row++) {
+    const name = allData[row][0];
+    if (name &amp;&amp; name.toString().trim() !== '') {
+      const statuses = {};
+      matchingCols.forEach(mc =&gt; {
+        const statusVal = allData[row][mc.colIndex];
+        statuses[mc.jam] = statusVal ? statusVal.toString() : '-';
+      });
+      workers.push({ name: name.toString().trim(), statuses });
+    }
+  }
+  
+  // Sort workers by name
+  workers.sort((a, b) =&gt; a.name.localeCompare(b.name, 'id'));
+  
+  return { 
+    success: true, 
+    columns: matchingCols.map(mc =&gt; ({ tanggal: mc.tanggal, jam: mc.jam })),
+    workers 
+  };
+}
+
+function getMonthData(month, year) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Absen Recap');
+  if (!sheet) return { success: true, data: {} };
+  
+  const lastCol = sheet.getLastColumn();
+  if (lastCol &lt; 2) return { success: true, data: {} };
+  
+  const dates = sheet.getRange(1, 2, 1, lastCol - 1).getValues()[0];
+  const result = {};
+  
+  dates.forEach(dateStr =&gt; {
+    if (!dateStr) return;
+    const parsed = parseTanggalIndo(dateStr.toString());
+    if (parsed &amp;&amp; parsed.month == month &amp;&amp; parsed.year == year) {
+      result[parsed.day] = (result[parsed.day] || 0) + 1;
+    }
+  });
+  
+  return { success: true, data: result };
+}
+
+function parseTanggalIndo(str) {
+  if (!str) return null;
+  const parts = str.toString().split(' ');
+  if (parts.length !== 3) return null;
+  
+  const day = parseInt(parts[0]);
+  const monthIndex = BULAN_INDO.indexOf(parts[1]) + 1;
+  const year = parseInt(parts[2]);
+  
+  if (isNaN(day) || monthIndex === 0 || isNaN(year)) return null;
+  return { day, month: monthIndex, year };
+}
+
+function uploadPhotos(data) {
+  const { tanggal, jam, photos } = data;
+  
+  if (!photos || photos.length === 0) {
+    return { success: true };
+  }
+  
+  const folder = getOrCreateDateFolder(tanggal);
+  const timeStr = jam.replace(/:/g, '-');
+  
+  photos.forEach((photoBase64, index) =&gt; {
+    try {
+      const base64Data = photoBase64.split(',')[1];
+      const blob = Utilities.newBlob(
+        Utilities.base64Decode(base64Data), 
+        'image/jpeg', 
+        `Absen_${timeStr}_${index + 1}.jpg`
+      );
+      folder.createFile(blob);
+    } catch(err) {
+      console.error('Error saving photo ' + (index + 1) + ': ' + err);
+    }
+  });
+  
+  return { success: true };
+}
+
+function getOrCreateDateFolder(tanggal) {
+  const parentFolder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
+  const folderName = tanggal.replace(/ /g, '_');
+  
+  const folders = parentFolder.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return parentFolder.createFolder(folderName);
+}
+
+function getPhotoFolders() {
+  try {
+    const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
+    const subFolders = folder.getFolders();
+    const folders = [];
+    
+    while (subFolders.hasNext()) {
+      const f = subFolders.next();
+      folders.push(f.getName());
+    }
+    
+    folders.sort((a, b) =&gt; {
+      const parseDate = (str) =&gt; {
+        const p = str.replace(/_/g, ' ').split(' ');
+        if (p.length !== 3) return new Date(0);
+        const day = parseInt(p[0]);
+        const monthIndex = BULAN_INDO.indexOf(p[1]);
+        const year = parseInt(p[2]);
+        return new Date(year, monthIndex, day);
+      };
+      return parseDate(b) - parseDate(a);
+    });
+    
+    return { success: true, folders };
+  } catch(err) {
+    return { success: false, error: err.toString() };
+  }
+}
+
+function getPhotos(date) {
+  try {
+    const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
+    const folderName = date.replace(/ /g, '_');
+    const subFolders = folder.getFoldersByName(folderName);
+    
+    if (!subFolders.hasNext()) {
+      return { success: true, photos: [] };
+    }
+    
+    const dateFolder = subFolders.next();
+    const files = dateFolder.getFiles();
+    const photos = [];
+    
+    while (files.hasNext()) {
+      const file = files.next();
+      if (file.getMimeType().startsWith('image/')) {
+        photos.push({
+          name: file.getName(),
+          url: 'https://lh3.googleusercontent.com/d/' + file.getId()
+        });
+      }
+    }
+    
+    photos.sort((a, b) =&gt; a.name.localeCompare(b.name));
+    return { success: true, photos };
+  } catch(err) {
+    return { success: false, error: err.toString() };
+  }
+}
+
+// ========================================
+// FUNGSI UNTUK SORTIR DAN RAPIKAN DATA
+// ========================================
+
+// Jalankan fungsi ini SEKALI untuk merapikan semua data
+function runFullFix() {
+  const result1 = sortAndFixRecapSheet();
+  Logger.log('Sort result: ' + JSON.stringify(result1));
+  
+  const result2 = applyColorsToAllData();
+  Logger.log('Color result: ' + JSON.stringify(result2));
+  
+  return 'Selesai! Cek sheet Absen Recap. ' + result1.message;
+}
+
+// Sortir nama pekerja berdasarkan abjad dan rapikan
+function sortAndFixRecapSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Absen Recap');
+  if (!sheet) return { success: false, error: 'Sheet Absen Recap tidak ditemukan' };
+  
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  
+  if (lastRow &lt; 3 || lastCol &lt; 1) return { success: false, error: 'Data tidak cukup' };
+  
+  // Ambil semua data
+  const allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  
+  // Baris 1 = Tanggal, Baris 2 = Jam
+  const headerRow1 = allData[0];
+  const headerRow2 = allData[1];
+  
+  // Ambil data pekerja (mulai baris 3)
+  const workerData = [];
+  for (let i = 2; i &lt; lastRow; i++) {
+    const name = allData[i][0];
+    if (name &amp;&amp; name.toString().trim() !== '') {
+      const rowData = {
+        name: name.toString().trim(),
+        statuses: allData[i].slice(1)
+      };
+      workerData.push(rowData);
+    }
+  }
+  
+  // Sortir berdasarkan nama (abjad Indonesia)
+  workerData.sort((a, b) =&gt; a.name.localeCompare(b.name, 'id'));
+  
+  // Hapus data lama (baris 3 ke bawah)
+  if (lastRow &gt; 2) {
+    sheet.getRange(3, 1, lastRow - 2, lastCol).clear();
+  }
+  
+  // Tulis ulang data yang sudah diurutkan
+  workerData.forEach((worker, index) =&gt; {
+    const row = index + 3;
+    
+    // Tulis nama
+    const nameCell = sheet.getRange(row, 1);
+    nameCell.setValue(worker.name);
+    nameCell.setBackground('#0f172a');
+    nameCell.setFontColor('#ffffff');
+    nameCell.setFontWeight('bold');
+    
+    // Tulis status
+    worker.statuses.forEach((status, colIndex) =&gt; {
+      const col = colIndex + 2;
+      const cell = sheet.getRange(row, col);
+      
+      if (status &amp;&amp; status.toString().trim() !== '') {
+        const statusStr = status.toString().trim();
+        cell.setValue(statusStr);
+        
+        // Terapkan warna
+        const color = STATUS_COLORS[statusStr] || STATUS_COLORS['-'];
+        cell.setBackground(color);
+        cell.setFontColor('#ffffff');
+        cell.setFontWeight('bold');
+        cell.setHorizontalAlignment('center');
+      }
+    });
+  });
+  
+  // Format header
+  sheet.getRange(1, 1).setValue('Tanggal');
+  sheet.getRange(2, 1).setValue('Jam');
+  sheet.getRange(1, 1, 2, 1).setBackground('#1e293b');
+  sheet.getRange(1, 1, 2, 1).setFontColor('#ffffff');
+  sheet.getRange(1, 1, 2, 1).setFontWeight('bold');
+  
+  // Terapkan warna tanggal
+  applyDateRowColors(sheet);
+  
+  return { success: true, message: 'Total ' + workerData.length + ' pekerja diurutkan!' };
+}
+
+// Terapkan warna ke SEMUA sel status
+function applyColorsToAllData() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName('Absen Recap');
+  if (!sheet) return { success: false, error: 'Sheet tidak ditemukan' };
+  
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  
+  if (lastRow &lt; 3 || lastCol &lt; 2) return { success: false, error: 'Data tidak cukup' };
+  
+  let coloredCount = 0;
+  
+  // Loop semua sel status (mulai baris 3, kolom 2)
+  for (let row = 3; row &lt;= lastRow; row++) {
+    for (let col = 2; col &lt;= lastCol; col++) {
+      const cell = sheet.getRange(row, col);
+      const value = cell.getValue();
+      
+      if (value &amp;&amp; value.toString().trim() !== '') {
+        const status = value.toString().trim();
+        const color = STATUS_COLORS[status] || STATUS_COLORS['-'];
+        
+        cell.setBackground(color);
+        cell.setFontColor('#ffffff');
+        cell.setFontWeight('bold');
+        cell.setHorizontalAlignment('center');
+        coloredCount++;
+      }
+    }
+  }
+  
+  // Terapkan warna tanggal
+  applyDateRowColors(sheet);
+  
+  return { success: true, message: coloredCount + ' sel status diwarnai!' };
+}</pre>
+        </div>
+       </div>
+      </div>
+     </div>
+    </main>
+   </div><!-- PAGE 9: RECAP JAM KERJA -->
+   <div id="page-recap-jam" class="page min-h-full bg-primary">
+    <main class="p-3 max-w-2xl mx-auto">
+     <div class="nav-buttons"><button onclick="showPage('page-recap-detail')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+       </svg> Kembali </button> <button onclick="showPage('page-attendance')" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+       </svg> Home </button>
+     </div>
+     <div class="text-center mb-4">
+      <h2 class="text-xl md:text-2xl font-bold text-white">Recap Jam Kerja Worker</h2>
+      <p id="recap-jam-date" class="text-yellow-400 text-sm font-medium mt-1"></p>
+     </div>
+     <div class="flex justify-end mb-2"><button onclick="downloadRecapJamPDF()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all flex items-center gap-1 text-xs">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg> Download PDF </button>
+     </div>
+     <div class="relative mb-4">
+      <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg><input type="text" id="jam-search-input" placeholder="Cari nama pekerja..." class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm">
+     </div>
+     <div id="jam-search-results" class="space-y-2 max-h-48 overflow-y-auto mb-4"></div>
+     <div id="jam-result-container" class="hidden">
+      <div class="jam-result-card">
+       <div class="flex items-center gap-3 mb-4">
+        <div id="jam-worker-photo" class="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white text-xl font-bold"></div>
+        <div>
+         <h3 id="jam-worker-name" class="text-white font-bold text-lg"></h3>
+         <p class="text-slate-400 text-sm">Detail Jam Kerja</p>
+        </div>
+       </div>
+       <div id="jam-sessions" class="space-y-2 mb-4"></div>
+       <div class="border-t border-slate-600 pt-4">
+        <div class="flex justify-between items-center"><span class="text-slate-400 font-medium">Total Jam Kerja:</span> <span id="jam-total" class="text-2xl font-bold text-cyan-400"></span>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div id="jam-no-result" class="hidden text-center py-8">
+      <div class="text-4xl mb-2">
+       🔍
+      </div>
+      <p class="text-slate-400 text-sm">Ketik nama untuk mencari data jam kerja</p>
+     </div>
+    </main>
+   </div>
+  </div>
+  <script>
+    const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/10un5eCNXYwHkgznim3T4lRMwICFWQ8Bw';
+    const TIMEMARK_LOGO_URL = 'https://lh3.googleusercontent.com/d/1zaavYZSem-yNHztE724qeIAWw9uGJgen';
+    let cachedTimemarkLogoBase64 = null;
+    
+    const BULAN_INDO = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    
+    const defaultConfig = {
+      app_title: 'ABSEN ONLINE DAILY WORKER',
+      company_name: 'ABSEN ARCHIPELAGO',
+      logo_url: APP_LOGO_URL
+    };
+
+    let config = { ...defaultConfig };
+    let workers = [];
+    let attendanceStatus = {};
+    let uploadedPhotos = [];
+    let uploadedPhotosCompressed = [];
+    let currentPhotoIndex = 0;
+    let currentCalendarDate = new Date();
+    let isLoggedIn = false;
+    let currentRecapDate = '';
+    let currentRecapData = null;
+    let recapSource = 'today';
+    let calendarDataCache = {};
+    const SAVED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykHilTCxFbqVnxOCbPxAl733dR2KHx7z0Z6TIMBGV4DbmiZru_ksbhd2kgH2pj1kKfZw/exec';
+    let scriptUrl = localStorage.getItem('appsScriptUrl') || SAVED_SCRIPT_URL;
+    let cachedLocation = null;
+    let cachedAddress = null;
+    let cachedLogoBase64 = null;
+    const MAX_PHOTOS = 10;
+
+    window.currentStatusWorkers = { 'Start Work': [], 'Finish Work': [], 'Sakit': [], 'Standby': [], 'Belum Absen': [] };
+    
+    let galleryPhotos = [];
+    let currentGalleryIndex = 0;
+
+   function formatTanggalIndo(date) {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    // Menggunakan pemisah "-" secara manual agar konsisten di semua device
+    return `${d}-${m}-${y}`; 
+}
+
+    async function compressImageForUpload(dataUrl, quality = 0.8, maxSize = 1920) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      
+      // Menaikkan batas ukuran ke 1920px (Full HD)
+      if (width > maxSize || height > maxSize) {
+        if (width > height) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      // Kualitas dinaikkan ke 0.8 (80%) agar tetap tajam tapi tidak terlalu berat
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+async function downloadPhotosToDevice(photos, tanggal, jam) {
+    // jam formatnya HH:mm, kita ubah : menjadi - agar aman untuk nama file
+    const formattedTime = jam.replace(/:/g, '-');
+    
+    // 1. Cek apakah ini perangkat iOS/Safari
+    const isIOSDevice = isIOS() || (navigator.maxTouchPoints > 0 && /Macintosh/.test(navigator.userAgent));
+    
+    if (isIOSDevice && navigator.share) {
+        try {
+            const filesArray = [];
+            
+            for (let i = 0; i < photos.length; i++) {
+                const photoDataUrl = photos[i];
+                // Konversi DataURL ke Blob (Wajib untuk iOS agar file asli terbaca)
+                const response = await fetch(photoDataUrl);
+                const blob = await response.blob();
+                
+                // Gunakan format DD-MM-YYYY langsung dari variabel tanggal
+                const fileName = `Absen_${tanggal}_${formattedTime}_${i + 1}.jpg`;
+                const file = new File([blob], fileName, { type: 'image/jpeg' });
+                filesArray.push(file);
+            }
+
+            // Cek apakah browser mendukung sharing file
+            if (navigator.canShare && navigator.canShare({ files: filesArray })) {
+                await navigator.share({
+                    files: filesArray,
+                    title: 'Foto Absensi',
+                    text: `Data Absen ${tanggal} ${jam}`
+                });
+                showNotification(`${filesArray.length} foto siap dibagikan!`);
+            } else {
+                throw new Error("Share API tidak mendukung file.");
+            }
+        } catch (error) {
+            console.error('Gagal Share Sheet:', error);
+            // Fallback: Jika Share Sheet gagal/dibatalkan, buka foto satu per satu
+            photos.forEach(p => window.open(p, '_blank'));
+            showNotification('Gagal share, foto dibuka di tab baru.', true);
+        }
+    } else {
+        // 2. Logika untuk Android / Desktop (Download Langsung)
+        for (let i = 0; i < photos.length; i++) {
+            const fileName = `Absen_${tanggal}_${formattedTime}_${i + 1}.jpg`;
+            if (i > 0) await new Promise(r => setTimeout(r, 400)); // Delay agar download lancar
+            directDownload(photos[i], fileName);
+        }
+        showNotification(`${photos.length} foto berhasil diunduh!`);
+    }
+}
+
+    function directDownload(dataUrl, fileName) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = fileName;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => { document.body.removeChild(link); }, 100);
+    }
+
+    function showUploadProgress() {
+      document.getElementById('upload-progress-modal').classList.remove('hidden');
+    }
+
+    function hideUploadProgress() {
+      document.getElementById('upload-progress-modal').classList.add('hidden');
+    }
+
+    function updateUploadProgress(status, detail, percent) {
+      document.getElementById('upload-status').textContent = status;
+      document.getElementById('upload-detail').textContent = detail;
+      document.getElementById('progress-fill').style.width = percent + '%';
+      document.getElementById('progress-text').textContent = percent + '%';
+    }
+
+    function preloadLogoForPDF() {
+      const logoUrl = config.logo_url || APP_LOGO_URL;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        cachedLogoBase64 = canvas.toDataURL('image/png');
+      };
+      img.onerror = function() { cachedLogoBase64 = null; };
+      img.src = logoUrl;
+    }
+
+    function preloadTimemarkLogo() {
+      const fileId = '1zaavYZSem-yNHztE724qeIAWw9uGJgen';
+      const urlFormats = [
+        `https://lh3.googleusercontent.com/d/${fileId}`,
+        `https://drive.google.com/uc?export=view&id=${fileId}`
+      ];
+      
+      let currentUrlIndex = 0;
+      
+      function tryLoadLogo() {
+        if (currentUrlIndex >= urlFormats.length) {
+          cachedTimemarkLogoBase64 = null;
+          return;
+        }
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          try {
+            cachedTimemarkLogoBase64 = canvas.toDataURL('image/png');
+          } catch (e) {
+            currentUrlIndex++;
+            tryLoadLogo();
+          }
+        };
+        img.onerror = function() {
+          currentUrlIndex++;
+          tryLoadLogo();
+        };
+        img.src = urlFormats[currentUrlIndex];
+      }
+      
+      tryLoadLogo();
+    }
+
+    function requestLocationPermission() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            cachedLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+            fetchAddress(cachedLocation.lat, cachedLocation.lng);
+            updateLocationStatus('success');
+          },
+          (error) => { updateLocationStatus('error'); setTimeout(requestLocationPermission, 3000); },
+          { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+        );
+      }
+    }
+
+    async function fetchAddress(lat, lng) {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+        const data = await response.json();
+        if (data && data.display_name) {
+          cachedAddress = data.display_name;
+          updateLocationStatus('success');
+        }
+      } catch (error) {}
+    }
+
+    function updateLocationStatus(status) {
+      const locationText = document.getElementById('location-text');
+      if (locationText) {
+        if (status === 'success' && cachedAddress) {
+          const shortAddress = cachedAddress.length > 50 ? cachedAddress.substring(0, 50) + '...' : cachedAddress;
+          locationText.textContent = shortAddress;
+          locationText.classList.remove('text-red-400');
+          locationText.classList.add('text-green-400');
+        } else {
+          locationText.textContent = 'Mengambil lokasi...';
+        }
+      }
+    }
+
+    function convertDriveLink(url) {
+  if (!url || url === '') return '';
+  if (url.includes('googleusercontent.com')) return url;
+  
+  // Mengambil ID file dari link Drive biasa
+  const match = url.match(/[-\w]{25,}/);
+  if (match) {
+    return `https://lh3.googleusercontent.com/d/${match[0]}`;
+  }
+  return url;
+}
+
+    function updateAllLogos() {
+      const logoUrl = config.logo_url || APP_LOGO_URL;
+      const convertedUrl = convertDriveLink(logoUrl);
+      
+      const logoElements = ['login-logo-img', 'header-logo-img'];
+      
+      logoElements.forEach(id => {
+        const img = document.getElementById(id);
+        if (img) {
+          img.src = convertedUrl;
+          img.style.display = '';
+          const fallback = img.nextElementSibling;
+          if (fallback) fallback.classList.add('hidden');
+        }
+      });
+      
+      preloadLogoForPDF();
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      
+      const mainHeader = document.getElementById('main-header');
+      if (pageId === 'page-login') {
+        mainHeader.classList.add('hidden');
+      } else {
+        mainHeader.classList.remove('hidden');
+      }
+      
+      if (pageId === 'page-attendance') {
+        if (workers.length > 0) {
+          renderWorkers(workers);
+          updateCounter();
+          document.getElementById('loading-workers').classList.add('hidden');
+          document.getElementById('workers-grid').classList.remove('hidden');
+          document.getElementById('search-container').classList.remove('hidden');
+          document.getElementById('photo-section').classList.remove('hidden');
+          document.getElementById('submit-section').classList.remove('hidden');
+        } else {
+          loadWorkers();
+        }
+        updateDateTime();
+      } else if (pageId === 'page-calendar') {
+        renderCalendar();
+      } else if (pageId === 'page-photo-gallery') {
+        loadPhotoFolders();
+      } else if (pageId === 'page-apps-script') {
+        document.getElementById('script-url-input').value = scriptUrl;
+        updateScriptUrlStatus();
+      } else if (pageId === 'page-recap-jam') {
+        document.getElementById('recap-jam-date').textContent = currentRecapDate;
+        document.getElementById('jam-search-input').value = '';
+        document.getElementById('jam-search-results').innerHTML = '';
+        document.getElementById('jam-result-container').classList.add('hidden');
+        document.getElementById('jam-no-result').classList.remove('hidden');
+      }
+    }
+
+    function goBackFromAppsScript() {
+      if (isLoggedIn) showPage('page-attendance');
+      else showPage('page-login');
+    }
+
+    function goBackFromRecapDetail() {
+      if (recapSource === 'calendar') showPage('page-calendar');
+      else showPage('page-recap');
+    }
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      if (username === 'archipelago' && password === 'balivibes') {
+        isLoggedIn = true;
+        document.getElementById('page-login').style.display = 'none';
+        showPage('page-attendance');
+      } else {
+        const errorEl = document.getElementById('login-error');
+        errorEl.textContent = 'Username atau password salah!';
+        errorEl.classList.remove('hidden');
+      }
+    });
+
+    function getTimezone() {
+      const offset = new Date().getTimezoneOffset();
+      if (offset === -420) return 'WIB';
+      if (offset === -480) return 'WITA';
+      if (offset === -540) return 'WIT';
+      return 'WIB';
+    }
+
+    function updateDateTime() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      const dateEl = document.getElementById('header-date');
+      const timeEl = document.getElementById('header-time');
+      const tzEl = document.getElementById('timezone-badge');
+      if (dateEl) dateEl.textContent = dateStr;
+      if (timeEl) timeEl.textContent = timeStr;
+      if (tzEl) tzEl.textContent = getTimezone();
+    }
+    
+    setInterval(updateDateTime, 1000);
+
+    async function loadWorkers() {
+      const loadingEl = document.getElementById('loading-workers');
+      const gridEl = document.getElementById('workers-grid');
+      const searchContainer = document.getElementById('search-container');
+      const photoSection = document.getElementById('photo-section');
+      const submitSection = document.getElementById('submit-section');
+      const noScriptWarning = document.getElementById('no-script-warning');
+
+      if (!scriptUrl) {
+        loadingEl.classList.add('hidden');
+        noScriptWarning.classList.remove('hidden');
+        return;
+      }
+
+      noScriptWarning.classList.add('hidden');
+      loadingEl.classList.remove('hidden');
+      gridEl.classList.add('hidden');
+
+      try {
+        const data = await fetchWithCallback(`${scriptUrl}?action=getWorkers`);
+        
+        if (data.success && data.workers) {
+          workers = data.workers;
+          renderWorkers(workers);
+          updateCounter();
+          
+          loadingEl.classList.add('hidden');
+          gridEl.classList.remove('hidden');
+          searchContainer.classList.remove('hidden');
+          photoSection.classList.remove('hidden');
+          submitSection.classList.remove('hidden');
+        } else {
+          throw new Error(data.error || 'Failed to load workers');
+        }
+      } catch (error) {
+        loadingEl.innerHTML = `<div class="text-red-400 text-center"><p class="text-base mb-2">Gagal memuat data</p><p class="text-xs mb-3 text-slate-400">${error.message}</p><button onclick="loadWorkers()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm">Coba Lagi</button></div>`;
+      }
+    }
+
+    async function fetchWithCallback(url) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      try {
+        const response = await fetch(url, { method: 'GET', redirect: 'follow', signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        return JSON.parse(text);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') throw new Error('Koneksi timeout.');
+        throw error;
+      }
+    }
+
+    function renderWorkers(workerList, container = 'workers-grid') {
+      const grid = document.getElementById(container);
+      grid.innerHTML = '';
+
+      workerList.forEach(worker => {
+        const status = attendanceStatus[worker.id] || '';
+        const isSelected = status !== '';
+        
+        const card = document.createElement('div');
+        card.className = `card-worker bg-white rounded-xl p-3 border-2 ${isSelected ? 'status-selected' : 'border-slate-200'}`;
+        card.dataset.workerId = worker.id;
+        
+        const photoUrl = convertDriveLink(worker.photo);
+        
+        let photoHtml = '';
+        if (photoUrl && photoUrl.startsWith('http')) {
+          photoHtml = `<img src="${photoUrl}" alt="${worker.name}" class="w-20 h-20 rounded-full worker-photo mx-auto" onerror="this.outerHTML='<div class=\\'w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold mx-auto\\'>${worker.name.charAt(0).toUpperCase()}</div>'">`;
+        } else {
+          photoHtml = `<div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold mx-auto">${worker.name.charAt(0).toUpperCase()}</div>`;
+        }
+        
+        card.innerHTML = `
+          <div class="flex gap-3">
+            <div class="w-1/2 flex flex-col items-center justify-center gap-2">
+              ${photoHtml}
+              <p class="text-slate-800 font-semibold text-xs text-center leading-tight line-clamp-2">${worker.name}</p>
+            </div>
+            <div class="w-1/2 flex flex-col gap-1.5">
+              <div class="text-center py-1 rounded-lg ${status ? 'bg-pink-100' : 'bg-slate-100'}">
+                <p class="text-[10px] ${status ? 'text-pink-500 font-semibold' : 'text-slate-500'}">${status || 'Belum dipilih'}</p>
+              </div>
+              <div class="grid grid-cols-2 gap-1 flex-1">
+                <button onclick="setStatus(${worker.id}, 'Start Work', '${container}')" class="btn-status py-2 ${status === 'Start Work' ? 'bg-green-600 ring-2 ring-green-400' : 'bg-green-500 hover:bg-green-600'} text-white rounded-lg text-[10px] font-semibold transition-all">Start</button>
+                <button onclick="setStatus(${worker.id}, 'Finish Work', '${container}')" class="btn-status py-2 ${status === 'Finish Work' ? 'bg-blue-600 ring-2 ring-blue-400' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg text-[10px] font-semibold transition-all">Finish</button>
+                <button onclick="setStatus(${worker.id}, 'Sakit', '${container}')" class="btn-status py-2 ${status === 'Sakit' ? 'bg-orange-600 ring-2 ring-orange-400' : 'bg-orange-500 hover:bg-orange-600'} text-white rounded-lg text-[10px] font-semibold transition-all">Sakit</button>
+                <button onclick="setStatus(${worker.id}, 'Standby', '${container}')" class="btn-status py-2 ${status === 'Standby' ? 'bg-purple-600 ring-2 ring-purple-400' : 'bg-purple-500 hover:bg-purple-600'} text-white rounded-lg text-[10px] font-semibold transition-all">Standby</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        grid.appendChild(card);
+      });
+    }
+
+    function setStatus(workerId, status, fromContainer) {
+      if (attendanceStatus[workerId] === status) {
+        delete attendanceStatus[workerId];
+      } else {
+        attendanceStatus[workerId] = status;
+      }
+      
+      renderWorkers(workers);
+      updateCounter();
+      
+      const searchInput = document.getElementById('search-input');
+      if (searchInput.value.trim() !== '') {
+        const query = searchInput.value.toLowerCase().trim();
+        const filtered = workers.filter(w => w.name.toLowerCase().includes(query));
+        renderWorkers(filtered, 'search-results');
+        
+        if (attendanceStatus[workerId]) {
+          setTimeout(() => clearSearch(), 1000);
+        }
+      }
+    }
+    
+    function updateCounter() {
+      const selectedCount = Object.keys(attendanceStatus).length;
+      const unselectedCount = workers.length - selectedCount;
+      document.getElementById('counter-selected').textContent = selectedCount;
+      document.getElementById('counter-unselected').textContent = unselectedCount;
+    }
+
+    function setAllPresent() {
+      workers.forEach(worker => { attendanceStatus[worker.id] = 'Start Work'; });
+      renderWorkers(workers);
+      updateCounter();
+      showNotification('Semua pekerja diset Start Work!');
+    }
+
+    function resetAllStatus() {
+      attendanceStatus = {};
+      renderWorkers(workers);
+      updateCounter();
+      showNotification('Status absensi direset!');
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const clearBtn = document.getElementById('clear-search');
+      const gridEl = document.getElementById('workers-grid');
+      const searchResults = document.getElementById('search-results');
+
+      if (query === '') {
+        clearBtn.classList.add('hidden');
+        gridEl.classList.remove('hidden');
+        searchResults.classList.add('hidden');
+        return;
+      }
+
+      clearBtn.classList.remove('hidden');
+      gridEl.classList.add('hidden');
+      searchResults.classList.remove('hidden');
+
+      const filtered = workers.filter(w => w.name.toLowerCase().includes(query));
+      
+      if (filtered.length > 0) {
+        renderWorkers(filtered, 'search-results');
+      } else {
+        searchResults.innerHTML = `<div class="col-span-full text-center py-6"><p class="text-slate-400 text-sm">Tidak ditemukan</p></div>`;
+      }
+    });
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('clear-search').classList.add('hidden');
+      document.getElementById('workers-grid').classList.remove('hidden');
+      document.getElementById('search-results').classList.add('hidden');
+      renderWorkers(workers);
+    }
+
+    async function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (uploadedPhotos.length >= MAX_PHOTOS) {
+        showNotification(`Maksimal ${MAX_PHOTOS} foto!`, true);
+        event.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const originalImage = e.target.result;
+        const timestampedImage = await addTimemark(originalImage);
+        uploadedPhotos.push(timestampedImage);
+        const compressedImage = await compressImageForUpload(timestampedImage, 0.3, 600);
+        uploadedPhotosCompressed.push(compressedImage);
+        renderPhotoThumbnails();
+        event.target.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function addTimemark(imageDataUrl) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          const minWidth = 1920;
+          const minHeight = 1080;
+          
+          let targetWidth = img.width;
+          let targetHeight = img.height;
+          
+          if (img.width < minWidth || img.height < minHeight) {
+            const scaleX = minWidth / img.width;
+            const scaleY = minHeight / img.height;
+            const scale = Math.max(scaleX, scaleY);
+            targetWidth = Math.round(img.width * scale);
+            targetHeight = Math.round(img.height * scale);
+          }
+          
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          
+          const now = new Date();
+          const padding = Math.min(canvas.width, canvas.height) * 0.03;
+          const smallFontSize = Math.min(canvas.width, canvas.height) * 0.022;
+          
+          ctx.textBaseline = 'top';
+          ctx.textAlign = 'right';
+          const rightX = canvas.width - padding;
+          
+          ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+          const verifiedText = '100% photo verified';
+          const verifiedWidth = ctx.measureText(verifiedText).width;
+          
+          const timemarkText = 'Timemark';
+          let timemarkFontSize = smallFontSize;
+          ctx.font = `${timemarkFontSize}px Poppins, sans-serif`;
+          let timemarkWidth = ctx.measureText(timemarkText).width;
+          
+          timemarkFontSize = (verifiedWidth / timemarkWidth) * timemarkFontSize;
+          ctx.font = `${timemarkFontSize}px Poppins, sans-serif`;
+          
+          const markText = 'mark';
+          const timeText = 'Time';
+          const markWidth = ctx.measureText(markText).width;
+          
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(markText, rightX, padding);
+          
+          ctx.fillStyle = '#ffcc00';
+          ctx.fillText(timeText, rightX - markWidth, padding);
+          
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `${smallFontSize}px Poppins, sans-serif`;
+          ctx.fillText(verifiedText, rightX, padding + timemarkFontSize + 5);
+          
+          ctx.textAlign = 'left';
+          const leftX = padding;
+          
+          let addressLines = [];
+          if (cachedAddress) {
+            const maxCharsPerLine = 50;
+            let remaining = cachedAddress;
+            while (remaining.length > 0) {
+              if (remaining.length <= maxCharsPerLine) {
+                addressLines.push(remaining);
+                break;
+              } else {
+                let cutIndex = remaining.lastIndexOf(' ', maxCharsPerLine);
+                if (cutIndex === -1) cutIndex = maxCharsPerLine;
+                addressLines.push(remaining.substring(0, cutIndex));
+                remaining = remaining.substring(cutIndex).trim();
+              }
+            }
+          }
+          
+          const infoFontSize = smallFontSize * 1.2;
+          const addressFontSize = smallFontSize * 0.9;
+          const addressLineHeight = addressFontSize * 1.3;
+          const addressHeight = addressLines.length * addressLineHeight;
+          
+          const lineHeight = infoFontSize * 3.5;
+          
+          const timeDisplay = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+          const timeFontSize = lineHeight;
+          
+          const cardW = timeFontSize * 2.5;
+          const cardH = cardW;
+          
+          ctx.font = `bold ${timeFontSize}px 'Bebas Neue', Arial, sans-serif`;
+          const timeTextWidth = ctx.measureText(timeDisplay).width;
+          
+          const totalHeight = cardH + 15 + lineHeight + 15 + addressHeight;
+          const bottomStartY = canvas.height - padding - totalHeight;
+          
+          const drawLogoAndFinish = (logoImg = null) => {
+            const cardX = leftX;
+            const cardY = bottomStartY;
+            const cardRadius = Math.min(cardW, cardH) * 0.1;
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(cardX + cardRadius, cardY);
+            ctx.lineTo(cardX + cardW - cardRadius, cardY);
+            ctx.quadraticCurveTo(cardX + cardW, cardY, cardX + cardW, cardY + cardRadius);
+            ctx.lineTo(cardX + cardW, cardY + cardH - cardRadius);
+            ctx.quadraticCurveTo(cardX + cardW, cardY + cardH, cardX + cardW - cardRadius, cardY + cardH);
+            ctx.lineTo(cardX + cardRadius, cardY + cardH);
+            ctx.quadraticCurveTo(cardX, cardY + cardH, cardX, cardY + cardH - cardRadius);
+            ctx.lineTo(cardX, cardY + cardRadius);
+            ctx.quadraticCurveTo(cardX, cardY, cardX + cardRadius, cardY);
+            ctx.closePath();
+            ctx.fill();
+            
+            const logoPadding = cardW * 0.08;
+            const logoDrawSize = cardW - (logoPadding * 2);
+            
+            if (logoImg && logoImg.width > 10 && logoImg.height > 10) {
+              const imgRatio = logoImg.width / logoImg.height;
+              let drawW, drawH;
+              
+              if (imgRatio > 1) {
+                drawW = logoDrawSize;
+                drawH = logoDrawSize / imgRatio;
+              } else {
+                drawH = logoDrawSize;
+                drawW = logoDrawSize * imgRatio;
+              }
+              
+              const logoX = cardX + (cardW - drawW) / 2;
+              const logoY = cardY + (cardH - drawH) / 2;
+              ctx.drawImage(logoImg, logoX, logoY, drawW, drawH);
+            } else {
+              ctx.fillStyle = '#ff8c00';
+              ctx.font = `${logoDrawSize * 0.7}px Poppins, sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText('A', cardX + cardW / 2, cardY + cardH / 2);
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'top';
+            }
+            
+            const infoStartY = cardY + cardH + 15;
+            
+            ctx.font = `bold ${timeFontSize}px 'Bebas Neue', Arial, sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'left';
+            ctx.fillText(timeDisplay, leftX, infoStartY);
+            
+            const lineX = leftX + timeTextWidth + 20;
+            ctx.strokeStyle = '#ffcc00';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(lineX, infoStartY);
+            ctx.lineTo(lineX, infoStartY + lineHeight);
+            ctx.stroke();
+            
+            const dateInfoX = lineX + 20;
+            const day = now.getDate();
+            const month = now.toLocaleDateString('en-US', { month: 'long' });
+            const year = now.getFullYear();
+            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+            
+            const dateText = `${day} ${month} ${year}`;
+            const dayText = dayName;
+            
+            const dateFontSize = lineHeight * 0.45;
+            
+            ctx.font = `${dateFontSize}px Poppins, sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'top';
+            ctx.fillText(dateText, dateInfoX, infoStartY + lineHeight * 0.05);
+            ctx.fillText(dayText, dateInfoX, infoStartY + lineHeight * 0.52);
+            
+            const addressY = infoStartY + lineHeight + 15;
+            ctx.font = `${addressFontSize}px Poppins, sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'top';
+            
+            if (addressLines.length > 0) {
+              addressLines.forEach((line, index) => {
+                const prefix = index === 0 ? '📍 ' : '     ';
+                ctx.fillText(prefix + line, leftX, addressY + (index * addressLineHeight));
+              });
+            } else {
+              ctx.fillText('📍 Mengambil lokasi...', leftX, addressY);
+            }
+            
+            resolve(canvas.toDataURL('image/jpeg', 1.0));
+          };
+          
+          if (cachedTimemarkLogoBase64 && cachedTimemarkLogoBase64.length > 100) {
+            const logoImg = new Image();
+            logoImg.onload = () => { drawLogoAndFinish(logoImg); };
+            logoImg.onerror = () => { drawLogoAndFinish(null); };
+            logoImg.src = cachedTimemarkLogoBase64;
+          } else {
+            drawLogoAndFinish(null);
+          }
+        };
+        img.src = imageDataUrl;
+      });
+    }
+
+    function renderPhotoThumbnails() {
+      const container = document.getElementById('photo-thumbnails');
+      const badge = document.getElementById('photo-count-badge');
+      
+      if (uploadedPhotos.length === 0) {
+        container.classList.add('hidden');
+        badge.classList.add('hidden');
+        return;
+      }
+      
+      container.classList.remove('hidden');
+      badge.classList.remove('hidden');
+      badge.textContent = `${uploadedPhotos.length}/${MAX_PHOTOS} foto`;
+      
+      container.innerHTML = uploadedPhotos.map((photo, index) => `
+        <div class="photo-thumbnail relative aspect-square rounded-lg overflow-hidden bg-slate-700" onclick="openFullscreen(${index})">
+          <img src="${photo}" alt="Foto ${index + 1}" class="w-full h-full object-cover">
+          <button class="delete-btn" onclick="deletePhoto(${index}, event)">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function deletePhoto(index, event) {
+      event.stopPropagation();
+      uploadedPhotos.splice(index, 1);
+      uploadedPhotosCompressed.splice(index, 1);
+      renderPhotoThumbnails();
+    }
+
+    function openFullscreen(index) {
+      currentPhotoIndex = index;
+      const viewer = document.getElementById('fullscreen-viewer');
+      const image = document.getElementById('fullscreen-image');
+      const counter = document.getElementById('photo-counter');
+      
+      image.src = uploadedPhotos[index];
+      counter.textContent = `${index + 1} / ${uploadedPhotos.length}`;
+      viewer.classList.remove('hidden');
+    }
+
+    function closeFullscreen(event) {
+      const viewer = document.getElementById('fullscreen-viewer');
+      if (event.target === viewer) {
+        viewer.classList.add('hidden');
+        viewer.dataset.mode = '';
+      }
+    }
+
+    function handleNavClick(direction, event) {
+      event.stopPropagation();
+      const viewer = document.getElementById('fullscreen-viewer');
+      const mode = viewer.dataset.mode;
+      
+      if (mode === 'gallery') {
+        navigateGalleryPhoto(direction, event);
+      } else {
+        navigatePhoto(direction, event);
+      }
+    }
+
+    function navigatePhoto(direction, event) {
+      event.stopPropagation();
+      currentPhotoIndex += direction;
+      
+      if (currentPhotoIndex < 0) currentPhotoIndex = uploadedPhotos.length - 1;
+      if (currentPhotoIndex >= uploadedPhotos.length) currentPhotoIndex = 0;
+      
+      document.getElementById('fullscreen-image').src = uploadedPhotos[currentPhotoIndex];
+      document.getElementById('photo-counter').textContent = `${currentPhotoIndex + 1} / ${uploadedPhotos.length}`;
+    }
+
+   async function submitAttendance() {
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
 
@@ -83,3 +2017,688 @@ async function submitAttendance() {
         btn.disabled = false;
     }
 }
+    async function showRecapToday() {
+      recapSource = 'today';
+      const today = formatTanggalIndo(new Date());
+      await showRecapForDate(today);
+    }
+
+    async function showRecapForDate(date, source = recapSource) {
+      recapSource = source;
+      showPage('page-recap-detail');
+      currentRecapDate = date;
+      
+      const titleEl = document.getElementById('recap-title');
+      const dateLabel = document.getElementById('recap-date-label');
+      
+      const today = formatTanggalIndo(new Date());
+      if (date === today) {
+        titleEl.textContent = 'Recap Absen Hari Ini';
+      } else {
+        titleEl.textContent = 'Recap Absen Tanggal';
+      }
+      dateLabel.textContent = date;
+      
+      document.getElementById('recap-loading').classList.remove('hidden');
+      document.getElementById('recap-content').classList.add('hidden');
+      document.getElementById('recap-empty').classList.add('hidden');
+
+      try {
+        const response = await fetch(`${scriptUrl}?action=getAttendance&date=${encodeURIComponent(date)}`);
+        const result = await response.json();
+        
+        document.getElementById('recap-loading').classList.add('hidden');
+
+        if (result.success && result.columns && result.columns.length > 0) {
+          currentRecapData = result;
+          renderRecapTable(result);
+          document.getElementById('recap-content').classList.remove('hidden');
+          document.getElementById('download-pdf-btn').classList.remove('hidden');
+        } else {
+          currentRecapData = null;
+          document.getElementById('recap-empty').classList.remove('hidden');
+          document.getElementById('download-pdf-btn').classList.add('hidden');
+        }
+      } catch (error) {
+        document.getElementById('recap-loading').innerHTML = `<p class="text-red-400 text-sm">Error: ${error.message}</p>`;
+      }
+    }
+
+    function renderRecapTable(data) {
+      const container = document.getElementById('recap-content');
+      container.innerHTML = '';
+
+      const { columns, workers: recapWorkers } = data;
+      
+      const counts = { 'Start Work': 0, 'Finish Work': 0, 'Sakit': 0, 'Standby': 0, 'Belum Absen': 0 };
+      const statusWorkers = { 'Start Work': [], 'Finish Work': [], 'Sakit': [], 'Standby': [], 'Belum Absen': [] };
+      
+      recapWorkers.forEach(w => {
+        const allStatuses = Object.values(w.statuses);
+        const hasStart = allStatuses.includes('Start Work');
+        const hasFinish = allStatuses.includes('Finish Work');
+        const hasSakit = allStatuses.includes('Sakit');
+        const hasStandby = allStatuses.includes('Standby');
+        
+        if (hasStart) { counts['Start Work']++; statusWorkers['Start Work'].push(w.name); }
+        if (hasFinish) { counts['Finish Work']++; statusWorkers['Finish Work'].push(w.name); }
+        if (hasSakit) { counts['Sakit']++; statusWorkers['Sakit'].push(w.name); }
+        if (hasStandby) { counts['Standby']++; statusWorkers['Standby'].push(w.name); }
+        
+        const allDash = allStatuses.every(s => s === '-' || s === '');
+        if (allDash) { counts['Belum Absen']++; statusWorkers['Belum Absen'].push(w.name); }
+      });
+
+      window.currentStatusWorkers = statusWorkers;
+
+      let summaryHtml = `
+        <div class="mb-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <div class="status-card rounded-lg p-3 text-center cursor-pointer" style="background-color: #22c55e;" onclick="showStatusModal('Start Work')">
+            <p class="text-2xl font-bold text-white">${counts['Start Work']}</p>
+            <p class="text-xs font-medium text-white">Start Work 👆</p>
+          </div>
+          <div class="status-card rounded-lg p-3 text-center cursor-pointer" style="background-color: #3b82f6;" onclick="showStatusModal('Finish Work')">
+            <p class="text-2xl font-bold text-white">${counts['Finish Work']}</p>
+            <p class="text-xs font-medium text-white">Finish Work 👆</p>
+          </div>
+          <div class="status-card rounded-lg p-3 text-center cursor-pointer" style="background-color: #f97316;" onclick="showStatusModal('Sakit')">
+            <p class="text-2xl font-bold text-white">${counts['Sakit']}</p>
+            <p class="text-xs font-medium text-white">Sakit 👆</p>
+          </div>
+          <div class="status-card rounded-lg p-3 text-center cursor-pointer" style="background-color: #a855f7;" onclick="showStatusModal('Standby')">
+            <p class="text-2xl font-bold text-white">${counts['Standby']}</p>
+            <p class="text-xs font-medium text-white">Standby 👆</p>
+          </div>
+          <div class="status-card rounded-lg p-3 text-center cursor-pointer" style="background-color: #ef4444;" onclick="showStatusModal('Belum Absen')">
+            <p class="text-2xl font-bold text-white">${counts['Belum Absen']}</p>
+            <p class="text-xs font-medium text-white">Belum Absen 👆</p>
+          </div>
+        </div>
+      `;
+
+      let tableHtml = `
+        <div class="overflow-x-auto rounded-xl border border-slate-600 shadow-lg">
+          <table class="recap-table min-w-full">
+            <thead>
+              <tr>
+                <th class="sticky-col text-left" style="min-width: 180px;">Nama Pekerja</th>
+                ${columns.map(c => `<th style="min-width: 100px; background: #1e293b; color: #fbbf24;">${c.jam}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      const statusColors = {
+        'Start Work': '#22c55e',
+        'Finish Work': '#3b82f6',
+        'Sakit': '#f97316',
+        'Standby': '#a855f7',
+        '-': '#ef4444'
+      };
+
+      recapWorkers.forEach((w, rowIndex) => {
+        tableHtml += `<tr>
+          <td class="sticky-col text-left text-white font-medium whitespace-nowrap" style="background: ${rowIndex % 2 === 0 ? '#1e293b' : '#0f172a'};">${w.name}</td>`;
+        
+        columns.forEach(c => {
+          const status = w.statuses[c.jam] || '-';
+          const bgColor = statusColors[status] || statusColors['-'];
+          tableHtml += `<td style="background-color: ${bgColor}; color: #ffffff; font-weight: bold;">${status}</td>`;
+        });
+        
+        tableHtml += `</tr>`;
+      });
+
+      tableHtml += `</tbody></table></div>`;
+
+      container.innerHTML = summaryHtml + tableHtml;
+    }
+
+    function showStatusModal(status) {
+      const modal = document.getElementById('status-modal');
+      const title = document.getElementById('modal-title');
+      const body = document.getElementById('modal-body');
+      
+      const workerNames = window.currentStatusWorkers[status] || [];
+      
+      title.textContent = `Daftar Pekerja - ${status} (${workerNames.length})`;
+      
+      if (workerNames.length === 0) {
+        body.innerHTML = `<p class="text-slate-400 text-center py-4">Tidak ada pekerja dengan status ${status}</p>`;
+      } else {
+        body.innerHTML = workerNames.map(name => {
+          const worker = workers.find(w => w.name === name);
+          const photoUrl = worker ? convertDriveLink(worker.photo) : '';
+          
+          let photoHtml = '';
+          if (photoUrl && photoUrl.startsWith('http')) {
+            photoHtml = `<img src="${photoUrl}" alt="${name}" class="w-12 h-12 rounded-full object-cover" onerror="this.outerHTML='<div class=\\'avatar bg-gradient-to-br from-orange-400 to-pink-500\\'>${name.charAt(0).toUpperCase()}</div>'">`;
+          } else {
+            photoHtml = `<div class="avatar bg-gradient-to-br from-orange-400 to-pink-500">${name.charAt(0).toUpperCase()}</div>`;
+          }
+          
+          return `
+            <div class="worker-list-item">
+              ${photoHtml}
+              <span class="text-white font-medium">${name}</span>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeStatusModal(event) {
+      if (!event || event.target === document.getElementById('status-modal')) {
+        document.getElementById('status-modal').classList.add('hidden');
+      }
+    }
+
+    function showRecapJam() {
+      showPage('page-recap-jam');
+    }
+
+    document.getElementById('jam-search-input').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const resultsContainer = document.getElementById('jam-search-results');
+      const resultContainer = document.getElementById('jam-result-container');
+      const noResult = document.getElementById('jam-no-result');
+      
+      if (query === '' || !currentRecapData) {
+        resultsContainer.innerHTML = '';
+        resultContainer.classList.add('hidden');
+        noResult.classList.remove('hidden');
+        return;
+      }
+      
+      const matchingWorkers = currentRecapData.workers.filter(w => 
+        w.name.toLowerCase().includes(query)
+      );
+      
+      if (matchingWorkers.length === 0) {
+        resultsContainer.innerHTML = `<p class="text-slate-400 text-center py-2 text-sm">Tidak ditemukan</p>`;
+        resultContainer.classList.add('hidden');
+        noResult.classList.add('hidden');
+        return;
+      }
+      
+      noResult.classList.add('hidden');
+      
+      resultsContainer.innerHTML = matchingWorkers.slice(0, 5).map(w => `
+        <button onclick="showWorkerJamDetail('${w.name.replace(/'/g, "\\'")}')" class="w-full text-left px-4 py-2 bg-slate-700/50 hover:bg-slate-600 rounded-lg text-white text-sm transition-all">
+          ${w.name}
+        </button>
+      `).join('');
+    });
+
+   function showWorkerJamDetail(workerName) {
+    const resultsContainer = document.getElementById('jam-search-results');
+    const resultContainer = document.getElementById('jam-result-container');
+    const noResult = document.getElementById('jam-no-result');
+    
+    resultsContainer.innerHTML = '';
+    noResult.classList.add('hidden');
+    
+    const worker = workers.find(w => w.name === workerName);
+    const photoUrl = worker ? convertDriveLink(worker.photo) : '';
+    const recapWorker = currentRecapData.workers.find(w => w.name === workerName);
+    
+    if (!recapWorker) return;
+    
+    // Tampilkan Foto & Nama
+    const photoContainer = document.getElementById('jam-worker-photo');
+    if (photoUrl && photoUrl.startsWith('http')) {
+        photoContainer.innerHTML = `<img src="${photoUrl}" class="w-16 h-16 rounded-full object-cover">`;
+    } else {
+        photoContainer.textContent = workerName.charAt(0).toUpperCase();
+    }
+    document.getElementById('jam-worker-name').textContent = workerName;
+    
+    // LOGIKA: MENCARI AWAL DAN AKHIR
+    const times = Object.keys(recapWorker.statuses).sort(); 
+    let firstStart = null;
+    let lastFinish = null;
+
+    times.forEach(jam => {
+        const status = recapWorker.statuses[jam];
+        if (status === 'Start Work') {
+            if (!firstStart) firstStart = jam; 
+        } else if (status === 'Finish Work') {
+            lastFinish = jam; 
+        }
+    });
+
+    const sessionsContainer = document.getElementById('jam-sessions');
+    
+    if (firstStart && lastFinish) {
+        const totalMinutes = calculateMinutes(firstStart, lastFinish);
+        
+        // Kalkulasi Jam Kerja Reguler vs Lembur
+        const standardMinutes = 12 * 60; // 12 Jam = 720 Menit
+        let overtimeMinutes = 0;
+        let overtimeText = "";
+
+        if (totalMinutes > standardMinutes) {
+            overtimeMinutes = totalMinutes - standardMinutes;
+            const oh = Math.floor(overtimeMinutes / 60);
+            const om = overtimeMinutes % 60;
+            overtimeText = `${oh} Jam ${om} Menit`;
+        }
+
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+
+        // Render Tampilan
+        sessionsContainer.innerHTML = `
+            <div class="flex flex-col gap-3 bg-slate-700/50 rounded-lg px-4 py-3">
+                <div class="flex justify-between border-b border-slate-600 pb-2">
+                    <span class="text-slate-400 text-xs text-left">Start Pertama:</span>
+                    <span class="text-green-400 font-bold">${firstStart}</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-600 pb-2">
+                    <span class="text-slate-400 text-xs text-left">Finish Terakhir:</span>
+                    <span class="text-blue-400 font-bold">${lastFinish}</span>
+                </div>
+                ${overtimeMinutes > 0 ? `
+                <div class="flex justify-between bg-yellow-500/10 p-2 rounded border border-yellow-500/30">
+                    <span class="text-yellow-500 text-xs font-bold uppercase text-left">Lembur:</span>
+                    <span class="text-yellow-400 font-bold">${overtimeText}</span>
+                </div>
+                ` : `
+                <div class="flex justify-between p-2">
+                    <span class="text-slate-500 text-xs text-left">Lembur:</span>
+                    <span class="text-slate-500 font-medium">0 Jam 0 Menit</span>
+                </div>
+                `}
+            </div>
+        `;
+        document.getElementById('jam-total').textContent = `${h} Jam ${m} Menit`;
+    } else {
+        sessionsContainer.innerHTML = `<p class="text-red-400 text-sm text-center font-medium p-4">Data tidak lengkap.<br><span class="text-xs opacity-70 text-left">Pekerja harus memiliki status Start Work dan Finish Work.</span></p>`;
+        document.getElementById('jam-total').textContent = "0 Jam 0 Menit";
+    }
+    
+    resultContainer.classList.remove('hidden');
+}
+
+    function calculateDuration(start, finish) {
+  const minutes = calculateMinutes(start, finish);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  
+  // Jika durasi kurang dari 1 jam, tampilkan menit saja
+  if (h === 0) return `${m} Menit`;
+  // Jika lebih, tampilkan format jam dan menit
+  return `${h} Jam ${m} Menit`;
+}
+
+    function calculateMinutes(start, finish) {
+  if (!start || !finish) return 0;
+
+  const parseTime = (timeStr) => {
+    // Menghapus detik jika ada (misal 23:05:04 jadi 23:05)
+    // Dan mengubah titik (.) menjadi titik dua (:) agar seragam di semua browser
+    const cleanTime = timeStr.toString().replace(/\./g, ':');
+    const parts = cleanTime.split(':');
+    
+    const hours = parseInt(parts[0]) || 0;
+    const minutes = parseInt(parts[1]) || 0;
+    return (hours * 60) + minutes;
+  };
+
+  const startTotal = parseTime(start);
+  const finishTotal = parseTime(finish);
+
+  let diff = finishTotal - startTotal;
+
+  // Logika jika jam kerja melewati tengah malam (misal 22:00 - 02:00)
+  if (diff < 0) {
+    diff += 1440; // Tambah 24 jam dalam menit
+  }
+
+  return diff;
+}
+    async function renderCalendar() {
+      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+      
+      document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
+      
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const container = document.getElementById('calendar-days');
+      const loadingEl = document.getElementById('calendar-loading');
+      
+      container.innerHTML = '';
+      
+      loadingEl.classList.remove('hidden');
+      let monthData = {};
+      
+      try {
+        const cacheKey = `${month + 1}-${year}`;
+        if (calendarDataCache[cacheKey]) {
+          monthData = calendarDataCache[cacheKey];
+        } else {
+          const response = await fetch(`${scriptUrl}?action=getMonthData&month=${month + 1}&year=${year}`);
+          const result = await response.json();
+          if (result.success) {
+            monthData = result.data || {};
+            calendarDataCache[cacheKey] = monthData;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load month data:', error);
+      }
+      
+      loadingEl.classList.add('hidden');
+      
+      for (let i = 0; i < firstDay; i++) {
+        container.appendChild(document.createElement('div'));
+      }
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateStr = formatTanggalIndo(date);
+        const isToday = new Date().toDateString() === date.toDateString();
+        const dataCount = monthData[day] || 0;
+        const hasData = dataCount > 0;
+        
+        const dayCell = document.createElement('button');
+        dayCell.className = `calendar-day flex flex-col items-center justify-center rounded-lg p-1 ${isToday ? 'ring-2 ring-orange-500' : ''} ${hasData ? 'has-data' : 'bg-slate-700/30 hover:bg-slate-600/50'}`;
+        dayCell.innerHTML = `
+          <span class="text-white text-sm font-semibold">${day}</span>
+          ${hasData ? `<span class="text-[9px] text-white/80">${dataCount} data</span>` : ''}
+        `;
+        dayCell.onclick = () => showRecapForDate(dateStr, 'calendar');
+        container.appendChild(dayCell);
+      }
+    }
+
+    function prevMonth() { 
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); 
+      renderCalendar(); 
+    }
+    
+    function nextMonth() { 
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); 
+      renderCalendar(); 
+    }
+
+    async function loadPhotoFolders() {
+      const loading = document.getElementById('gallery-loading');
+      const folders = document.getElementById('gallery-folders');
+      const empty = document.getElementById('gallery-empty');
+
+      loading.classList.remove('hidden');
+      folders.classList.add('hidden');
+      empty.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${scriptUrl}?action=getPhotoFolders`);
+        const result = await response.json();
+        loading.classList.add('hidden');
+
+        if (result.success && result.folders && result.folders.length > 0) {
+          renderPhotoFolders(result.folders);
+          folders.classList.remove('hidden');
+        } else {
+          empty.classList.remove('hidden');
+        }
+      } catch (error) {
+        loading.innerHTML = `<p class="text-red-400 text-sm">Error: ${error.message}</p>`;
+      }
+    }
+
+    function renderPhotoFolders(folderDates) {
+      const container = document.getElementById('gallery-folders');
+      container.innerHTML = '';
+
+      folderDates.forEach(date => {
+        const displayDate = date.replace(/_/g, ' ');
+        const folder = document.createElement('button');
+        folder.className = 'gallery-folder bg-white rounded-xl p-3 text-center border border-slate-200 shadow-md';
+        folder.onclick = () => loadPhotosForDate(displayDate);
+        folder.innerHTML = `<div class="text-2xl mb-1">📁</div><p class="text-slate-800 font-semibold text-xs">${displayDate}</p>`;
+        container.appendChild(folder);
+      });
+    }
+
+    async function loadPhotosForDate(date) {
+      showPage('page-photo-detail');
+      document.getElementById('photo-folder-date').textContent = date;
+      
+      const grid = document.getElementById('photo-grid');
+      const empty = document.getElementById('photos-empty');
+      
+      grid.innerHTML = '<div class="col-span-full text-center py-8"><div class="inline-block w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>';
+      empty.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${scriptUrl}?action=getPhotos&date=${encodeURIComponent(date)}`);
+        const result = await response.json();
+
+        if (result.success && result.photos && result.photos.length > 0) {
+          grid.innerHTML = '';
+          galleryPhotos = result.photos;
+          result.photos.forEach((photo, index) => {
+            const photoEl = document.createElement('div');
+            photoEl.className = 'relative rounded-lg overflow-hidden bg-slate-800 cursor-pointer hover:opacity-90 transition-opacity';
+            photoEl.onclick = () => openGalleryFullscreen(index);
+            photoEl.innerHTML = `<img src="${photo.url}" alt="${photo.name}" class="w-full aspect-square object-cover" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23334155%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2212%22>No Image</text></svg>'"><div class="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-center"><span class="text-white text-xs">${photo.name}</span></div>`;
+            grid.appendChild(photoEl);
+          });
+        } else {
+          grid.innerHTML = '';
+          galleryPhotos = [];
+          empty.classList.remove('hidden');
+        }
+      } catch (error) {
+        grid.innerHTML = `<p class="col-span-full text-center text-red-400 text-sm">Error: ${error.message}</p>`;
+      }
+    }
+
+    function saveScriptUrl() {
+      const input = document.getElementById('script-url-input');
+      const url = input.value.trim();
+      
+      if (url && url.startsWith('https://script.google.com/')) {
+        scriptUrl = url;
+        localStorage.setItem('appsScriptUrl', url);
+        updateScriptUrlStatus();
+        showNotification('URL tersimpan!');
+      } else {
+        showNotification('URL tidak valid!', true);
+      }
+    }
+
+    function updateScriptUrlStatus() {
+      const status = document.getElementById('script-url-status');
+      status.innerHTML = scriptUrl ? '<span class="text-green-400">✓ URL tersimpan</span>' : '<span class="text-slate-400">Belum ada URL</span>';
+    }
+
+    function copyScript() {
+      navigator.clipboard.writeText(document.getElementById('apps-script-code').textContent).then(() => showNotification('Kode di-copy!'));
+    }
+
+    function showNotification(message, isError = false) {
+      const notif = document.getElementById('notification');
+      const text = document.getElementById('notification-text');
+      text.textContent = message;
+      notif.querySelector('div').className = `${isError ? 'bg-red-500' : 'bg-green-500'} text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm`;
+      notif.classList.remove('hidden');
+      setTimeout(() => notif.classList.add('hidden'), 3000);
+    }
+
+    function openGalleryFullscreen(index) {
+      currentGalleryIndex = index;
+      const viewer = document.getElementById('fullscreen-viewer');
+      const image = document.getElementById('fullscreen-image');
+      const counter = document.getElementById('photo-counter');
+      
+      image.src = galleryPhotos[index].url;
+      counter.textContent = `${index + 1} / ${galleryPhotos.length}`;
+      viewer.classList.remove('hidden');
+      viewer.dataset.mode = 'gallery';
+    }
+
+    function navigateGalleryPhoto(direction, event) {
+      event.stopPropagation();
+      currentGalleryIndex += direction;
+      
+      if (currentGalleryIndex < 0) currentGalleryIndex = galleryPhotos.length - 1;
+      if (currentGalleryIndex >= galleryPhotos.length) currentGalleryIndex = 0;
+      
+      document.getElementById('fullscreen-image').src = galleryPhotos[currentGalleryIndex].url;
+      document.getElementById('photo-counter').textContent = `${currentGalleryIndex + 1} / ${galleryPhotos.length}`;
+    }
+
+    async function downloadRecapPDF() {
+    if (!currentRecapData) return showNotification('Data tidak tersedia', true);
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    // Header & Logo
+    if (cachedLogoBase64) doc.addImage(cachedLogoBase64, 'PNG', 14, 10, 20, 20);
+    doc.setFontSize(16);
+    doc.text(config.company_name, 40, 18);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Laporan Absensi Harian - Tanggal: ${currentRecapDate}`, 40, 25);
+    doc.line(14, 32, 196, 32);
+
+    const table = document.querySelector('.recap-table');
+    doc.autoTable({
+        html: table,
+        startY: 35,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59] },
+        styles: { fontSize: 8 },
+        didParseCell: function(data) {
+            if (data.section === 'body' && data.column.index > 0) {
+                const status = data.cell.text[0];
+                const colors = {
+                    'Start Work': [34, 197, 94],
+                    'Finish Work': [59, 130, 246],
+                    'Sakit': [249, 115, 22],
+                    'Standby': [168, 85, 247],
+                    '-': [239, 68, 68]
+                };
+                if (colors[status]) {
+                    data.cell.styles.fillColor = colors[status];
+                    data.cell.styles.textColor = [255, 255, 255];
+                }
+            }
+        }
+    });
+    doc.save(`Recap_Absen_${currentRecapDate}.pdf`);
+}
+
+    async function downloadRecapJamPDF() {
+    if (!currentRecapData) return showNotification('Data tidak tersedia', true);
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    // Header Laporan
+    if (cachedLogoBase64) doc.addImage(cachedLogoBase64, 'PNG', 14, 10, 20, 20);
+    doc.setFontSize(16);
+    doc.text(config.company_name, 40, 18);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Laporan Rekap Jam Kerja & Lembur Seluruh Pekerja`, 40, 24);
+    doc.text(`Tanggal: ${currentRecapDate}`, 40, 29);
+    doc.line(14, 34, 196, 34);
+
+    // Persiapkan Data Tabel
+    const tableData = [];
+    const standardMinutes = 12 * 60; // Batas 12 Jam
+
+    currentRecapData.workers.forEach(worker => {
+        const times = Object.keys(worker.statuses).sort();
+        let firstStart = null;
+        let lastFinish = null;
+
+        times.forEach(jam => {
+            const status = worker.statuses[jam];
+            if (status === 'Start Work' && !firstStart) firstStart = jam;
+            if (status === 'Finish Work') lastFinish = jam;
+        });
+
+        if (firstStart && lastFinish) {
+            const totalMin = calculateMinutes(firstStart, lastFinish);
+            const h = Math.floor(totalMin / 60);
+            const m = totalMin % 60;
+            
+            let overtimeText = "0j 0m";
+            if (totalMin > standardMinutes) {
+                const diff = totalMin - standardMinutes;
+                overtimeText = `${Math.floor(diff/60)}j ${diff%60}m`;
+            }
+
+            tableData.push([
+                worker.name,
+                firstStart,
+                lastFinish,
+                `${h}j ${m}m`,
+                overtimeText
+            ]);
+        } else {
+            // Jika data tidak lengkap tetap masukkan ke list dengan keterangan
+            tableData.push([worker.name, firstStart || '-', lastFinish || '-', '-', '-']);
+        }
+    });
+
+    // Buat Tabel di PDF
+    doc.autoTable({
+        head: [['Nama Pekerja', 'Start Awal', 'Finish Akhir', 'Total Jam', 'Lembur']],
+        body: tableData,
+        startY: 40,
+        theme: 'grid',
+        headStyles: { fillColor: [6, 182, 212] }, // Warna Cyan (sesuai tema Recap Jam)
+        styles: { fontSize: 8 },
+        didParseCell: function(data) {
+            // Warnai baris yang ada lemburnya agar admin mudah melihat
+            if (data.section === 'body' && data.column.index === 4 && data.cell.text[0] !== '0j 0m' && data.cell.text[0] !== '-') {
+                data.cell.styles.textColor = [220, 38, 38]; // Warna merah untuk teks lembur
+                data.cell.styles.fontStyle = 'bold';
+            }
+        }
+    });
+
+    doc.save(`Rekap_Lembur_Semua_${currentRecapDate.replace(/\//g, '-')}.pdf`);
+    showNotification('Laporan Lembur Semua Pekerja berhasil dibuat');
+}
+
+    async function onConfigChange(newConfig) {
+      config = { ...config, ...newConfig };
+      document.getElementById('header-title').textContent = config.app_title || defaultConfig.app_title;
+      document.getElementById('login-company-name').textContent = config.company_name || defaultConfig.company_name;
+      updateAllLogos();
+    }
+
+    function mapToCapabilities(config) {
+      return { recolorables: [], borderables: [], fontEditable: undefined, fontSizeable: undefined };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['app_title', config.app_title || defaultConfig.app_title],
+        ['company_name', config.company_name || defaultConfig.company_name],
+        ['logo_url', config.logo_url || defaultConfig.logo_url]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({ defaultConfig, onConfigChange, mapToCapabilities, mapToEditPanelValues });
+    }
+
+    updateDateTime();
+    requestLocationPermission();
+    updateAllLogos();
+    preloadTimemarkLogo();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ba4b9cdf0367d63',t:'MTc2NzgwMjIzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
